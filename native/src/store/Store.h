@@ -53,6 +53,11 @@ public:
     void touchSession(const std::string& id);
     /** True when a session with this name exists in this folder (case-insensitive). */
     bool sessionNameExists(const std::string& folder, const std::string& name) const;
+    /**
+     * Saved session by name, compared case-insensitively (PuTTY "-load"). A name containing '/' may also match
+     * "<folder>/<name>". When several sessions share the name, the one in the root folder (or the first) wins.
+     */
+    std::optional<SessionConfig> findSessionByName(const std::string& name) const;
 
     /* ---- settings ---- */
     Json settings() const;
@@ -70,11 +75,20 @@ public:
     KnownHosts& knownHosts() { return knownHosts_; }
     Credentials& credentials() { return credentials_; }
 
+    /** Normalizes a session document: merges it over the built-in defaults (unknown fields preserved), repairs
+     *  wrongly typed known fields, normalizes the folder and generates an id when empty (if generateId). */
+    static Json normalizeSessionJson(const Json& doc, bool generateId = true);
+
     /** Change notifications, invoked on the thread that made the change (after the lock is released). */
     std::function<void()> onSessionsChanged;
     std::function<void(const Json& settings)> onSettingsChanged;
 
 private:
+    void writeSessionsLocked() const;
+    void writeSettingsLocked() const;
+    void writeStateLocked() const;
+    void notifySessionsChanged();
+
     std::filesystem::path dir_;
     mutable std::recursive_mutex mutex_;
     Json sessions_ = Json::array();

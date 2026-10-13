@@ -4,8 +4,10 @@
 #include "core/Win.h"
 
 #include <atomic>
+#include <functional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace sc {
 
@@ -23,6 +25,12 @@ struct ConnectOptions {
     int timeoutMs = 20000;
     bool noDelay = true;
     bool keepAlive = false;
+    /** Optional local source port range (rlogin privileged ports): ports are tried from localPortHigh down to
+     *  localPortLow; when none can be bound an ephemeral port is used. 0/0 => ephemeral. */
+    int localPortHigh = 0;
+    int localPortLow = 0;
+    /** Optional progress callback for event-log lines ("Looking up host ...", "Connecting to 192.0.2.1 port 22"). */
+    std::function<void(const std::string&)> log;
 };
 
 /**
@@ -47,6 +55,25 @@ bool sendAll(SOCKET s, std::string_view data);
 void setNonBlocking(SOCKET s, bool nonBlocking);
 /** "host:port" / "[v6]:port" of the peer, '' on failure. */
 std::string peerName(SOCKET s);
+
+/* ---- additions (net module) ------------------------------------------------------------------------ */
+
+/**
+ * Resolve `host` to numeric addresses ("192.0.2.1", "2001:db8::1"), in resolver order. Honours `family`, polls
+ * `cancel` at least every 100 ms ("Cancelled") and gives up after timeoutMs (<= 0: no limit). Empty + error on failure.
+ */
+std::vector<std::string> resolveHost(const std::string& host, AddressFamily family, std::string& error,
+                                     const std::atomic<bool>* cancel = nullptr, int timeoutMs = 20000);
+/** "host:port" / "[v6]:port" of the local end, '' on failure. */
+std::string localName(SOCKET s);
+/** Local port of a bound socket, 0 on failure. */
+int localPort(SOCKET s);
+/** True for numeric IPv4 / IPv6 literals ("[::1]" accepted). `family` (optional) receives AF_INET / AF_INET6. */
+bool isNumericAddress(const std::string& host, int* family = nullptr);
+/** "[2001:db8::1]" -> "2001:db8::1"; anything else unchanged. */
+std::string stripBrackets(const std::string& host);
+/** "host:port", bracketing IPv6 literals ("[::1]:22"). */
+std::string formatHostPort(const std::string& host, int port);
 
 /**
  * Wakes a thread blocked in WSAWaitForMultipleEvents / select-style loops: wraps a manual-reset WSAEVENT

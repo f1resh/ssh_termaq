@@ -1,6 +1,8 @@
 #pragma once
 // Trusted SSH host keys, persisted as known_hosts.json: { "hosts": [KnownHost...] }.
 // Thread-safe.
+// Hosts are compared case-insensitively (surrounding whitespace and IPv6 brackets ignored). Key types are compared
+// after mapping RSA signature algorithm names (rsa-sha2-256/512) to the key type "ssh-rsa".
 #include "core/Types.h"
 
 #include <filesystem>
@@ -14,6 +16,7 @@ namespace sc {
 class KnownHosts {
 public:
     explicit KnownHosts(std::filesystem::path file);
+    /** Loads known_hosts.json (missing => empty; corrupt => backed up and empty; invalid entries skipped). */
     void load();
 
     std::vector<KnownHost> list() const;
@@ -24,6 +27,8 @@ public:
      * Mismatch: host:port has stored keys of the same keyType but none equal (possible MITM).
      * Unknown : no stored key of this type for host:port.
      * (A different key *type* than stored ones counts as Unknown, like PuTTY.)
+     * keyBlob may be either the raw SSH wire-format blob or its base64 encoding (as stored in KnownHost::key).
+     * An empty keyType is derived from the blob.
      */
     HostKeyCheck check(const std::string& host, int port, const std::string& keyType, const std::string& keyBlob) const;
     /** Adds (or replaces an entry with the same host/port/keyType). Fills id/fingerprint/addedAt if empty. */
@@ -32,6 +37,7 @@ public:
     int addMany(const std::vector<KnownHost>& entries);
     void remove(const std::vector<std::string>& ids);
 
+    /** Fired after any change (outside the lock, on the thread that made the change). */
     std::function<void()> onChanged;
 
 private:

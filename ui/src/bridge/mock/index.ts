@@ -6,6 +6,9 @@
 import type { Transport } from '../api';
 import { registerCoreMocks } from './core';
 import { registerConnMocks } from './conn';
+import { registerImporterMocks } from './importer';
+import { registerKeysMocks } from './keys';
+import { registerSftpMocks } from './sftp';
 
 export type MockInvoke = (...args: any[]) => unknown;
 export type MockSend = (...args: any[]) => void;
@@ -36,6 +39,9 @@ export function createMockBackend(): Transport {
 
   registerCoreMocks(ctx);
   registerConnMocks(ctx);
+  registerSftpMocks(ctx);
+  registerImporterMocks(ctx);
+  registerKeysMocks(ctx);
 
   return {
     async invoke(channel, args) {
