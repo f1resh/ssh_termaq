@@ -1,0 +1,9 @@
+/build/
+/out/
+/vcpkg_installed/
+/dist/
+*.user
+.vs/
+/ui/node_modules/
+/ui/dist/
+/artifacts/

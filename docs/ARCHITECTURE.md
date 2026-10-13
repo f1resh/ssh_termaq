@@ -1,0 +1,146 @@
+# SSH Crawler — Architecture & contributor contract
+
+A modern, tabbed Windows SSH/Telnet/Rlogin/Raw/Serial client with PuTTY's feature set plus PuTTY session import.
+
+```
+SSHCrawler.exe (C++20, Win32)
+├─ app/        WinMain, main window (custom title bar), WebView2 host, CLI, single instance, dialogs
+├─ bridge/     JSON message router  <── WebView2 postMessage ──>  UI (React + xterm.js, ui/)
+├─ store/      sessions.json, settings.json, state.json, known_hosts.json, credentials.json (DPAPI)
+├─ session/    SessionManager: connections, charset, local echo/edit (ldisc), session logging, prompts
+├─ transport/  Telnet, Rlogin, Raw, Serial  (+ TransportFactory)
+├─ net/        Winsock helpers, proxies (SOCKS4/4a/5, HTTP, Telnet, local command, SSH jump)
+├─ ssh/        libssh transport: auth (agent/Pageant, keys, kbd-int, password), host keys, PTY,
+│              port forwarding L/R/D, X11, agent forwarding, SFTP task posting
+├─ keys/       key loading (OpenSSH/PEM/PPK v2/v3), PPK read/write, keygen (PuTTYgen equivalent)
+├─ putty/      PuTTY registry/.reg import + export, PuTTY host key conversion
+├─ importers/  ~/.ssh/config, JSON backup, OpenSSH known_hosts, import apply logic + bridge handlers
+└─ sftp/       SFTP browser backend (runs on SSH connections)
+```
+
+Dependencies (vcpkg manifest `vcpkg.json`, installed into `vcpkg_installed/`): libssh 0.12 (OpenSSL 3, zlib),
+OpenSSL 3.6, zlib, nlohmann-json 3.12, WebView2 SDK, WIL, Catch2 3. libssh sources (for reference while
+implementing) are in `vcpkg_installed/vcpkg/blds/libssh/src/libssh-0-e5f4972781.clean/`.
+
+UI: `ui/` — Vite + React 19 + TypeScript 5.9 + zustand + xterm.js 5.5 (+ fit/webgl/search/web-links/unicode11
+addons) + lucide-react icons. Served by the host from `<exe dir>/ui` via WebView2 virtual host mapping
+`https://app.sshcrawler.local/` (dev: `--dev-url http://localhost:5173`).
+
+## Contracts (read before writing code)
+
+| Contract | File(s) |
+|---|---|
+| Domain types (TS) | `ui/src/shared/types.ts` |
+| Defaults / normalisation (TS) | `ui/src/shared/defaults.ts` |
+| Bridge API + wire format | `ui/src/shared/ipc.ts` (API_SCHEMA lists every channel) |
+| Domain types (C++ mirror) | `native/src/core/Types.h` — JSON names/enums/defaults MUST match the TS files |
+| Bridge (C++) | `native/src/bridge/Bridge.h` |
+| Transport interface + threading rules | `native/src/transport/Transport.h` |
+| Prompts | `native/src/session/Prompter.h`, `prompts::*` helpers in `core/Types.h` |
+| Module public headers | each module's `.h` in `native/src/**` (stubs exist for all of them) |
+| UI stores | `ui/src/store/workspace.ts`, `ui/src/store/ui.ts`, `ui/src/store/data.ts` |
+| Terminal handles | `ui/src/terminal/registry.ts` |
+| UI primitives + tokens | `ui/src/components/ui/*`, `ui/src/styles/global.css` (CSS variables only, no hard-coded colours) |
+
+Rules:
+1. **Public signatures in contract headers / TS contract files are frozen.** You may *add* functions, members,
+   fields, files. If you truly must change an existing signature, keep the old one working and note it in
+   `docs/notes/<module>.md`.
+2. **Only edit files you own** (table below). Need something from another module? Use its declared API; if it's
+   missing, write the need into `docs/notes/<your-module>.md` ("Requests") and work around it.
+3. Adding a field to SessionConfig/AppSettings requires updating BOTH `types.ts`/`defaults.ts` AND `Types.h`.
+   Only the owners listed below may do that (C++ types: owner `host`; TS types: owner `ui-dialogs`) — other
+   modules file a request.
+4. All strings crossing the bridge are UTF-8 JSON. Paths are UTF-8 (convert with `widen()/narrow()`).
+5. Never block the UI thread (no network, no disk-heavy work, no waiting on prompts). Use `Bridge::handleAsync`
+   or your own threads.
+6. Never log secrets (passwords, passphrases, private keys) to the event log, app log or session log.
+7. Tests must only use localhost. The user's real PuTTY registry may be **read** (never written) — tests that
+   read it must not print hostnames/usernames, only counts.
+8. Include `core/Win.h` instead of `<windows.h>`/`<winsock2.h>`.
+9. No new third-party dependencies without a note in `docs/notes/` (vcpkg/npm installs are coordinated).
+
+### Bridge
+Channel = `namespace:method` from `API_SCHEMA`. Invoke args are positional JSON arrays (optional trailing args
+may be absent/null). Events are pushed with `bridge.emit("ns:onX", Json::array({...callback args}))`.
+Every invoke/send channel in `API_SCHEMA` must have exactly one C++ handler (owner in the table).
+
+### Threading
+UI thread = Win32 message loop + WebView2 + bridge handlers. Each connection has its own I/O thread (owned by
+its Transport). Prompts block the transport thread, never the UI thread. Long bridge work → `handleAsync`
+(shared ThreadPool) or a dedicated thread. `Dispatcher::post` marshals to the UI thread.
+
+### Connection data path
+```
+UI keystroke ─conn:write─▶ SessionManager ─▶ LineDiscipline (echo/edit) ─▶ charset encode ─▶ Transport::write
+Transport::onData(bytes) ─▶ SessionLog ─▶ Decoder(charset) ─▶ batch ─conn:onData─▶ xterm.write(string)
+```
+connId = `<paneId>#<generation>` (the UI restarts a pane by bumping the generation).
+
+## Module ownership
+
+| Module (agent) | Owns |
+|---|---|
+| `ssh` | `native/src/ssh/**`, `native/tests/ssh/**` |
+| `net` | `native/src/net/**`, `native/src/transport/{Telnet,Rlogin,Raw,Serial}*`, `native/src/session/LineDiscipline.*`, `native/tests/net/**` |
+| `keys-import` | `native/src/keys/**`, `native/src/putty/**`, `native/src/importers/**`, `native/tests/{keys,putty}/**`, `native/tests/fixtures/**` |
+| `host` | `native/src/app/**`, `native/src/store/**`, `native/src/core/Types.*` (additions), `native/res/**`, `native/tests/{store,app}/**`, `CMakeLists.txt` (additions only) |
+| `session` | `native/src/session/{SessionManager,Charset,SessionLog}.*`, `native/src/transport/TransportFactory.*`, `native/tests/session/**` |
+| `sftp` | `native/src/sftp/**`, `native/tests/sftp/**`, `ui/src/components/sftp/**`, `ui/src/bridge/mock/sftp.ts` |
+| `testinfra` | `native/tests/support/**`, `scripts/**` |
+| `ui-shell` | `ui/src/App.tsx`, `ui/src/components/{titlebar,sidebar,layout,palette,welcome,statusbar,quickconnect}/**`, `ui/src/commands/**`, `ui/src/theme/**`, `ui/src/store/**` (keep exported APIs), `ui/src/bridge/mock/{index,core}.ts` |
+| `ui-terminal` | `ui/src/terminal/**`, `ui/src/bridge/mock/conn.ts` |
+| `ui-dialogs` | `ui/src/components/dialogs/**`, `ui/src/shared/types.ts` + `defaults.ts` (additions), `ui/src/bridge/mock/{importer,keys}.ts` |
+
+Bridge handler ownership: `conn:*`, `prompts:*` → session · `importer:*`, `keys:*`, `knownHosts:importOpenSsh` →
+keys-import · `sftp:*` → sftp · everything else (`sessions`, `credentials`, `settings`, `knownHosts` list/remove,
+`serial`, `dialog`, `app`, `window`) → host. The host's composition root calls `registerConnHandlers`,
+`registerImportHandlers`, `SftpService::registerHandlers` and its own core handlers.
+
+## Building & testing
+
+```powershell
+# UI
+cd ui; npm run typecheck; npm test; npm run build          # build -> ui/dist (copied next to the exe)
+node scripts/shot.mjs --name <you> --out ../artifacts/<you>.png [--steps my-steps.mjs]   # mock-mode screenshot (headless Edge)
+
+# Native — use YOUR OWN build dir (build/<module>) so parallel builds don't collide
+$cmake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+& $cmake --preset vs -B build/<module>                      # configure once (fast; vcpkg already installed)
+& $cmake --build build/<module> --config Debug --target sc_<lib> -- /nologo /v:minimal /m
+& $cmake --build build/<module> --config Debug --target sc_test_<module> -- /nologo /v:minimal /m
+build/<module>/Debug/sc_test_<module>.exe                   # Catch2: add "[tag]" or a test name to filter
+```
+Libraries: `sc_core sc_bridge sc_store sc_dialogs sc_net sc_transport sc_keys sc_ssh sc_session sc_putty sc_sftp sc_app`,
+executable `SSHCrawler`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
+Tests: `native/tests/<module>/*.cpp` → `sc_test_<module>`; `native/tests/support` (TestSshServer, TestEchoServer,
+TestScriptServer, TempDir) is linked into every test exe. `SC_FIXTURES_DIR` points at `native/tests/fixtures`.
+If the build fails in a file you don't own, another agent is mid-edit: wait a minute and retry; don't touch it.
+
+Reference tools available locally: PuTTY 0.83 (`C:\Program Files\PuTTY\{putty,plink,pscp,psftp,puttygen,pageant}.exe`),
+OpenSSH client tools (`C:\Windows\System32\OpenSSH\ssh-keygen.exe`, `ssh.exe`). `plink -batch` is a handy reference
+client against the test SSH server (e.g. to validate PPK files we write).
+
+## PuTTY feature parity checklist
+
+- [ ] Protocols: SSH-2, Telnet, Rlogin, Raw, Serial (SUPDUP / bare ssh-connection / SSH-1: not supported)
+- [ ] Saved sessions (+ folders), "Default Settings" template, duplicate session, restart session, CLI `-load`
+- [ ] Logging: off / printable / all output / SSH debug; placeholders &Y &M &D &T &H &P &S; overwrite/append/ask; flush
+- [ ] Terminal: auto-wrap, implicit CR/LF, local echo & line editing (auto/on/off), answerback (^E), bell (none/system/visual/sound), scrollback, remote title
+- [ ] Keyboard: Backspace ^H/^?, Home/End standard/rxvt, function key modes (ESC[n~, Linux, Xterm R6, VT400, VT100+, SCO, xterm), disable app cursor/keypad, Ctrl+Alt=AltGr
+- [ ] Window/appearance: font, size, cursor block/underline/bar + blink, fixed title, close on exit always/never/clean, warn on close, full screen
+- [ ] Translation: remote charset (UTF-8, ISO-8859-x, CP125x, KOI8, CP437/866, Shift_JIS, EUC, GBK, Big5...), CJK ambiguous width
+- [ ] Selection: copy-on-select, right-click paste or menu, middle click, word separators, rectangular (Alt+drag), Shift+Insert / Ctrl+Insert
+- [ ] Colours: schemes, bold-as-bright, PuTTY 22-colour import, custom scheme editor
+- [ ] Connection: keepalives, TCP_NODELAY, SO_KEEPALIVE, IPv4/IPv6/auto, logical host name, TERM, terminal speed, env vars, auto-login username
+- [ ] Proxy: SOCKS4/4a, SOCKS5 (+auth), HTTP CONNECT (+auth), Telnet, local command, SSH jump; exclusions; localhost; DNS at proxy
+- [ ] SSH: remote command, no shell, compression, cipher/kex/hostkey/mac preferences, host key cache + verification prompts (new/changed), logical host name for keys
+- [ ] SSH auth: Pageant + Windows OpenSSH agent, private keys (PPK v2/v3 + OpenSSH/PEM, passphrase), keyboard-interactive, password, banner, saved passwords (DPAPI)
+- [ ] SSH: agent forwarding, X11 forwarding, port forwarding L/R/D (+accept from other hosts, IPv4/IPv6), PTY allocation on/off
+- [ ] Serial: line, speed, data/stop bits, parity, flow control; Telnet: active/passive, keyboard specials, Return=NEWLINE; Rlogin: local username
+- [ ] Special commands menu (Break, EOF, IGNORE, signals, telnet AYT/Synch/EC/EL/GA/NOP/AO/IP/SUSP/EOR/EOF...)
+- [ ] Context menu: event log, new/duplicate/restart session, saved sessions, change settings, copy all, clear scrollback, reset terminal, full screen
+- [ ] PSFTP/PSCP → SFTP browser (upload/download/drag & drop, mkdir/rename/delete/chmod); PuTTYgen → keygen/convert/inspect; Pageant → agent support
+- [ ] Import: PuTTY registry sessions + Default Settings + SSH host keys, .reg files, export to .reg; ~/.ssh/config; OpenSSH known_hosts; JSON backup
+- [ ] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`
+- [ ] Modern: tabs (reorder, colours, rename), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode
