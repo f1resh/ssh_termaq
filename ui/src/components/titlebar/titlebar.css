@@ -1,0 +1,424 @@
+:root {
+  /* Windows 11 caption close button (system colour, intentionally theme independent). */
+  --caption-close-bg: #c42b1c;
+  --caption-close-fg: #ffffff;
+}
+
+.titlebar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: stretch;
+  flex: none;
+  height: var(--titlebar-height);
+  background: var(--titlebar);
+  color: var(--titlebar-fg);
+  border-bottom: 1px solid var(--border);
+}
+
+.titlebar > .titlebar__app,
+.titlebar > .tabstrip,
+.titlebar > .caption {
+  transition: opacity 160ms ease;
+}
+.titlebar--inactive > .titlebar__app,
+.titlebar--inactive > .tabstrip,
+.titlebar--inactive > .caption {
+  opacity: 0.55;
+}
+
+.titlebar__app {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 30px;
+  margin: auto 2px auto 6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: default;
+}
+.titlebar__app:hover {
+  background: var(--tab-hover);
+}
+.titlebar__app:active {
+  background: var(--surface-active);
+}
+
+.titlebar__drag {
+  flex: 1 1 auto;
+  min-width: 48px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tab strip                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.tabstrip {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.tabstrip__scroll {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.tabstrip__scroll::-webkit-scrollbar {
+  display: none;
+}
+.tabstrip__scroll--fade-left {
+  mask-image: linear-gradient(to right, transparent 0, #000 28px);
+}
+.tabstrip__scroll--fade-right {
+  mask-image: linear-gradient(to left, transparent 0, #000 28px);
+}
+.tabstrip__scroll--fade-left.tabstrip__scroll--fade-right {
+  mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+
+.tab {
+  --tab-bg: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 216px;
+  min-width: 104px;
+  max-width: 240px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border-radius: 7px;
+  background: var(--tab-bg);
+  color: color-mix(in srgb, var(--titlebar-fg) 78%, transparent);
+  font-size: 12.5px;
+  cursor: default;
+  outline: none;
+  transition:
+    background-color var(--transition),
+    color var(--transition),
+    box-shadow var(--transition);
+}
+
+/* thin separators between inactive tabs */
+.tab + .tab::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border-strong);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.tab--active::before,
+.tab--active + .tab::before,
+.tab:hover::before,
+.tab:hover + .tab::before {
+  opacity: 0;
+}
+
+.tab:hover {
+  --tab-bg: var(--tab-hover);
+  color: var(--titlebar-fg);
+}
+
+.tab--active,
+.tab--active:hover {
+  --tab-bg: var(--tab-active);
+  color: var(--text);
+  box-shadow:
+    0 0 0 1px var(--border),
+    var(--shadow-sm);
+}
+
+.tab--colored.tab--active,
+.tab--colored.tab--active:hover {
+  --tab-bg: color-mix(in srgb, var(--tab-color) 13%, var(--tab-active));
+}
+
+/* colour accent along the top edge */
+.tab--colored::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 9px;
+  right: 9px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--tab-color);
+  opacity: 0.75;
+}
+.tab--colored.tab--active::after {
+  opacity: 1;
+  height: 3px;
+}
+
+.tab:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.tab--dragging {
+  opacity: 0.45;
+}
+
+.tab--drop-before > .tab__icon::before,
+.tab--drop-after > .tab__close::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.tab--drop-before > .tab__icon::before {
+  left: -3px;
+}
+.tab--drop-after > .tab__close::after {
+  right: -3px;
+}
+
+.tab__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+.tab--active .tab__icon {
+  color: var(--text);
+}
+.tab__status.status-dot {
+  position: absolute;
+  left: 20px;
+  top: 17px;
+  width: 7px;
+  height: 7px;
+}
+.tab__status.status-dot--connected,
+.tab__status.status-dot--connecting,
+.tab__status.status-dot--authenticating,
+.tab__status.status-dot--error {
+  box-shadow: 0 0 0 2px var(--titlebar);
+}
+.tab:hover .tab__status,
+.tab--active .tab__status {
+  --ring: var(--tab-bg);
+}
+.tab:hover .tab__status.status-dot--connected,
+.tab:hover .tab__status.status-dot--connecting,
+.tab:hover .tab__status.status-dot--authenticating,
+.tab:hover .tab__status.status-dot--error,
+.tab--active .tab__status.status-dot--connected,
+.tab--active .tab__status.status-dot--connecting,
+.tab--active .tab__status.status-dot--authenticating,
+.tab--active .tab__status.status-dot--error {
+  box-shadow: 0 0 0 2px var(--tab-bg);
+}
+.tab__status.status-dot--idle,
+.tab__status.status-dot--disconnected {
+  background: var(--titlebar);
+}
+
+.tab__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tab__rename {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  color: var(--text);
+  font-size: 12.5px;
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tab__badge {
+  flex: none;
+}
+.tab__badge--broadcast {
+  color: var(--warning);
+}
+.tab__badge--bell {
+  color: var(--warning);
+  animation: bell-ring 0.9s ease-in-out 2;
+  transform-origin: 50% 0;
+}
+@keyframes bell-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(16deg);
+  }
+  40% {
+    transform: rotate(-14deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-4deg);
+  }
+}
+
+.tab__activity {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.tab__count {
+  flex: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--surface-active);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+
+.tab__close {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: default;
+  transition:
+    opacity var(--transition),
+    background-color var(--transition);
+}
+.tab:hover .tab__close,
+.tab--active .tab__close {
+  opacity: 1;
+}
+.tab__close:hover {
+  background: var(--surface-active);
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab__badge--bell {
+    animation: none;
+  }
+  .tabstrip__scroll {
+    scroll-behavior: auto;
+  }
+}
+
+/* New tab split button */
+.newtab {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 28px;
+  margin-left: 2px;
+  border-radius: var(--radius-md);
+}
+.newtab__btn {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--titlebar-fg);
+  cursor: default;
+  transition: background-color var(--transition);
+}
+.newtab__btn:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+.newtab__btn--menu {
+  width: 22px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-muted);
+}
+.newtab:hover .newtab__btn--menu {
+  box-shadow: inset 1px 0 0 var(--border-strong);
+}
+.newtab__btn:hover {
+  background: var(--tab-hover);
+  color: var(--text);
+}
+.newtab__btn:active {
+  background: var(--surface-active);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Caption buttons                                                             */
+/* -------------------------------------------------------------------------- */
+
+.caption {
+  display: flex;
+  flex: none;
+  height: 100%;
+  margin-top: -1px;
+}
+.caption__btn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--titlebar-fg);
+  cursor: default;
+  transition:
+    background-color 90ms linear,
+    color 90ms linear;
+}
+.caption__btn:hover {
+  background: color-mix(in srgb, var(--titlebar-fg) 10%, transparent);
+}
+.caption__btn:active {
+  background: color-mix(in srgb, var(--titlebar-fg) 6%, transparent);
+}
+.caption__btn--close:hover {
+  background: var(--caption-close-bg);
+  color: var(--caption-close-fg);
+}
+.caption__btn--close:active {
+  background: color-mix(in srgb, var(--caption-close-bg) 85%, transparent);
+  color: var(--caption-close-fg);
+}

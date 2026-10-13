@@ -365,15 +365,20 @@ const APPEARANCE_KEYS: readonly (keyof AppearanceOverrides)[] = [
   'boldIsBright'
 ];
 
+/** Appearance overrides whose "inherit" value can be expressed as '' (see AppearanceOverrides). */
+const STRING_APPEARANCE_KEYS = new Set<keyof AppearanceOverrides>(['fontFamily', 'colorScheme']);
+
 /**
  * settings.update() deep-merges and ignores undefined, so removing an appearance override from the
- * "Default Settings" template must be sent as an explicit null (JSON merge-patch semantics: null deletes).
+ * "Default Settings" template must be sent explicitly: '' for string overrides (means "inherit"), null for
+ * the others (JSON merge-patch semantics: null deletes — see the host request in docs/notes/ui-dialogs.md).
  */
 export function defaultSessionPatch(prev: SessionConfig, next: SessionConfig): SessionConfig {
-  const out = structuredClone(next) as SessionConfig & { appearance: Record<string, unknown> };
+  const out = structuredClone(next);
+  const appearance = out.appearance as Record<string, unknown>;
   for (const k of APPEARANCE_KEYS) {
     if (prev.appearance[k] !== undefined && prev.appearance[k] !== null && next.appearance[k] === undefined) {
-      out.appearance[k] = null;
+      appearance[k] = STRING_APPEARANCE_KEYS.has(k) ? '' : null;
     }
   }
   return out;

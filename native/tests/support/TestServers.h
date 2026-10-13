@@ -29,6 +29,15 @@ struct TestSshServerOptions {
     /** SFTP root directory (required for SFTP tests; paths are confined to it). */
     std::filesystem::path sftpRoot;
     bool allowTcpForwarding = true;
+
+    // ---- additions (testinfra) ----
+    /** Fixed listen port on 127.0.0.1 (0 => ephemeral). */
+    int port = 0;
+    /** keyboard-interactive echo flags, parallel to kbdIntQuestions (missing entries => no echo). */
+    std::vector<bool> kbdIntEcho;
+    /** keyboard-interactive INFO_REQUEST name / instruction strings. */
+    std::string kbdIntName;
+    std::string kbdIntInstruction;
 };
 
 /**
@@ -68,8 +77,16 @@ public:
     bool waitForEvent(const std::string& prefix, int timeoutMs) const;
     void stop();
 
+    // ---- additions (testinfra) ----
+    /** Number of TCP connections accepted so far. */
+    int connections() const;
+    /** True if any logged event starts with `prefix`. */
+    bool hasEvent(const std::string& prefix) const;
+    void clearEvents();
+
+    struct Impl;  // public so file-local helpers in the .cpp can name it
+
 private:
-    struct Impl;
     std::unique_ptr<Impl> impl_;
 };
 
@@ -104,6 +121,12 @@ public:
     void send(const std::string& bytes);
     void closeClient();
     void stop();
+
+    // ---- additions (testinfra) ----
+    /** True while a client is connected (accepted and not yet closed by either side). */
+    bool connected() const;
+    /** Wait until the accepted client has disconnected (or was closed via closeClient()). */
+    bool waitForDisconnect(int timeoutMs) const;
 
 private:
     struct Impl;

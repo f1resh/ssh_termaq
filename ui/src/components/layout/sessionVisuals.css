@@ -1,0 +1,71 @@
+.status-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-faint) 18%, transparent);
+}
+.status-dot--connected {
+  background: var(--success);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--success) 22%, transparent);
+}
+.status-dot--connecting,
+.status-dot--authenticating {
+  background: var(--warning);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--warning) 22%, transparent);
+  animation: status-pulse 1.1s ease-in-out infinite;
+}
+.status-dot--error {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 22%, transparent);
+}
+.status-dot--disconnected {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--text-faint);
+}
+.status-dot--idle {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text-faint) 70%, transparent);
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot--connecting,
+  .status-dot--authenticating {
+    animation: none;
+  }
+}
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent);
+}
+.swatch--none {
+  background: linear-gradient(135deg, transparent 45%, var(--danger) 45%, var(--danger) 55%, transparent 55%);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+mark.hl {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.choice-dialog__message {
+  color: var(--text-muted);
+  line-height: 1.5;
+}

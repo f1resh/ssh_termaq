@@ -555,7 +555,8 @@ export interface PromptResponse {
 /* Import / export                                                           */
 /* ------------------------------------------------------------------------ */
 
-export type ImportSource = 'putty-registry' | 'putty-regfile' | 'ssh-config';
+/** 'json' = our own JSON backup (matches the C++ ImportPreview::source values). */
+export type ImportSource = 'putty-registry' | 'putty-regfile' | 'ssh-config' | 'json';
 
 export interface ImportCandidate {
   /** Stable key within the preview (e.g. original PuTTY session name). */

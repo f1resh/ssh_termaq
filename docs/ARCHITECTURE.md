@@ -123,24 +123,28 @@ client against the test SSH server (e.g. to validate PPK files we write).
 
 ## PuTTY feature parity checklist
 
-- [ ] Protocols: SSH-2, Telnet, Rlogin, Raw, Serial (SUPDUP / bare ssh-connection / SSH-1: not supported)
-- [ ] Saved sessions (+ folders), "Default Settings" template, duplicate session, restart session, CLI `-load`
-- [ ] Logging: off / printable / all output / SSH debug; placeholders &Y &M &D &T &H &P &S; overwrite/append/ask; flush
-- [ ] Terminal: auto-wrap, implicit CR/LF, local echo & line editing (auto/on/off), answerback (^E), bell (none/system/visual/sound), scrollback, remote title
-- [ ] Keyboard: Backspace ^H/^?, Home/End standard/rxvt, function key modes (ESC[n~, Linux, Xterm R6, VT400, VT100+, SCO, xterm), disable app cursor/keypad, Ctrl+Alt=AltGr
-- [ ] Window/appearance: font, size, cursor block/underline/bar + blink, fixed title, close on exit always/never/clean, warn on close, full screen
-- [ ] Translation: remote charset (UTF-8, ISO-8859-x, CP125x, KOI8, CP437/866, Shift_JIS, EUC, GBK, Big5...), CJK ambiguous width
-- [ ] Selection: copy-on-select, right-click paste or menu, middle click, word separators, rectangular (Alt+drag), Shift+Insert / Ctrl+Insert
-- [ ] Colours: schemes, bold-as-bright, PuTTY 22-colour import, custom scheme editor
-- [ ] Connection: keepalives, TCP_NODELAY, SO_KEEPALIVE, IPv4/IPv6/auto, logical host name, TERM, terminal speed, env vars, auto-login username
-- [ ] Proxy: SOCKS4/4a, SOCKS5 (+auth), HTTP CONNECT (+auth), Telnet, local command, SSH jump; exclusions; localhost; DNS at proxy
-- [ ] SSH: remote command, no shell, compression, cipher/kex/hostkey/mac preferences, host key cache + verification prompts (new/changed), logical host name for keys
-- [ ] SSH auth: Pageant + Windows OpenSSH agent, private keys (PPK v2/v3 + OpenSSH/PEM, passphrase), keyboard-interactive, password, banner, saved passwords (DPAPI)
-- [ ] SSH: agent forwarding, X11 forwarding, port forwarding L/R/D (+accept from other hosts, IPv4/IPv6), PTY allocation on/off
-- [ ] Serial: line, speed, data/stop bits, parity, flow control; Telnet: active/passive, keyboard specials, Return=NEWLINE; Rlogin: local username
-- [ ] Special commands menu (Break, EOF, IGNORE, signals, telnet AYT/Synch/EC/EL/GA/NOP/AO/IP/SUSP/EOR/EOF...)
-- [ ] Context menu: event log, new/duplicate/restart session, saved sessions, change settings, copy all, clear scrollback, reset terminal, full screen
-- [ ] PSFTP/PSCP → SFTP browser (upload/download/drag & drop, mkdir/rename/delete/chmod); PuTTYgen → keygen/convert/inspect; Pageant → agent support
-- [ ] Import: PuTTY registry sessions + Default Settings + SSH host keys, .reg files, export to .reg; ~/.ssh/config; OpenSSH known_hosts; JSON backup
-- [ ] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`
-- [ ] Modern: tabs (reorder, colours, rename), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode
+Status as of 0.1.0 (all items implemented and covered by native/UI tests or end-to-end checks).
+Known gaps: GSSAPI, SSH-1, SUPDUP, bare ssh-connection, SSH certificates, connection sharing, X11 cookie
+substitution, ML-KEM key exchange (disabled: libssh client issue).
+
+- [x] Protocols: SSH-2, Telnet, Rlogin, Raw, Serial (SUPDUP / bare ssh-connection / SSH-1: not supported)
+- [x] Saved sessions (+ folders), "Default Settings" template, duplicate session, restart session, CLI `-load`
+- [x] Logging: off / printable / all output / SSH debug; placeholders &Y &M &D &T &H &P &S; overwrite/append/ask; flush
+- [x] Terminal: auto-wrap, implicit CR/LF, local echo & line editing (auto/on/off), answerback (^E), bell (none/system/visual/sound), scrollback, remote title
+- [x] Keyboard: Backspace ^H/^?, Home/End standard/rxvt, function key modes (ESC[n~, Linux, Xterm R6, VT400, VT100+, SCO, xterm), disable app cursor/keypad, Ctrl+Alt=AltGr
+- [x] Window/appearance: font, size, cursor block/underline/bar + blink, fixed title, close on exit always/never/clean, warn on close, full screen
+- [x] Translation: remote charset (UTF-8, ISO-8859-x, CP125x, KOI8, CP437/866, Shift_JIS, EUC, GBK, Big5...), CJK ambiguous width
+- [x] Selection: copy-on-select, right-click paste or menu, middle click, word separators, rectangular (Alt+drag), Shift+Insert / Ctrl+Insert
+- [x] Colours: schemes, bold-as-bright, PuTTY 22-colour import, custom scheme editor
+- [x] Connection: keepalives, TCP_NODELAY, SO_KEEPALIVE, IPv4/IPv6/auto, logical host name, TERM, terminal speed, env vars, auto-login username
+- [x] Proxy: SOCKS4/4a, SOCKS5 (+auth), HTTP CONNECT (+auth), Telnet, local command, SSH jump; exclusions; localhost; DNS at proxy
+- [x] SSH: remote command, no shell, compression, cipher/kex/hostkey/mac preferences, host key cache + verification prompts (new/changed), logical host name for keys
+- [x] SSH auth: Pageant + Windows OpenSSH agent, private keys (PPK v2/v3 + OpenSSH/PEM, passphrase), keyboard-interactive, password, banner, saved passwords (DPAPI)
+- [x] SSH: agent forwarding, X11 forwarding, port forwarding L/R/D (+accept from other hosts, IPv4/IPv6), PTY allocation on/off
+- [x] Serial: line, speed, data/stop bits, parity, flow control; Telnet: active/passive, keyboard specials, Return=NEWLINE; Rlogin: local username
+- [x] Special commands menu (Break, EOF, IGNORE, signals, telnet AYT/Synch/EC/EL/GA/NOP/AO/IP/SUSP/EOR/EOF...)
+- [x] Context menu: event log, new/duplicate/restart session, saved sessions, change settings, copy all, clear scrollback, reset terminal, full screen
+- [x] PSFTP/PSCP → SFTP browser (upload/download/drag & drop, mkdir/rename/delete/chmod); PuTTYgen → keygen/convert/inspect; Pageant → agent support
+- [x] Import: PuTTY registry sessions + Default Settings + SSH host keys, .reg files, export to .reg; ~/.ssh/config; OpenSSH known_hosts; JSON backup
+- [x] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`
+- [x] Modern: tabs (reorder, colours, rename), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode

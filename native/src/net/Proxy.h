@@ -31,4 +31,40 @@ bool proxyExcludes(const ProxyConfig& proxy, const std::string& host);
 /** PuTTY template substitution: %host %port %user %pass %proxyhost %proxyport %% and \n \r \t \\ \xHH escapes. */
 std::string expandProxyTemplate(const std::string& tmpl, const ProxyConfig& proxy, const std::string& host, int port);
 
+/* ---- additions (net module) ------------------------------------------------------------------------ */
+
+struct OpenOptions {
+    /** Local source port range for DIRECT connections (rlogin privileged ports, see ConnectOptions). */
+    int localPortHigh = 0;
+    int localPortLow = 0;
+    /** Receives a description of the established path for the event log, e.g. "127.0.0.1 port 23" or
+     *  "proxy.example 1080 (SOCKS 5 proxy)". Optional. */
+    std::string* connectedTo = nullptr;
+    /** Receives true when the connection goes through a proxy (not excluded). Optional. */
+    bool* viaProxy = nullptr;
+};
+
+/** openConnection with extra options. Event-log lines go to ctx.listener->onLog (listener may be null). */
+SOCKET openConnection(const TransportContext& ctx, const std::string& host, int port, std::string& error,
+                      const std::atomic<bool>* cancel, const OpenOptions& options);
+
+/**
+ * Closes a socket returned by openConnection. For relayed connections (local proxy command) it also detaches the
+ * relay from ctx.listener (no proxy log callbacks happen after it returns) and terminates the proxy process tree.
+ * Transports call this (instead of closesocket) before delivering onClose. No-op for INVALID_SOCKET.
+ */
+void closeConnection(SOCKET& s);
+
+/**
+ * Like closeConnection, but for sockets whose ownership moved elsewhere (libssh closes the SSH transport's socket
+ * itself): detaches a local-command relay from ctx.listener and terminates its process, without closing `s`.
+ * Call before the listener is destroyed. No-op for plain sockets. `terminate` = false only detaches the event-log
+ * listener and leaves the proxy process running (the connection stays in use).
+ */
+void detachConnection(SOCKET s, bool terminate = true);
+
+/** Whether host names are passed to the proxy unresolved (PuTTY "Do DNS name lookup at proxy end"; auto => yes
+ *  for every proxy type except SOCKS 4). */
+bool proxyResolvesRemotely(const ProxyConfig& proxy);
+
 }  // namespace sc

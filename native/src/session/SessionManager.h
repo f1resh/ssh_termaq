@@ -8,7 +8,9 @@
 // Output batching: data is coalesced per connection and flushed at most every ~8 ms or when > 64 KiB.
 // Thread-safe.
 #include "core/Types.h"
+#include "transport/Transport.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,6 +45,11 @@ public:
     int activeCount() const;
     /** Close everything (app shutdown); blocks until transports are torn down (bounded wait). */
     void closeAll();
+
+    /** Builds transports (default: createTransport from transport/TransportFactory.h). Tests inject fakes.
+     *  Must be set before the first open(); an empty function restores the default. */
+    using TransportFactoryFn = std::function<std::unique_ptr<Transport>(TransportContext ctx)>;
+    void setTransportFactory(TransportFactoryFn factory);
 
 private:
     struct Impl;

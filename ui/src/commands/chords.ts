@@ -294,17 +294,19 @@ const ALLOWED_WITH_DIALOG = new Set<CommandId>(['app.fullscreen']);
 
 /**
  * Decides whether a matched command should run for this event.
- * - chords without Ctrl/Alt are left to focused text inputs (not xterm's helper textarea)
+ * - chords without Ctrl/Alt (except F-keys) are left to focused text inputs (not xterm's helper textarea)
  * - while a dialog is open only a few global commands run (the dialog owns the keyboard)
  * - auto-repeat only for navigation / zoom commands
  */
 export function shouldHandle(
   id: CommandId,
-  e: Pick<KeyboardEvent, 'ctrlKey' | 'altKey' | 'repeat'>,
+  e: Pick<KeyboardEvent, 'ctrlKey' | 'altKey' | 'repeat'> & { code?: string },
   ctx: { dialogOpen: boolean; textEntryFocused: boolean }
 ): boolean {
   if (e.repeat && !REPEATABLE.has(id)) return false;
   if (ctx.dialogOpen && !ALLOWED_WITH_DIALOG.has(id)) return false;
-  if (ctx.textEntryFocused && !e.ctrlKey && !e.altKey) return false;
+  // Function keys never produce text, so they stay global even while an input has focus.
+  const functionKey = /^F([1-9]|1[0-9]|2[0-4])$/.test(e.code ?? '');
+  if (ctx.textEntryFocused && !e.ctrlKey && !e.altKey && !functionKey) return false;
   return true;
 }

@@ -28,6 +28,8 @@ public:
     std::filesystem::path path() const;
     void output(std::string_view rawBytes, std::string_view decodedUtf8);
     void event(const std::string& line);
+    /** Text shown locally in the terminal (banner, local echo...): logged as printable text in Printable/All modes. */
+    void localOutput(std::string_view utf8);
     void close();
 
     static std::string expandPath(const std::string& tmpl, const SessionConfig& s, const std::tm& when);

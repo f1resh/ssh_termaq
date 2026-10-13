@@ -43,6 +43,10 @@ export interface UiState {
   fullscreen: boolean;
   windowFocused: boolean;
   maximized: boolean;
+  /** Tab whose title is being edited inline in the tab strip (null = none). */
+  renamingTabId: string | null;
+  /** Initial query of the command palette when it opens (e.g. '>' or '@'). */
+  paletteQuery: string;
 
   openDialog(d: DialogState): void;
   closeDialog(): void;
@@ -50,6 +54,9 @@ export interface UiState {
   setSftpPane(paneId: string | null): void;
   setSidebarFilter(v: string): void;
   set(patch: Partial<Pick<UiState, 'fullscreen' | 'windowFocused' | 'maximized'>>): void;
+  setRenamingTab(tabId: string | null): void;
+  /** Opens the palette with a prefilled query (mode derived from the prefix). */
+  openPalette(query?: string): void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -61,12 +68,22 @@ export const useUi = create<UiState>((set) => ({
   fullscreen: false,
   windowFocused: true,
   maximized: false,
+  renamingTabId: null,
+  paletteQuery: '',
   openDialog: (dialog) => set({ dialog, paletteOpen: false }),
   closeDialog: () => set({ dialog: null }),
-  setPalette: (paletteOpen, paletteMode = 'all') => set({ paletteOpen, paletteMode }),
+  setPalette: (paletteOpen, paletteMode = 'all') =>
+    set({ paletteOpen, paletteMode, paletteQuery: paletteMode === 'commands' ? '>' : paletteMode === 'sessions' ? '@' : '' }),
   setSftpPane: (sftpPaneId) => set({ sftpPaneId }),
   setSidebarFilter: (sidebarFilter) => set({ sidebarFilter }),
-  set: (patch) => set(patch)
+  set: (patch) => set(patch),
+  setRenamingTab: (renamingTabId) => set({ renamingTabId }),
+  openPalette: (query = '') =>
+    set({
+      paletteOpen: true,
+      paletteQuery: query,
+      paletteMode: query.startsWith('>') ? 'commands' : query.startsWith('@') ? 'sessions' : 'all'
+    })
 }));
 
 /** Promise-based confirm helper built on the 'confirm' dialog. */

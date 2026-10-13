@@ -1,0 +1,88 @@
+.statusbar {
+  height: var(--statusbar-height);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  background: var(--titlebar);
+  border-top: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.statusbar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.statusbar__muted {
+  color: var(--text-faint);
+}
+.statusbar__spacer {
+  flex: 1;
+}
+.statusbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: none;
+}
+.statusbar__dot--connected {
+  background: var(--success);
+}
+.statusbar__dot--connecting,
+.statusbar__dot--authenticating,
+.statusbar__dot--idle {
+  background: var(--warning);
+  animation: statusbar-pulse 1s ease-in-out infinite alternate;
+}
+.statusbar__dot--error {
+  background: var(--danger);
+}
+@keyframes statusbar-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+.statusbar__proto {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+.statusbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 7px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.statusbar__btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.statusbar__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.statusbar__btn--on {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--text);
+}
+.statusbar__btn--warn {
+  background: color-mix(in srgb, var(--warning) 22%, transparent);
+  color: var(--text);
+}
