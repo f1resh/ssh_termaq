@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include <thread>
 
-namespace sc::test {
+namespace st::test {
 
 namespace {
 
@@ -41,7 +41,7 @@ std::string keyBlob(ssh_key key) {
     char* b64 = nullptr;
     if (ssh_pki_export_pubkey_base64(key, &b64) != SSH_OK || !b64) return {};
     std::string out;
-    sc::crypto::base64Decode(b64, out);
+    st::crypto::base64Decode(b64, out);
     ssh_string_free_char(b64);
     return out;
 }
@@ -312,7 +312,7 @@ int onShell(ssh_session, ssh_channel, void* ud) {
     if (ch->mode != ChannelState::Mode::None) return -1;
     ch->mode = ChannelState::Mode::Shell;
     ch->conn->server->event("shell");
-    queue(ch, "Welcome to the SSH Crawler test server.\r\n$ ");
+    queue(ch, "Welcome to the SSHTerm test server.\r\n$ ");
     return 0;
 }
 
@@ -779,4 +779,4 @@ void TestSshServer::stop() {
     }
 }
 
-}  // namespace sc::test
+}  // namespace st::test

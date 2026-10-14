@@ -18,11 +18,11 @@
 
 struct IDataObject;
 
-namespace sc {
+namespace st {
 class Dispatcher;
 }
 
-namespace sc::dnd {
+namespace st::dnd {
 
 /** One file or folder of a virtual drag. Folders come before their contents. */
 struct VirtualItem {
@@ -68,4 +68,4 @@ IDataObject* createVirtualDataObjectInMta(std::shared_ptr<VirtualSource> source,
 /** Shell data object for local paths (refcount 1), nullptr when the paths cannot be resolved. */
 IDataObject* createShellDataObject(const std::vector<std::string>& paths);
 
-}  // namespace sc::dnd
+}  // namespace st::dnd

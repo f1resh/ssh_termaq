@@ -71,7 +71,7 @@ export function Welcome() {
         <div className="welcome__hero">
           <Logo size={56} />
           <div>
-            <h1>SSH Crawler</h1>
+            <h1>SSHTerm</h1>
             <p>SSH, Telnet, Rlogin, Raw and Serial — with tabs, splits and your PuTTY sessions.</p>
           </div>
         </div>

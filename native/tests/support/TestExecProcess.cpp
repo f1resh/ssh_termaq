@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace sc::test {
+namespace st::test {
 
 namespace {
 
@@ -199,4 +199,4 @@ bool ExecProcess::finished(int& exitCode) {
     return true;
 }
 
-}  // namespace sc::test
+}  // namespace st::test

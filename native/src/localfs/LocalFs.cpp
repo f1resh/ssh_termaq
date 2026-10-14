@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <thread>
 
-namespace sc::localfs {
+namespace st::localfs {
 
 using Microsoft::WRL::ComPtr;
 
@@ -494,4 +494,4 @@ DirWatcher::~DirWatcher() {
     if (impl_->ready) CloseHandle(impl_->ready);
 }
 
-}  // namespace sc::localfs
+}  // namespace st::localfs

@@ -12,7 +12,7 @@
 
 struct HWND__;
 
-namespace sc::localfs {
+namespace st::localfs {
 
 /** Known folders (Desktop, Documents, Downloads, Home) followed by the drives, with label and free space. */
 std::vector<LocalEntry> listPlaces();
@@ -63,4 +63,4 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace sc::localfs
+}  // namespace st::localfs

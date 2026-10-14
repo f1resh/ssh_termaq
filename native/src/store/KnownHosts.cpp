@@ -8,7 +8,7 @@
 
 #include <stdexcept>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -194,4 +194,4 @@ void KnownHosts::saveLocked() const {
     storeio::saveJson(file_, Json{{"hosts", hosts_}});
 }
 
-}  // namespace sc
+}  // namespace st

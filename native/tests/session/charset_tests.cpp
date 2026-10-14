@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-using namespace sc;
+using namespace st;
 
 namespace {
 

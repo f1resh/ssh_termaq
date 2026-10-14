@@ -6,7 +6,7 @@
 #include <cctype>
 #include <stdexcept>
 
-namespace sc::crypto {
+namespace st::crypto {
 
 static std::string digest(const EVP_MD* md, std::string_view data) {
     unsigned char out[EVP_MAX_MD_SIZE];
@@ -106,4 +106,4 @@ std::string keyTypeOfBlob(std::string_view keyBlob) {
     return std::string(keyBlob.substr(4, len));
 }
 
-}  // namespace sc::crypto
+}  // namespace st::crypto

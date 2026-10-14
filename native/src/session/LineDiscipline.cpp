@@ -1,7 +1,7 @@
 // PuTTY-compatible local echo / local line editing (see LineDiscipline.h for the exact rules).
 #include "session/LineDiscipline.h"
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -285,4 +285,4 @@ void LineDiscipline::processPlain(const std::string& cp, std::string& remote, st
     }
 }
 
-}  // namespace sc
+}  // namespace st

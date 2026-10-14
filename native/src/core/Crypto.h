@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::crypto {
+namespace st::crypto {
 
 std::string sha256(std::string_view data);
 std::string sha1(std::string_view data);
@@ -22,4 +22,4 @@ std::string fingerprintMd5(std::string_view keyBlob);
 /** Reads the leading SSH string (uint32 length + bytes) of a key blob = the key type, e.g. "ssh-ed25519". */
 std::string keyTypeOfBlob(std::string_view keyBlob);
 
-}  // namespace sc::crypto
+}  // namespace st::crypto

@@ -11,7 +11,7 @@
 #include <mutex>
 #include <thread>
 
-namespace sc::test {
+namespace st::test {
 
 namespace {
 constexpr int kPollMs = 50;
@@ -241,7 +241,7 @@ bool TestScriptServer::waitForDisconnect(int timeoutMs) const {
 
 // ==================================================================================================== TempDir
 
-TempDir::TempDir() : path_(std::filesystem::temp_directory_path() / ("sc-test-" + sc::newUuid())) {
+TempDir::TempDir() : path_(std::filesystem::temp_directory_path() / ("st-test-" + st::newUuid())) {
     std::filesystem::create_directories(path_);
 }
 
@@ -264,4 +264,4 @@ std::filesystem::path gitShell() {
     return {};
 }
 
-}  // namespace sc::test
+}  // namespace st::test

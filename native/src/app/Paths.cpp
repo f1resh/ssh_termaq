@@ -9,7 +9,7 @@
 
 namespace fs = std::filesystem;
 
-namespace sc {
+namespace st {
 
 fs::path exeDirectory() {
     std::vector<wchar_t> buf(MAX_PATH);
@@ -49,7 +49,7 @@ AppPaths resolveAppPaths(const fs::path& exeDir, const fs::path& appData, const 
         p.portable = true;
     } else {
         if (appData.empty()) throw std::runtime_error("Cannot determine the %APPDATA% directory");
-        p.dataDir = appData / L"SSH Crawler";
+        p.dataDir = appData / L"SSHTerm";
     }
     p.dataDir = p.dataDir.lexically_normal();
     p.logsDir = p.dataDir / L"logs";
@@ -61,7 +61,7 @@ AppPaths initAppPaths(const fs::path& overrideDataDir) {
     fs::path override = overrideDataDir;
     if (override.empty()) {
         std::vector<wchar_t> env(32768);
-        DWORD n = GetEnvironmentVariableW(L"SSHCRAWLER_DATA_DIR", env.data(), static_cast<DWORD>(env.size()));
+        DWORD n = GetEnvironmentVariableW(L"SSHTERM_DATA_DIR", env.data(), static_cast<DWORD>(env.size()));
         if (n > 0 && n < env.size()) override = std::wstring(env.data(), n);
     }
     AppPaths p = resolveAppPaths(exeDirectory(), roamingAppDataDirectory(), override);
@@ -73,4 +73,4 @@ AppPaths initAppPaths(const fs::path& overrideDataDir) {
     return p;
 }
 
-}  // namespace sc
+}  // namespace st

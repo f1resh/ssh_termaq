@@ -6,7 +6,7 @@
 #include <thread>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 /** Marshals work onto the UI thread (implemented by MainWindow via PostMessage). */
 class Dispatcher {
@@ -39,4 +39,4 @@ private:
     bool stop_ = false;
 };
 
-}  // namespace sc
+}  // namespace st

@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <unordered_map>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -565,4 +565,4 @@ std::string binaryStringToBytes(std::string_view utf8) {
     return out;
 }
 
-}  // namespace sc
+}  // namespace st

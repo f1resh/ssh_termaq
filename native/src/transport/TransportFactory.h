@@ -3,9 +3,9 @@
 
 #include <memory>
 
-namespace sc {
+namespace st {
 
 /** Creates the transport for ctx.session.protocol. Throws std::invalid_argument for unsupported configs. */
 std::unique_ptr<Transport> createTransport(TransportContext ctx);
 
-}  // namespace sc
+}  // namespace st

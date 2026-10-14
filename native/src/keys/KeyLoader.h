@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-namespace sc {
+namespace st {
 
 /** Called when the key is encrypted; `attempt` starts at 1. Return nullopt to cancel. */
 using PassphraseCallback = std::function<std::optional<std::string>(int attempt)>;
@@ -25,4 +25,4 @@ ssh_key loadPrivateKey(const std::string& path, const PassphraseCallback& askPas
 /** Detects the key file format without decrypting: 'openssh' | 'pem' | 'ppk2' | 'ppk3' | 'unknown'. */
 std::string detectKeyFormat(const std::string& fileContent);
 
-}  // namespace sc
+}  // namespace st

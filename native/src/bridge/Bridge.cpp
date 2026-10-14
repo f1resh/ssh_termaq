@@ -2,7 +2,7 @@
 
 #include "core/Log.h"
 
-namespace sc {
+namespace st {
 
 struct Bridge::Responder::State {
     Bridge* bridge = nullptr;
@@ -167,4 +167,4 @@ void Bridge::onWebMessage(const std::string& json, const std::vector<std::string
     }
 }
 
-}  // namespace sc
+}  // namespace st

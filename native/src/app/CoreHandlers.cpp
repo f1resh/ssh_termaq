@@ -17,11 +17,11 @@
 #include <fstream>
 #include <stdexcept>
 
-#ifndef SC_VERSION
-#define SC_VERSION "0.0.0"
+#ifndef ST_VERSION
+#define ST_VERSION "0.0.0"
 #endif
 
-namespace sc {
+namespace st {
 
 namespace fs = std::filesystem;
 
@@ -251,8 +251,8 @@ void registerCoreHandlers(const CoreHandlerContext& c) {
 
     /* ---- app ---- */
     b.handleSync("app:info", [&win, paths](const Json&) {
-        return Json{{"name", "SSH Crawler"},
-                    {"version", SC_VERSION},
+        return Json{{"name", "SSHTerm"},
+                    {"version", ST_VERSION},
                     {"electron", ""},
                     {"chrome", win.browserVersion()},
                     {"node", ""},
@@ -331,4 +331,4 @@ void registerCoreHandlers(const CoreHandlerContext& c) {
     store.knownHosts().onChanged = [&b] { b.emit("knownHosts:onChanged", Json::array()); };
 }
 
-}  // namespace sc
+}  // namespace st

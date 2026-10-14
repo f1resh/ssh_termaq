@@ -4,8 +4,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace sc;
-using namespace sc::test;
+using namespace st;
+using namespace st::test;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 
@@ -136,7 +136,7 @@ TEST_CASE("scp: transfers use the scp protocol", "[scp]") {
         f.resolve(c, "overwrite");
         CHECK(f.waitDone(tid)["state"] == "done");
         CHECK(slurp(l / "x.txt") == "remote version");
-        CHECK_FALSE(fs::exists(l / "x.txt.sc-partial"));
+        CHECK_FALSE(fs::exists(l / "x.txt.st-partial"));
     }
 
     SECTION("errors from the remote scp are reported") {

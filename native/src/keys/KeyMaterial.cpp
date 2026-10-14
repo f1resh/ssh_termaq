@@ -6,7 +6,7 @@
 
 #include <array>
 
-namespace sc::keys {
+namespace st::keys {
 
 namespace {
 
@@ -302,4 +302,4 @@ bool encodeOpenSshPrivate(const KeyMaterial& m, std::string& armoredOut, std::st
     return true;
 }
 
-}  // namespace sc::keys
+}  // namespace st::keys

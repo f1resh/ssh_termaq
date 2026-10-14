@@ -15,7 +15,7 @@
 #include <future>
 #include <thread>
 
-using namespace sc;
+using namespace st;
 namespace fs = std::filesystem;
 
 namespace {

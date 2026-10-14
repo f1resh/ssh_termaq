@@ -1,4 +1,4 @@
-# SSH Crawler
+# SSHTerm
 
 A modern, tabbed SSH / Telnet / Rlogin / Raw / Serial client for Windows with PuTTY's feature set and one-click
 import of your PuTTY sessions and trusted host keys.
@@ -27,25 +27,25 @@ import of your PuTTY sessions and trusted host keys.
 ### Command line (PuTTY compatible)
 
 ```
-SSHCrawler.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] [-l user] [-pw password]
+SSHTerm.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] [-l user] [-pw password]
                [-i key.ppk] [-load "Saved Session"] [-L|-R|-D spec] [-A|-a] [-X|-x] [-C] [-4|-6] [-N]
                [-m file] [-sercfg 115200,8,n,1,N] ...
-SSHCrawler.exe ssh://user@host:2222   telnet://host   @"Saved Session"
-SSHCrawler.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
+SSHTerm.exe ssh://user@host:2222   telnet://host   @"Saved Session"
+SSHTerm.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
 ```
 A second invocation opens a new tab in the already running window.
 
 ### Requirements
 
 Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11). The release folder holds
-`SSHCrawler.exe`, `ssh.dll` (libssh, kept separate so it can be replaced under the LGPL) and the `ui` folder.
+`SSHTerm.exe`, `ssh.dll` (libssh, kept separate so it can be replaced under the LGPL) and the `ui` folder.
 Everything else, including the C/C++ runtime and OpenSSL, is linked in statically: no Visual C++
 Redistributable is needed.
 
 ### Data and portable mode
 
-Settings, sessions and trusted host keys live in `%APPDATA%\SSH Crawler`. Put a file named `portable.flag`
-next to `SSHCrawler.exe` to keep everything in a `data` folder beside the program instead.
+Settings, sessions and trusted host keys live in `%APPDATA%\SSHTerm`. Put a file named `portable.flag`
+next to `SSHTerm.exe` to keep everything in a `data` folder beside the program instead.
 
 ## Not supported (yet)
 
@@ -60,13 +60,14 @@ Remote-to-remote copies and text-mode (CRLF) transfers are not available.
 
 ## Building
 
-Requirements: Visual Studio 2022 (Desktop C++, includes vcpkg and CMake), Node.js 20+, WebView2 Runtime.
+Requirements: Visual Studio 2022 17.14+ (Desktop C++, includes CMake and vcpkg 2025-11-19 or newer), Node.js 22 LTS,
+WebView2 Runtime. Step-by-step setup, Visual Studio usage and troubleshooting: [docs/BUILDING.md](docs/BUILDING.md).
 
 ```powershell
 # one-time: C++ dependencies (libssh, OpenSSL, zlib, nlohmann-json, WebView2, WIL, Catch2)
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows-sc --overlay-triplets=triplets --x-install-root=vcpkg_installed
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows-st --overlay-triplets=triplets --x-install-root=vcpkg_installed
 
-# everything: UI + native Release + dist\SSHCrawler-<version>-win-x64 (+ zip)
+# everything: UI + native Release + dist\SSHTerm-<version>-win-x64 (+ zip)
 .\scripts\build.ps1            # -Tests runs all test suites first, -Portable adds portable.flag
 ```
 
@@ -75,20 +76,22 @@ Development:
 ```powershell
 cd ui; npm install; npm run dev              # UI with a mock backend at http://localhost:5173
 cmake --preset vs                            # native Debug build in build\vs
-cmake --build build/vs --config Debug
-build\vs\Debug\SSHCrawler.exe --dev-url http://localhost:5173 --devtools
+cmake --build build/vs --config Debug --parallel
+build\vs\Debug\SSHTerm.exe --dev-url http://localhost:5173 --devtools
 ```
 
 An installer can be built with Inno Setup 6 from `scripts\installer.iss` after running `build.ps1`.
 
 ## Tests
 
-- Native (Catch2): `build\vs\Debug\sc_test_*.exe` — core, store, CLI, session manager, charsets, logging, sockets,
+How everything is tested, the full list of tests and how to run each part: [docs/TESTING.md](docs/TESTING.md).
+
+- Native (Catch2): `build\vs\Debug\st_test_*.exe` — core, store, CLI, session manager, charsets, logging, sockets,
   proxies, Telnet/Rlogin/Raw, SSH (all auth methods incl. Pageant, host keys, shell, exec, resize, signals,
   L/R/D forwarding, jump hosts), keys (PPK v2/v3 cross-checked with PuTTY's `plink`), PuTTY import (host-key
   conversion verified against `ssh-keygen` fingerprints), SFTP.
   Integration tests run against an in-process libssh test server (`native/tests/support`), itself validated with
-  PuTTY's `plink`/`psftp`. `sc_testserver.exe --port 2222` runs that server standalone for manual testing
+  PuTTY's `plink`/`psftp`. `st_testserver.exe --port 2222` runs that server standalone for manual testing
   (user `test`, password `secret`; `--sftp off --exec-shell git` makes it an SCP-only server using Git for Windows'
   shell, GNU tools and OpenSSH `scp`). File manager tests cover transfers, conflicts, resume, move, find,
   synchronize, edit, SCP and drag out into a real Explorer drop target.

@@ -10,11 +10,11 @@
 #include <string>
 #include <vector>
 
-namespace sc::dnd {
+namespace st::dnd {
 class VirtualSource;
 }
 
-namespace sc {
+namespace st {
 
 class Bridge;
 class SessionManager;
@@ -40,4 +40,4 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace sc
+}  // namespace st

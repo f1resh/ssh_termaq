@@ -12,7 +12,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace sc::keys {
+namespace st::keys {
 
 namespace {
 
@@ -239,4 +239,4 @@ bool loadKeyMaterial(const std::string& content, const std::string& path, const 
     }
 }
 
-}  // namespace sc::keys
+}  // namespace st::keys

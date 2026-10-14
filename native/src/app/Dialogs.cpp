@@ -13,7 +13,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace sc::dialogs {
+namespace st::dialogs {
 
 namespace {
 
@@ -175,4 +175,4 @@ std::optional<std::string> saveFile(const FileDialogOptions& opts) {
         std::nullopt);
 }
 
-}  // namespace sc::dialogs
+}  // namespace st::dialogs

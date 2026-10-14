@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace sc {
+namespace st {
 /** RFC 4122 v4 UUID string (lowercase, with dashes). */
 std::string newUuid();
-}  // namespace sc
+}  // namespace st

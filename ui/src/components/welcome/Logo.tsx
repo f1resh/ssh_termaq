@@ -1,5 +1,5 @@
 /**
- * SSH Crawler logo: a rounded tile with a terminal prompt and a "crawling" trail of nodes.
+ * SSHTerm logo: a rounded tile with a terminal prompt and a trail of connected nodes.
  * Pure SVG so it scales crisply; colours come from the accent token with a fixed violet partner.
  */
 import { useId } from 'react';
@@ -7,7 +7,7 @@ import { useId } from 'react';
 export function Logo({ size = 64, className }: { size?: number; className?: string }) {
   const gid = useId().replace(/:/g, '');
   return (
-    <svg className={className} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="SSH Crawler">
+    <svg className={className} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="SSHTerm">
       <defs>
         <linearGradient id={`lg-${gid}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="var(--accent)" />

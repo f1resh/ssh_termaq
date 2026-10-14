@@ -4,9 +4,9 @@
 #include <filesystem>
 #include <string>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
-/** %TEMP%\SSH Crawler */
+/** %TEMP%\SSHTerm */
 std::filesystem::path tempRoot();
 /** A new empty folder below tempRoot() (old ones are pruned once per process). */
 std::filesystem::path newTempFolder();
@@ -22,4 +22,4 @@ void shellOpen(const std::filesystem::path& file);
  */
 void shellEdit(const std::filesystem::path& file, const std::string& editor);
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

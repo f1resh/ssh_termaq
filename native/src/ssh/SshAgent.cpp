@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <vector>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 namespace {
 
@@ -241,4 +241,4 @@ std::string AgentForwarder::feed(const char* data, size_t len) {
     return out;
 }
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

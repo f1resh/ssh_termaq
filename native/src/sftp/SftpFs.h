@@ -4,11 +4,11 @@
 
 #include <memory>
 
-namespace sc {
+namespace st {
 class Transport;
 }
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 class SftpFs;
 
@@ -18,4 +18,4 @@ class SftpFs;
  */
 std::shared_ptr<RemoteFs> openSftpFs(const std::weak_ptr<Transport>& transport);
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

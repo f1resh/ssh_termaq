@@ -8,7 +8,7 @@
 #include <string>
 #include <thread>
 
-namespace sc::test {
+namespace st::test {
 
 class ExecProcess {
 public:
@@ -41,4 +41,4 @@ private:
     bool inEof_ = false, outDone_ = false, errDone_ = false, stop_ = false;
 };
 
-}  // namespace sc::test
+}  // namespace st::test

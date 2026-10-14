@@ -25,8 +25,8 @@
 #include <set>
 #include <thread>
 
-using namespace sc;
-using namespace sc::test;
+using namespace st;
+using namespace st::test;
 namespace fs = std::filesystem;
 
 namespace {
@@ -184,7 +184,7 @@ TEST_CASE("dnd: virtual data object", "[dnd]") {
     CHECK(src->enumerations == 1);
 
     // Generic store (drag image helper data and the like)
-    FORMATETC custom = fmt(L"SSHCrawler.Test", TYMED_HGLOBAL);
+    FORMATETC custom = fmt(L"SSHTerm.Test", TYMED_HGLOBAL);
     CHECK(obj->QueryGetData(&custom) == DV_E_FORMATETC);
     STGMEDIUM in{};
     in.tymed = TYMED_HGLOBAL;

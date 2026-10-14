@@ -3,7 +3,7 @@
 
 #include "net/SocketTransport.h"
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -32,4 +32,4 @@ protected:
 
 std::unique_ptr<Transport> makeRawTransport(TransportContext ctx) { return std::make_unique<RawTransport>(std::move(ctx)); }
 
-}  // namespace sc
+}  // namespace st

@@ -34,8 +34,8 @@ import { sessionLabel } from '@shared/defaults';
 import type { SessionConfig } from '@shared/types';
 import { COLOR_SWATCHES, ProtocolIcon, STATUS_LABELS, StatusDot, Swatch, sessionSubtitle } from '@/components/layout/sessionVisuals';
 
-export const TAB_MIME = 'application/x-sshcrawler-tab';
-export const SESSION_MIME = 'application/x-sshcrawler-session';
+export const TAB_MIME = 'application/x-sshterm-tab';
+export const SESSION_MIME = 'application/x-sshterm-session';
 
 /* -------------------------------------------------------------------------- */
 /* Menus                                                                       */

@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace sc::test::net {
+namespace st::test::net {
 
 void ensureWinsock() {
     static std::once_flag once;
@@ -144,4 +144,4 @@ Socket connectTcp(const std::string& host, int port, int timeoutMs) {
     return result;
 }
 
-}  // namespace sc::test::net
+}  // namespace st::test::net

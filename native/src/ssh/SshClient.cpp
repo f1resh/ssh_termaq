@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 namespace {
 
@@ -446,4 +446,4 @@ int SshConnector::tryPassword(ssh_session s, bool& cancelled) {
     return SSH_AUTH_DENIED;
 }
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

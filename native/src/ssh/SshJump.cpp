@@ -13,7 +13,7 @@
 #include <memory>
 #include <thread>
 
-namespace sc {
+namespace st {
 
 using namespace ssh;
 
@@ -149,4 +149,4 @@ SOCKET openSshJumpTunnel(const TransportContext& ctx, const SessionConfig& jumpI
     return b;
 }
 
-}  // namespace sc
+}  // namespace st

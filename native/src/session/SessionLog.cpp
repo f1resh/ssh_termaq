@@ -18,7 +18,7 @@
 #include <mutex>
 #include <system_error>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -272,7 +272,7 @@ bool SessionLog::open(Prompter* prompter, std::string& error) {
         char stamp[64];
         std::snprintf(stamp, sizeof stamp, "%04d.%02d.%02d %02d:%02d:%02d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday,
                       now.tm_hour, now.tm_min, now.tm_sec);
-        impl_->writeLocked(std::string("=~=~=~=~=~=~=~=~=~=~=~= SSH Crawler log ") + stamp +
+        impl_->writeLocked(std::string("=~=~=~=~=~=~=~=~=~=~=~= SSHTerm log ") + stamp +
                            " =~=~=~=~=~=~=~=~=~=~=~=\r\n");
     }
     return true;
@@ -372,4 +372,4 @@ std::string SessionLog::stripEscapes(std::string_view text) {
     return out;
 }
 
-}  // namespace sc
+}  // namespace st

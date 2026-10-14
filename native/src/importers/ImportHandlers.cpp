@@ -15,7 +15,7 @@
 #include <fstream>
 #include <stdexcept>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -63,7 +63,7 @@ void registerImportHandlers(Bridge& bridge, Store& store) {
     bridge.handleAsync("importer:scanSshConfig", [&store](const Json& a) { return toJson(importers::previewSshConfig(argStr(a, 0), store)); });
 
     bridge.handleAsync("importer:parseJsonFile", [&store](const Json& a) -> Json {
-        auto path = pathOrDialog(a, 0, {"Import an SSH Crawler backup", "", {{"JSON files", {"json"}}, {"All files", {"*"}}}});
+        auto path = pathOrDialog(a, 0, {"Import an SSHTerm backup", "", {{"JSON files", {"json"}}, {"All files", {"*"}}}});
         if (!path) return nullptr;
         return toJson(importers::previewJsonBackup(*path, store));
     });
@@ -94,7 +94,7 @@ void registerImportHandlers(Bridge& bridge, Store& store) {
                 if (!f.empty() && std::find(folders.begin(), folders.end(), f) == folders.end()) folders.push_back(f);
             }
         if (arr.empty()) throw std::invalid_argument("No sessions selected");
-        auto path = dialogs::saveFile({"Export sessions", "ssh-crawler-sessions.json", {{"JSON files", {"json"}}}});
+        auto path = dialogs::saveFile({"Export sessions", "sshterm-sessions.json", {{"JSON files", {"json"}}}});
         if (!path) return nullptr;
         writeBytes(*path, importers::exportJsonBackup(arr, folders));
         return *path;
@@ -120,4 +120,4 @@ void registerImportHandlers(Bridge& bridge, Store& store) {
     });
 }
 
-}  // namespace sc
+}  // namespace st

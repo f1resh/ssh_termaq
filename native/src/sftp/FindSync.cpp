@@ -10,7 +10,7 @@
 #include <deque>
 #include <set>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace fs = std::filesystem;
 
@@ -337,4 +337,4 @@ Tree walkRemote(RemoteFs& rfs, const std::string& root, const SyncFilter& filter
     return tree;
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 std::shared_ptr<dnd::VirtualSource> makeRemoteDragSource(std::shared_ptr<RemoteFs> fs, std::vector<std::string> paths);
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

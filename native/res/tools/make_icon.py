@@ -1,4 +1,4 @@
-"""Renders the SSH Crawler application icon (stdlib only) into native/res/app.ico and native/res/icon-256.png.
+"""Renders the SSHTerm application icon (stdlib only) into native/res/app.ico and native/res/icon-256.png.
 
 Design: rounded square with a diagonal blue gradient, a subtle inner highlight, and a white ">_" prompt.
 Rendering uses 4x4 supersampling of analytic shapes (rounded rect, thick line segments, rectangle).

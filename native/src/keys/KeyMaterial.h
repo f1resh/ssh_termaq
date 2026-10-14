@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::keys {
+namespace st::keys {
 
 struct KeyMaterial {
     std::string type;        // "ssh-ed25519" | "ssh-rsa" | "ecdsa-sha2-nistp256" ... | "ssh-dss" | "ssh-ed448"
@@ -58,4 +58,4 @@ bool decodeOpenSshPrivate(const OpenSshContainer& c, KeyMaterial& out, std::stri
 /** Serializes material as an unencrypted, armored openssh-key-v1 private key (importable by libssh/OpenSSH). */
 bool encodeOpenSshPrivate(const KeyMaterial& m, std::string& armoredOut, std::string& error);
 
-}  // namespace sc::keys
+}  // namespace st::keys

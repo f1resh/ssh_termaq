@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstring>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 /* ---- UniqueSocket / WakePair ----------------------------------------------------------------------- */
 
@@ -233,4 +233,4 @@ bool parseX11Display(const std::string& textIn, X11Display& out, std::string& er
     return true;
 }
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

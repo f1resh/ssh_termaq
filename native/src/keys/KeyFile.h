@@ -12,7 +12,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace sc::keys {
+namespace st::keys {
 
 struct SshKeyDeleter {
     void operator()(ssh_key k) const { ssh_key_free(k); }
@@ -64,4 +64,4 @@ bool loadKeyMaterial(const std::string& content, const std::string& path, const 
 /** Public blob (and comment) of the "<path>.pub" sidecar file, if present and well-formed. */
 std::optional<std::string> sidecarPublicKey(const std::string& path, std::string* comment);
 
-}  // namespace sc::keys
+}  // namespace st::keys

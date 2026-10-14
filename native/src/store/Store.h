@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Store {
 public:
@@ -104,4 +104,4 @@ void writeFileAtomic(const std::filesystem::path& path, const std::string& conte
 /** Reads a whole file; std::nullopt if missing/unreadable. */
 std::optional<std::string> readFile(const std::filesystem::path& path);
 
-}  // namespace sc
+}  // namespace st

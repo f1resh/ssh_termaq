@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Bridge {
 public:
@@ -76,4 +76,4 @@ private:
     std::shared_ptr<std::atomic<bool>> alive_;
 };
 
-}  // namespace sc
+}  // namespace st

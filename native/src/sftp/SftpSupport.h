@@ -30,7 +30,7 @@
 #include <utility>
 #include <vector>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 using Clock = std::chrono::steady_clock;
 
@@ -183,4 +183,4 @@ private:
     std::string scratch_;
 };
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

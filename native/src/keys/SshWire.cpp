@@ -2,7 +2,7 @@
 
 #include <openssl/crypto.h>
 
-namespace sc::keys {
+namespace st::keys {
 
 bool WireReader::u8(uint8_t& v) {
     if (remaining() < 1) return false;
@@ -106,4 +106,4 @@ std::string padLeft(std::string_view bigEndian, size_t size) {
     return std::string(size - v.size(), '\0') + v;
 }
 
-}  // namespace sc::keys
+}  // namespace st::keys

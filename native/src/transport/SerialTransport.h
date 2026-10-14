@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 std::unique_ptr<Transport> makeSerialTransport(TransportContext ctx);
 
@@ -15,4 +15,4 @@ std::unique_ptr<Transport> makeSerialTransport(TransportContext ctx);
  *  HKLM\HARDWARE\DEVICEMAP\SERIALCOMM). Sorted naturally (COM2 before COM10). */
 std::vector<SerialPortInfo> listSerialPorts();
 
-}  // namespace sc
+}  // namespace st

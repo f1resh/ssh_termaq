@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::keys {
+namespace st::keys {
 
 /** Bounds-checked sequential reader. Every accessor returns false (and leaves the output untouched) on underflow. */
 class WireReader {
@@ -73,4 +73,4 @@ std::string stripLeadingZeros(std::string_view bigEndian);
 /** Left-pads an unsigned big-endian number with zeros to `size` bytes (returns empty if it does not fit). */
 std::string padLeft(std::string_view bigEndian, size_t size);
 
-}  // namespace sc::keys
+}  // namespace st::keys

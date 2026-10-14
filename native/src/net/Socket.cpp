@@ -11,7 +11,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -643,4 +643,4 @@ Waker::~Waker() { WSACloseEvent(event_); }
 void Waker::signal() { WSASetEvent(event_); }
 void Waker::reset() { WSAResetEvent(event_); }
 
-}  // namespace sc
+}  // namespace st

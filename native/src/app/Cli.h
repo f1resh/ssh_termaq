@@ -1,10 +1,10 @@
 #pragma once
 // PuTTY-compatible command line -> OpenRequest.
 //
-//   SSHCrawler.exe [options] [user@]host[:port]
-//   SSHCrawler.exe -serial COM3 -sercfg 115200,8,n,1,N
-//   SSHCrawler.exe -load "session name" | @sessionname
-//   SSHCrawler.exe telnet://host[:port]/   (also ssh://[user@]host[:port])
+//   SSHTerm.exe [options] [user@]host[:port]
+//   SSHTerm.exe -serial COM3 -sercfg 115200,8,n,1,N
+//   SSHTerm.exe -load "session name" | @sessionname
+//   SSHTerm.exe telnet://host[:port]/   (also ssh://[user@]host[:port])
 //
 // Supported PuTTY options: -ssh -telnet -rlogin -raw -serial, -P port, -l user, -pw password, -pwfile file,
 // -i keyfile, -load name, -L/-R/-D (PuTTY/OpenSSH syntax), -A/-a, -X/-x, -C, -4/-6, -N, -m file, -t/-T,
@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Store;
 
@@ -68,4 +68,4 @@ void applySerialConfig(SerialOptions& serial, const std::string& spec);
 /** Splits a Windows command line (CommandLineToArgvW rules) into UTF-8 arguments, excluding argv[0]. */
 std::vector<std::string> splitCommandLine(const std::wstring& commandLine);
 
-}  // namespace sc
+}  // namespace st

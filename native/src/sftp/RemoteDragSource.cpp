@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace {
 
@@ -114,4 +114,4 @@ std::shared_ptr<dnd::VirtualSource> makeRemoteDragSource(std::shared_ptr<RemoteF
     return std::make_shared<RemoteDragSource>(std::move(fs), std::move(paths));
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

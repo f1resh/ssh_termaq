@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <string>
 
-namespace sc::storeio {
+namespace st::storeio {
 
 enum class LoadStatus { Missing, Ok, Corrupt };
 
@@ -20,4 +20,4 @@ std::filesystem::path backupCorrupt(const std::filesystem::path& path, const std
 /** Serializes with 2-space indentation (invalid UTF-8 replaced) and writes atomically. Throws on failure. */
 void saveJson(const std::filesystem::path& path, const Json& value);
 
-}  // namespace sc::storeio
+}  // namespace st::storeio

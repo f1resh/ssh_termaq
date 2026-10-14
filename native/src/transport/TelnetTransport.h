@@ -4,8 +4,8 @@
 
 #include <memory>
 
-namespace sc {
+namespace st {
 
 std::unique_ptr<Transport> makeTelnetTransport(TransportContext ctx);
 
-}  // namespace sc
+}  // namespace st

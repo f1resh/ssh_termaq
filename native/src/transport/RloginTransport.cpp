@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -109,4 +109,4 @@ std::unique_ptr<Transport> makeRloginTransport(TransportContext ctx) {
     return std::make_unique<RloginTransport>(std::move(ctx));
 }
 
-}  // namespace sc
+}  // namespace st

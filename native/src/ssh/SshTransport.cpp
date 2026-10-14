@@ -26,7 +26,7 @@
 #include <mutex>
 #include <thread>
 
-namespace sc {
+namespace st {
 
 using namespace ssh;
 
@@ -958,4 +958,4 @@ std::unique_ptr<Transport> makeSshTransport(TransportContext ctx) {
     return std::make_unique<SshTransportImpl>(std::move(ctx));
 }
 
-}  // namespace sc
+}  // namespace st

@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::scp {
+namespace st::scp {
 
 struct Record {
     char type = 0;  // 'C' file, 'D' folder, 'E' end of folder, 'T' times
@@ -63,4 +63,4 @@ int parseTzOffset(std::string_view s);
 /** Unix seconds of a civil UTC date/time. */
 int64_t civilToUnix(int year, int month, int day, int hour, int minute, int second);
 
-}  // namespace sc::scp
+}  // namespace st::scp

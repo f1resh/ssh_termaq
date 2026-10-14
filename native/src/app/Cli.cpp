@@ -13,7 +13,7 @@
 
 namespace fs = std::filesystem;
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -534,4 +534,4 @@ std::vector<std::string> splitCommandLine(const std::wstring& commandLine) {
     return out;
 }
 
-}  // namespace sc
+}  // namespace st

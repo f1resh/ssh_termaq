@@ -93,7 +93,7 @@ export function AboutContent({ compact }: { compact?: boolean }) {
         ))}
       </ul>
       <p className="about__note">
-        Session import and feature set are modelled on PuTTY by Simon Tatham (MIT licence). SSH Crawler is not affiliated with the PuTTY project.
+        Session import and feature set are modelled on PuTTY by Simon Tatham (MIT licence). SSHTerm is not affiliated with the PuTTY project.
       </p>
     </div>
   );

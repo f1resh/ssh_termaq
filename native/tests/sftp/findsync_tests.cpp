@@ -7,9 +7,9 @@
 
 #include <set>
 
-using namespace sc;
-using namespace sc::test;
-using namespace sc::sftpimpl;
+using namespace st;
+using namespace st::test;
+using namespace st::sftpimpl;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 

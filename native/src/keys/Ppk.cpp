@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-namespace sc::keys {
+namespace st::keys {
 
 namespace {
 
@@ -427,4 +427,4 @@ bool writePpk(const KeyMaterial& m, const PpkWriteOptions& opts, std::string& ou
     return true;
 }
 
-}  // namespace sc::keys
+}  // namespace st::keys

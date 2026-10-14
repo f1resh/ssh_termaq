@@ -15,7 +15,7 @@
 #include <memory>
 #include <string>
 
-namespace sc::test {
+namespace st::test {
 
 inline std::string u8(const std::filesystem::path& p) { return narrow(p.wstring()); }
 
@@ -133,4 +133,4 @@ struct SftpFixture {
     }
 };
 
-}  // namespace sc::test
+}  // namespace st::test

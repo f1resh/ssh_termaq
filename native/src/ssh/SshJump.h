@@ -6,7 +6,7 @@
 #include <atomic>
 #include <string>
 
-namespace sc {
+namespace st {
 
 /**
  * Connects + authenticates to `jump` (using ctx's prompter/knownHosts/credentials), opens a direct-tcpip
@@ -18,4 +18,4 @@ namespace sc {
 SOCKET openSshJumpTunnel(const TransportContext& ctx, const SessionConfig& jump, const std::string& host, int port,
                          std::string& error, const std::atomic<bool>* cancel);
 
-}  // namespace sc
+}  // namespace st

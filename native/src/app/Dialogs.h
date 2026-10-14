@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 class Dispatcher;
 }
 
-namespace sc::dialogs {
+namespace st::dialogs {
 
 /** Called once by the app after the main window exists. owner = HWND of the main window. */
 void init(void* ownerHwnd, Dispatcher* dispatcher);
@@ -22,4 +22,4 @@ std::vector<std::string> openFiles(const FileDialogOptions& opts);
 std::optional<std::string> openDirectory(const FileDialogOptions& opts);
 std::optional<std::string> saveFile(const FileDialogOptions& opts);
 
-}  // namespace sc::dialogs
+}  // namespace st::dialogs

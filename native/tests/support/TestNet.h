@@ -6,7 +6,7 @@
 #include <string_view>
 #include <utility>
 
-namespace sc::test::net {
+namespace st::test::net {
 
 /** Initialises Winsock once per process (idempotent, thread-safe). */
 void ensureWinsock();
@@ -59,4 +59,4 @@ Socket acceptNonBlocking(SOCKET listener);
 /** True when the last Winsock error means "try again later". */
 bool wouldBlock();
 
-}  // namespace sc::test::net
+}  // namespace st::test::net

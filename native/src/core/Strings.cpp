@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace sc {
+namespace st {
 
 std::wstring widen(std::string_view utf8) {
     if (utf8.empty()) return {};
@@ -128,4 +128,4 @@ bool hexDecode(std::string_view hex, std::string& out) {
     return true;
 }
 
-}  // namespace sc
+}  // namespace st

@@ -1,9 +1,9 @@
-# SSH Crawler — Architecture & contributor contract
+# SSHTerm — Architecture & contributor contract
 
 A modern, tabbed Windows SSH/Telnet/Rlogin/Raw/Serial client with PuTTY's feature set plus PuTTY session import.
 
 ```
-SSHCrawler.exe (C++20, Win32)
+SSHTerm.exe (C++20, Win32)
 ├─ app/        WinMain, main window (custom title bar), WebView2 host, CLI, single instance, dialogs
 ├─ bridge/     JSON message router  <── WebView2 postMessage ──>  UI (React + xterm.js, ui/)
 ├─ store/      sessions.json, settings.json, state.json, known_hosts.json, credentials.json (DPAPI)
@@ -22,7 +22,7 @@ SSHCrawler.exe (C++20, Win32)
 ```
 
 Linking: everything is static, including the C/C++ runtime (`/MT`), except libssh, which ships as `ssh.dll`
-(LGPL: replaceable) with its own static runtime. Custom vcpkg triplet `triplets/x64-windows-sc.cmake`. Because
+(LGPL: replaceable) with its own static runtime. Custom vcpkg triplet `triplets/x64-windows-st.cmake`. Because
 `ssh.dll` has a separate heap, memory allocated by libssh must be released with libssh functions
 (`ssh_string_free_char`, `ssh_key_free`, `sftp_attributes_free`, ...), never with `free()`.
 
@@ -32,7 +32,7 @@ implementing) are in `vcpkg_installed/vcpkg/blds/libssh/src/libssh-0-e5f4972781.
 
 UI: `ui/` — Vite + React 19 + TypeScript 5.9 + zustand + xterm.js 5.5 (+ fit/webgl/search/web-links/unicode11
 addons) + lucide-react icons. Served by the host from `<exe dir>/ui` via WebView2 virtual host mapping
-`https://app.sshcrawler.local/` (dev: `--dev-url http://localhost:5173`).
+`https://app.sshterm.local/` (dev: `--dev-url http://localhost:5173`).
 
 ## Contracts (read before writing code)
 
@@ -122,7 +122,7 @@ Native layering (`native/src/sftp`):
   stays responsive.
 - `TransferEngine` — one queue per remote session (1–6 workers), recursive planning, conflict policy per request
   (ask → `sftp:onConflict` / `sftp:resolveConflict`, one question per request at a time, "apply to all"), resume
-  (`.sc-partial` files; SFTP offset writes), move, synchronize deletes, throttled `sftp:onProgress`.
+  (`.st-partial` files; SFTP offset writes), move, synchronize deletes, throttled `sftp:onProgress`.
 - `FindSync` — glob search (`sftp:find` → `sftp:onFind` batches) and the pure synchronize comparison
   (`compareTrees`) with local / remote walkers. `EditWatcher` logic lives in `SftpService` (temp copy polled every
   500 ms, upload after a quiet period; a changed server copy asks first).
@@ -132,7 +132,7 @@ Native layering (`native/src/sftp`):
 
 Tests: `native/tests/sftp` (transfers, conflicts, resume, move, find, sync, edit, SCP against real GNU `ls` and
 OpenSSH `scp` run through Git for Windows' `sh.exe` by the test server, drag out into a real shell drop target),
-`native/tests/localfs`, `native/tests/dnd`. `sc_testserver --sftp off --exec-shell git` serves an SCP-only server.
+`native/tests/localfs`, `native/tests/dnd`. `st_testserver --sftp off --exec-shell git` serves an SCP-only server.
 
 ## Building & testing
 
@@ -144,14 +144,14 @@ node scripts/shot.mjs --name <you> --out ../artifacts/<you>.png [--steps my-step
 # Native — use YOUR OWN build dir (build/<module>) so parallel builds don't collide
 $cmake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 & $cmake --preset vs -B build/<module>                      # configure once (fast; vcpkg already installed)
-& $cmake --build build/<module> --config Debug --target sc_<lib> -- /nologo /v:minimal /m
-& $cmake --build build/<module> --config Debug --target sc_test_<module> -- /nologo /v:minimal /m
-build/<module>/Debug/sc_test_<module>.exe                   # Catch2: add "[tag]" or a test name to filter
+& $cmake --build build/<module> --config Debug --target st_<lib> -- /nologo /v:minimal /m
+& $cmake --build build/<module> --config Debug --target st_test_<module> -- /nologo /v:minimal /m
+build/<module>/Debug/st_test_<module>.exe                   # Catch2: add "[tag]" or a test name to filter
 ```
-Libraries: `sc_core sc_bridge sc_store sc_dialogs sc_net sc_transport sc_keys sc_ssh sc_session sc_putty sc_dnd sc_localfs sc_sftp sc_app`,
-executable `SSHCrawler`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
-Tests: `native/tests/<module>/*.cpp` → `sc_test_<module>`; `native/tests/support` (TestSshServer, TestEchoServer,
-TestScriptServer, TempDir) is linked into every test exe. `SC_FIXTURES_DIR` points at `native/tests/fixtures`.
+Libraries: `st_core st_bridge st_store st_dialogs st_net st_transport st_keys st_ssh st_session st_putty st_dnd st_localfs st_sftp st_app`,
+executable `SSHTerm`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
+Tests: `native/tests/<module>/*.cpp` → `st_test_<module>`; `native/tests/support` (TestSshServer, TestEchoServer,
+TestScriptServer, TempDir) is linked into every test exe. `ST_FIXTURES_DIR` points at `native/tests/fixtures`.
 If the build fails in a file you don't own, another agent is mid-edit: wait a minute and retry; don't touch it.
 
 Reference tools available locally: PuTTY 0.83 (`C:\Program Files\PuTTY\{putty,plink,pscp,psftp,puttygen,pageant}.exe`),

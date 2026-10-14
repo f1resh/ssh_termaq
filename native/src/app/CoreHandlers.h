@@ -8,7 +8,7 @@
 #include <mutex>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Bridge;
 class MainWindow;
@@ -46,4 +46,4 @@ void registerCoreHandlers(const CoreHandlerContext& ctx);
 std::string readClipboardText(void* ownerHwnd);
 void writeClipboardText(void* ownerHwnd, const std::string& utf8);
 
-}  // namespace sc
+}  // namespace st

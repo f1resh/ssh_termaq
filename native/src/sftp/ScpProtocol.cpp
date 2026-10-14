@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <vector>
 
-namespace sc::scp {
+namespace st::scp {
 
 namespace {
 
@@ -367,4 +367,4 @@ std::optional<LsEntry> parseLsLine(std::string_view line, int tzOffsetSeconds, i
     return e;
 }
 
-}  // namespace sc::scp
+}  // namespace st::scp

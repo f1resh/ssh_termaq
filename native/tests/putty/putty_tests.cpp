@@ -12,9 +12,9 @@
 
 #include <fstream>
 
-using namespace sc;
-using namespace sc::putty;
-using namespace sc::test;
+using namespace st;
+using namespace st::putty;
+using namespace st::test;
 
 namespace {
 

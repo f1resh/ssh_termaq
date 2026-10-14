@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 /* ------------------------------------------------------------------------ */
 /* Enums                                                                     */
@@ -216,7 +216,7 @@ struct TerminalOptions {
     TriState localLineEditing = TriState::Auto;
     bool implicitCrInLf = false;
     bool implicitLfInCr = false;
-    std::string answerback = "SSHCrawler";
+    std::string answerback = "SSHTerm";
     BellMode bell = BellMode::Visual;
     std::string bellSoundPath;
     int scrollbackLines = 0;
@@ -700,4 +700,4 @@ struct FileDialogOptions {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(FileDialogOptions, title, defaultPath, filters)
 
-}  // namespace sc
+}  // namespace st

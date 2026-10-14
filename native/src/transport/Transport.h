@@ -20,7 +20,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class KnownHosts;
 class Credentials;
@@ -99,4 +99,4 @@ public:
     virtual SshTransport* asSsh() { return nullptr; }
 };
 
-}  // namespace sc
+}  // namespace st

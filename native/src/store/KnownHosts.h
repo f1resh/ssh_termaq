@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class KnownHosts {
 public:
@@ -47,4 +47,4 @@ private:
     std::vector<KnownHost> hosts_;
 };
 
-}  // namespace sc
+}  // namespace st

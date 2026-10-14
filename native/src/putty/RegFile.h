@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc::putty {
+namespace st::putty {
 
 struct RegValue {
     enum class Type { String, Dword, Binary, ExpandString, MultiString, Qword } type = Type::String;
@@ -39,4 +39,4 @@ std::string regString(const RegValues& v, const std::string& name, const std::st
 int64_t regInt(const RegValues& v, const std::string& name, int64_t def = 0);
 bool regHas(const RegValues& v, const std::string& name);
 
-}  // namespace sc::putty
+}  // namespace st::putty

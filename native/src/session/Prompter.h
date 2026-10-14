@@ -1,7 +1,7 @@
 #pragma once
 #include "core/Types.h"
 
-namespace sc {
+namespace st {
 
 /**
  * Blocking UI prompts used by transports (implemented by SessionManager per connection).
@@ -15,4 +15,4 @@ public:
     virtual PromptResponse prompt(const PromptInput& input) = 0;
 };
 
-}  // namespace sc
+}  // namespace st

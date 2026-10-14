@@ -14,7 +14,7 @@
 #include <mutex>
 #include <thread>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -328,4 +328,4 @@ std::vector<SerialPortInfo> listSerialPorts() {
     return out;
 }
 
-}  // namespace sc
+}  // namespace st

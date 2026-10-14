@@ -7,9 +7,9 @@
 
 #include <thread>
 
-using namespace sc;
-using namespace sc::test;
-using namespace sc::sftpimpl;
+using namespace st;
+using namespace st::test;
+using namespace st::sftpimpl;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 
@@ -152,14 +152,14 @@ TEST_CASE("transfer: resume", "[sftp][transfer]") {
 
     SECTION("an interrupted download continues its partial file") {
         // The partial file deliberately differs from the remote prefix: a resumed download keeps it.
-        spit(l / "big.bin.sc-partial", std::string(1000, 'X'));
+        spit(l / "big.bin.st-partial", std::string(1000, 'X'));
         const std::string tid = f.download("/big.bin", l);
         CHECK(f.waitDone(tid)["state"] == "done");
         const std::string got = slurp(l / "big.bin");
         REQUIRE(got.size() == big.size());
         CHECK(got.substr(0, 1000) == std::string(1000, 'X'));
         CHECK(got.substr(1000) == big.substr(1000));
-        CHECK_FALSE(fs::exists(l / "big.bin.sc-partial"));
+        CHECK_FALSE(fs::exists(l / "big.bin.st-partial"));
     }
 
     SECTION("resume answer continues a shorter existing file") {

@@ -1,7 +1,7 @@
 #pragma once
 #include <nlohmann/json.hpp>
 
-namespace sc {
+namespace st {
 using Json = nlohmann::json;
 
 /** Deep merge `patch` into `base` (objects merge recursively; arrays/primitives replace; null values in patch are ignored). */
@@ -49,4 +49,4 @@ inline std::vector<std::string> argStrList(const Json& args, size_t i) {
             if (e.is_string()) out.push_back(e.get<std::string>());
     return out;
 }
-}  // namespace sc
+}  // namespace st

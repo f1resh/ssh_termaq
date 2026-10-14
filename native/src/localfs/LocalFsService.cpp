@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -117,4 +117,4 @@ void LocalFsService::closeAll() {
     all.clear();
 }
 
-}  // namespace sc
+}  // namespace st

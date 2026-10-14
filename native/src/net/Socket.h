@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 /** RAII WSAStartup/WSACleanup. Create one in main() before any networking. */
 class WsaInit {
@@ -93,4 +93,4 @@ private:
     WSAEVENT event_;
 };
 
-}  // namespace sc
+}  // namespace st

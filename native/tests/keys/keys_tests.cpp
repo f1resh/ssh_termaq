@@ -14,8 +14,8 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace sc;
-using namespace sc::test;
+using namespace st;
+using namespace st::test;
 namespace fs = std::filesystem;
 
 namespace {

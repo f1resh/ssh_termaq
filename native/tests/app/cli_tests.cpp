@@ -8,7 +8,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace sc;
+using namespace st;
 namespace fs = std::filesystem;
 
 namespace {
@@ -341,7 +341,7 @@ TEST_CASE("cli: host options are split off", "[app][cli]") {
 }
 
 TEST_CASE("cli: splitCommandLine follows Windows quoting rules", "[app][cli]") {
-    auto a = splitCommandLine(L"SSHCrawler.exe -load \"my session\" -pw \"a\\\"b\" h\u00e9.test");
+    auto a = splitCommandLine(L"SSHTerm.exe -load \"my session\" -pw \"a\\\"b\" h\u00e9.test");
     REQUIRE(a == std::vector<std::string>{"-load", "my session", "-pw", "a\"b", "h\xC3\xA9.test"});
     REQUIRE(splitCommandLine(L"").empty());
     REQUIRE(splitCommandLine(L"app.exe").empty());
@@ -373,9 +373,9 @@ TEST_CASE("paths: portable vs installed vs override", "[app][paths]") {
 
     auto p = resolveAppPaths(exe, appData);
     REQUIRE_FALSE(p.portable);
-    REQUIRE(p.dataDir == appData / "SSH Crawler");
-    REQUIRE(p.logsDir == appData / "SSH Crawler" / "logs");
-    REQUIRE(p.webViewDataDir == appData / "SSH Crawler" / "WebView2");
+    REQUIRE(p.dataDir == appData / "SSHTerm");
+    REQUIRE(p.logsDir == appData / "SSHTerm" / "logs");
+    REQUIRE(p.webViewDataDir == appData / "SSHTerm" / "WebView2");
     REQUIRE(p.uiDir == exe / "ui");
 
     writeFileAtomic(exe / "portable.flag", "");

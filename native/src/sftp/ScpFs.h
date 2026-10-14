@@ -6,13 +6,13 @@
 
 #include <memory>
 
-namespace sc {
+namespace st {
 class Transport;
 }
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 /** Probes the server (shell, `scp`, `ls` flavour, time zone). Throws ConnectionLost or SftpError. */
 std::shared_ptr<RemoteFs> openScpFs(const std::weak_ptr<Transport>& transport);
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

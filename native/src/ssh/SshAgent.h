@@ -14,7 +14,7 @@
 #include <string>
 #include <thread>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 class AgentClient {
 public:
@@ -62,4 +62,4 @@ private:
     std::string buf_;
 };
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

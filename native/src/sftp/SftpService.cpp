@@ -24,7 +24,7 @@
 #include <thread>
 #include <unordered_map>
 
-namespace sc {
+namespace st {
 
 namespace fs = std::filesystem;
 using namespace sftpimpl;
@@ -181,7 +181,7 @@ struct SftpCore : std::enable_shared_from_this<SftpCore> {
     };
 
     void checkRunning() const {
-        if (stopping) throw SftpError("SSH Crawler is shutting down");
+        if (stopping) throw SftpError("SSHTerm is shutting down");
     }
 
     SessionPtr session(const std::string& id) {
@@ -523,7 +523,7 @@ struct SftpCore : std::enable_shared_from_this<SftpCore> {
                         shellEdit(local, editor);
                     {
                         std::lock_guard lk(self->em);
-                        if (self->watcherStop) throw SftpError("SSH Crawler is shutting down");
+                        if (self->watcherStop) throw SftpError("SSHTerm is shutting down");
                         self->edits[e->editId] = e;
                         if (!self->watcher.joinable()) self->watcher = std::thread([self] { self->watchLoop(); });
                     }
@@ -809,4 +809,4 @@ void SftpService::closeAll() {
     impl_->core->closeAll();
 }
 
-}  // namespace sc
+}  // namespace st

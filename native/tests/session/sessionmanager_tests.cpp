@@ -21,9 +21,9 @@
 #include <sstream>
 #include <thread>
 
-using namespace sc;
+using namespace st;
 using namespace std::chrono_literals;
-using sc::test::TempDir;
+using st::test::TempDir;
 
 namespace {
 

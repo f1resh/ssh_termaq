@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Launch the real SSHCrawler.exe (WebView2) with remote debugging, attach Playwright over CDP, optionally run a
+ * Launch the real SSHTerm.exe (WebView2) with remote debugging, attach Playwright over CDP, optionally run a
  * steps module, take a screenshot and exit (the app is killed afterwards).
  *
- *   node scripts/app.mjs [--exe ../build/vs/Debug/SSHCrawler.exe] [--data-dir <dir>] [--steps file.mjs]
+ *   node scripts/app.mjs [--exe ../build/vs/Debug/SSHTerm.exe] [--data-dir <dir>] [--steps file.mjs]
  *                        [--out ../artifacts/app.png] [--keep-data] [--args "..."]
  *
  * A fresh temporary data directory is used unless --data-dir is given (the user's real data is never touched).
@@ -25,12 +25,12 @@ const opt = (n, d) => {
 };
 const flag = (n) => args.includes(`--${n}`);
 
-const exe = resolve(process.cwd(), opt('exe', join(here, '../../build/vs/Debug/SSHCrawler.exe')));
+const exe = resolve(process.cwd(), opt('exe', join(here, '../../build/vs/Debug/SSHTerm.exe')));
 const out = resolve(process.cwd(), opt('out', join(here, '../../artifacts/app.png')));
 const steps = opt('steps');
 const port = Number(opt('port', 9333));
 const tempData = !opt('data-dir');
-const dataDir = opt('data-dir') ? resolve(opt('data-dir')) : mkdtempSync(join(tmpdir(), 'sshcrawler-e2e-'));
+const dataDir = opt('data-dir') ? resolve(opt('data-dir')) : mkdtempSync(join(tmpdir(), 'sshterm-e2e-'));
 const extra = (opt('args', '') || '').split(' ').filter(Boolean);
 
 const child = spawn(exe, ['--data-dir', dataDir, ...extra], {
@@ -61,7 +61,7 @@ try {
   browser = await connect();
   let page;
   for (let i = 0; i < 40 && !page; i++) {
-    page = browser.contexts().flatMap((c) => c.pages()).find((p) => p.url().startsWith('https://app.sshcrawler.local'));
+    page = browser.contexts().flatMap((c) => c.pages()).find((p) => p.url().startsWith('https://app.sshterm.local'));
     if (!page) await new Promise((r) => setTimeout(r, 250));
   }
   if (!page) throw new Error('app page not found: ' + browser.contexts().flatMap((c) => c.pages()).map((p) => p.url()));

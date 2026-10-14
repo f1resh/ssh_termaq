@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <array>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -352,4 +352,4 @@ std::unique_ptr<Transport> makeTelnetTransport(TransportContext ctx) {
     return std::make_unique<TelnetTransport>(std::move(ctx));
 }
 
-}  // namespace sc
+}  // namespace st

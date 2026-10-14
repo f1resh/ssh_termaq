@@ -4,7 +4,7 @@
 
 #include <cstdio>
 
-namespace sc {
+namespace st {
 
 std::string newUuid() {
     std::string b = crypto::randomBytes(16);
@@ -17,4 +17,4 @@ std::string newUuid() {
     return out;
 }
 
-}  // namespace sc
+}  // namespace st

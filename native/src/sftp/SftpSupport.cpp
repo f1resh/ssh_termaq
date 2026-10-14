@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace {
 
@@ -264,4 +264,4 @@ void RemoteFile::close(sftp_session sftp, bool check) {
     if (sftp_close(f) != SSH_NO_ERROR && check) throwSftp(sftp, "Closing '" + path_ + "' failed");
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

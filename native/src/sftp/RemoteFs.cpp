@@ -1,6 +1,6 @@
 #include "sftp/RemoteFs.h"
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 void RemoteFs::removeTree(const std::string& path, const std::atomic<bool>* cancel) {
     // lstat: a symlink to a folder is removed as a link, never followed.
@@ -20,4 +20,4 @@ void RemoteFs::removeTree(const std::string& path, const std::atomic<bool>* canc
     rmdir(path);
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

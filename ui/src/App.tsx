@@ -41,7 +41,7 @@ async function handleCloseRequest() {
     return;
   }
   const ok = await confirmDialog({
-    title: 'Exit SSH Crawler?',
+    title: 'Exit SSHTerm?',
     message: `${live.length} session${live.length === 1 ? ' is' : 's are'} still connected. Close ${live.length === 1 ? 'it' : 'them'} and exit?`,
     confirmLabel: 'Exit',
     danger: true
@@ -92,7 +92,7 @@ function useHostWiring(ready: boolean) {
     const update = () => {
       const ws = useWorkspace.getState();
       const tab = ws.tabs.find((t) => t.id === ws.activeTabId);
-      const title = tab ? `${tabTitle(tab, ws.panes)} - SSH Crawler` : 'SSH Crawler';
+      const title = tab ? `${tabTitle(tab, ws.panes)} - SSHTerm` : 'SSHTerm';
       if (title !== last) {
         last = title;
         api.window.setTitle(title);

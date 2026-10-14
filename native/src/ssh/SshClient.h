@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 class AgentRelay;
 
@@ -60,4 +60,4 @@ private:
     std::unique_ptr<AgentRelay> agentRelay_;
 };
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <ctime>
 
-namespace sc::test {
+namespace st::test {
 
 namespace {
 
@@ -209,7 +209,7 @@ const char* statusText(uint32_t code) {
 }
 
 bool isReservedDeviceName(std::string_view comp) {
-    std::string base = sc::toLower(comp.substr(0, comp.find('.')));
+    std::string base = st::toLower(comp.substr(0, comp.find('.')));
     static const char* const kNames[] = {"con", "prn", "aux", "nul"};
     for (const char* n : kNames)
         if (base == n) return true;
@@ -330,7 +330,7 @@ void SftpServer::process(std::string_view packet, std::string& out) {
     const auto bad = [&] { sendStatus(out, id, FX_BAD_MESSAGE); };
     const auto fail = [&](DWORD err) {
         const uint32_t code = mapError(err);
-        sendStatus(out, id, code, code == FX_FAILURE ? sc::winErrorMessage(err) : std::string(statusText(code)));
+        sendStatus(out, id, code, code == FX_FAILURE ? st::winErrorMessage(err) : std::string(statusText(code)));
     };
     // Resolves a client path to (virtual components, local path); replies PERMISSION_DENIED and returns false if it
     // is not acceptable.
@@ -341,7 +341,7 @@ void SftpServer::process(std::string_view packet, std::string& out) {
             return false;
         }
         local = root_;
-        for (const auto& c : comps) local /= std::filesystem::path(sc::widen(c));
+        for (const auto& c : comps) local /= std::filesystem::path(st::widen(c));
         return true;
     };
     const auto findHandle = [&](const std::string& h, bool wantDir) -> Handle* {
@@ -550,7 +550,7 @@ void SftpServer::process(std::string_view packet, std::string& out) {
             if (find.get() == INVALID_HANDLE_VALUE) return fail(GetLastError());
             bool sawDot = false, sawDotDot = false;
             do {
-                const std::string name = sc::narrow(fd.cFileName);
+                const std::string name = st::narrow(fd.cFileName);
                 sawDot |= name == ".";
                 sawDotDot |= name == "..";
                 const uint64_t size = (static_cast<uint64_t>(fd.nFileSizeHigh) << 32) | fd.nFileSizeLow;
@@ -647,4 +647,4 @@ void SftpServer::process(std::string_view packet, std::string& out) {
     }
 }
 
-}  // namespace sc::test
+}  // namespace st::test

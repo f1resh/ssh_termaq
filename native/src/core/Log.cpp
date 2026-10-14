@@ -9,7 +9,7 @@
 #include <fstream>
 #include <mutex>
 
-namespace sc::applog {
+namespace st::applog {
 
 namespace {
 std::mutex g_mutex;
@@ -54,4 +54,4 @@ void debug(const std::string& msg) {
 #endif
 }
 
-}  // namespace sc::applog
+}  // namespace st::applog

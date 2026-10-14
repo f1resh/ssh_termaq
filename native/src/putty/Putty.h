@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace sc::putty {
+namespace st::putty {
 
 inline constexpr const char* kSessionsKey = "Software\\SimonTatham\\PuTTY\\Sessions";
 inline constexpr const char* kHostKeysKey = "Software\\SimonTatham\\PuTTY\\SshHostKeys";
@@ -36,4 +36,4 @@ std::optional<KnownHost> convertHostKey(const std::string& valueName, const std:
 /** PuTTY LineCodePage display name -> our charset name ('' => UTF-8). */
 std::string charsetFromPutty(const std::string& lineCodePage);
 
-}  // namespace sc::putty
+}  // namespace st::putty

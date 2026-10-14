@@ -5,7 +5,7 @@
 
 #include <chrono>
 
-namespace sc {
+namespace st {
 
 int64_t nowMs() {
     using namespace std::chrono;
@@ -177,4 +177,4 @@ void to_json(Json& j, const LocalEntry& v) {
     if (!v.icon.empty()) j["icon"] = v.icon;
 }
 
-}  // namespace sc
+}  // namespace st

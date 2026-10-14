@@ -12,7 +12,7 @@
 #include <mutex>
 #include <stdexcept>
 
-namespace sc {
+namespace st {
 
 std::unique_ptr<Transport> createTransport(TransportContext ctx) {
     static std::once_flag once;
@@ -27,4 +27,4 @@ std::unique_ptr<Transport> createTransport(TransportContext ctx) {
     throw std::invalid_argument("Unsupported protocol");
 }
 
-}  // namespace sc
+}  // namespace st

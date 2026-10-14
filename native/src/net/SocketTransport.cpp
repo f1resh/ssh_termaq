@@ -7,7 +7,7 @@
 #include <climits>
 #include <exception>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -137,7 +137,7 @@ void SocketTransport::finish(CloseInfo info) {
 /* ------------------------------------------------------------------------ */
 
 void SocketTransport::run() {
-    SetThreadDescription(GetCurrentThread(), widen("sc-" + toLower(protocolName())).c_str());
+    SetThreadDescription(GetCurrentThread(), widen("st-" + toLower(protocolName())).c_str());
     try {
         const std::string host = stripBrackets(trim(ctx_.session.host));
         const int port = ctx_.session.port > 0 ? ctx_.session.port : defaultPort(ctx_.session.protocol);
@@ -337,4 +337,4 @@ void SocketTransport::readUrgent() {
     }
 }
 
-}  // namespace sc
+}  // namespace st

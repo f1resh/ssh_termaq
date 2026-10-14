@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cstdio>
 
-namespace sc::putty {
+namespace st::putty {
 
 /* ------------------------------------------------------------------------ */
 /* Names                                                                     */
@@ -879,4 +879,4 @@ RegValues sessionToPutty(const SessionConfig& s) {
     return v;
 }
 
-}  // namespace sc::putty
+}  // namespace st::putty

@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace sc::test;
+using namespace st::test;
 namespace fs = std::filesystem;
 
 namespace {

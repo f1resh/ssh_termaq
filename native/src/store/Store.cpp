@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -664,4 +664,4 @@ void Store::setState(const std::string& key, const Json& value) {
     }
 }
 
-}  // namespace sc
+}  // namespace st

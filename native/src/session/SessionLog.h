@@ -13,7 +13,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc {
+namespace st {
 
 class Prompter;
 
@@ -41,4 +41,4 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace sc
+}  // namespace st

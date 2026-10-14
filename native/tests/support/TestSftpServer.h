@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc::test {
+namespace st::test {
 
 class SftpServer {
 public:
@@ -40,4 +40,4 @@ private:
     std::map<std::string, std::unique_ptr<Handle>> handles_;
 };
 
-}  // namespace sc::test
+}  // namespace st::test

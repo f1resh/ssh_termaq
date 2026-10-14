@@ -11,7 +11,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace sc {
+namespace st {
 
 class Credentials {
 public:
@@ -43,4 +43,4 @@ private:
     std::unordered_map<std::string, std::string> blobs_;  // key -> base64 DPAPI blob
 };
 
-}  // namespace sc
+}  // namespace st

@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace sc::test {
+namespace st::test {
 
 struct TestSshServerOptions {
     std::string username = "test";
@@ -154,4 +154,4 @@ private:
     std::filesystem::path path_;
 };
 
-}  // namespace sc::test
+}  // namespace st::test

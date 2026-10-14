@@ -14,7 +14,7 @@
 #include <functional>
 #include <string>
 
-namespace sc {
+namespace st {
 
 /** Signature of the SSH jump-host tunnel opener (ssh/SshJump.h: openSshJumpTunnel). Injected to avoid a
  *  dependency from the network layer on the SSH module; registered once by transport/TransportFactory. */
@@ -67,4 +67,4 @@ void detachConnection(SOCKET s, bool terminate = true);
  *  for every proxy type except SOCKS 4). */
 bool proxyResolvesRemotely(const ProxyConfig& proxy);
 
-}  // namespace sc
+}  // namespace st

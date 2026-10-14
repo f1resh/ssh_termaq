@@ -6,7 +6,7 @@
 #include <cwctype>
 #include <cstdio>
 
-namespace sc::sftputil {
+namespace st::sftputil {
 
 namespace {
 
@@ -156,4 +156,4 @@ std::string humanSize(uint64_t bytes) {
     return buf;
 }
 
-}  // namespace sc::sftputil
+}  // namespace st::sftputil

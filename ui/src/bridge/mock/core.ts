@@ -2,7 +2,7 @@ import { createDefaultSession, createDefaultSettings, deepMerge, normalizeFolder
 import type { AppSettings, KnownHost, SessionConfig } from '@shared/types';
 import type { MockContext } from './index';
 
-const LS_KEY = 'sshcrawler.mock.v1';
+const LS_KEY = 'sshterm.mock.v1';
 
 interface MockDb {
   sessions: SessionConfig[];
@@ -148,13 +148,13 @@ export function registerCoreMocks(ctx: MockContext): void {
 
   /* app */
   ctx.handle('app:info', () => ({
-    name: 'SSH Crawler',
+    name: 'SSHTerm',
     version: '0.1.0-mock',
     electron: '',
     chrome: navigator.userAgent,
     node: '',
     platform: 'browser-mock',
-    userDataDir: 'C:\\Users\\mock\\AppData\\Roaming\\SSH Crawler',
+    userDataDir: 'C:\\Users\\mock\\AppData\\Roaming\\SSHTerm',
     portable: false
   }));
   ctx.handle('app:systemPrefersDark', () => globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true);
@@ -172,7 +172,7 @@ export function registerCoreMocks(ctx: MockContext): void {
     }
   });
   ctx.on('app:writeClipboard', (text: string) => void navigator.clipboard?.writeText(text).catch(() => undefined));
-  ctx.handle('app:logDirectory', () => 'C:\\Users\\mock\\AppData\\Roaming\\SSH Crawler\\logs');
+  ctx.handle('app:logDirectory', () => 'C:\\Users\\mock\\AppData\\Roaming\\SSHTerm\\logs');
   ctx.handle('app:readFileDataUrl', () => null);
   ctx.handle('app:openExternal', (url: string) => void globalThis.open?.(url, '_blank'));
   ctx.on('app:confirmClose', () => undefined);

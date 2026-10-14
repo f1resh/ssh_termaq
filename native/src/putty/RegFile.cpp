@@ -6,7 +6,7 @@
 #include <cctype>
 #include <stdexcept>
 
-namespace sc::putty {
+namespace st::putty {
 
 bool CaseInsensitiveLess::operator()(const std::string& a, const std::string& b) const {
     return _stricmp(a.c_str(), b.c_str()) < 0;
@@ -222,4 +222,4 @@ int64_t regInt(const RegValues& v, const std::string& name, int64_t def) {
 
 bool regHas(const RegValues& v, const std::string& name) { return v.count(name) > 0; }
 
-}  // namespace sc::putty
+}  // namespace st::putty

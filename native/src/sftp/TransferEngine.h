@@ -1,7 +1,7 @@
 #pragma once
 // Transfer queue and execution on top of RemoteFs: one queue per remote session with parallel workers, recursive
 // planning of folder transfers, conflict handling (ask / overwrite / newer / skip / resume / rename, "apply to all"),
-// resume of interrupted transfers (.sc-partial files locally, offset writes remotely), move (delete the source after
+// resume of interrupted transfers (.st-partial files locally, offset writes remotely), move (delete the source after
 // each copied file), deletes for synchronize, and throttled progress reporting.
 #include "sftp/RemoteFs.h"
 
@@ -14,7 +14,7 @@
 #include <optional>
 #include <string>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 enum class ConflictDecision { Overwrite, Skip, Resume, Rename };
 
@@ -101,4 +101,4 @@ private:
     std::shared_ptr<Impl> impl_;
 };
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

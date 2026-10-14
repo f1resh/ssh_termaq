@@ -3,7 +3,7 @@
 #include "sftp/SftpSupport.h"
 #include "sftp/SftpUtil.h"
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace {
 
@@ -364,4 +364,4 @@ std::shared_ptr<RemoteFs> openSftpFs(const std::weak_ptr<Transport>& transport) 
     return fs;
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

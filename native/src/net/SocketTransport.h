@@ -19,7 +19,7 @@
 #include <string>
 #include <thread>
 
-namespace sc {
+namespace st {
 
 class SocketTransport : public Transport {
 public:
@@ -126,4 +126,4 @@ private:
     std::chrono::steady_clock::time_point lastSend_{};
 };
 
-}  // namespace sc
+}  // namespace st

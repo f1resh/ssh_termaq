@@ -21,7 +21,7 @@
 #include <functional>
 #include <memory>
 
-namespace sc {
+namespace st {
 
 class SshTransport : public Transport {
 public:
@@ -40,4 +40,4 @@ public:
 
 std::unique_ptr<Transport> makeSshTransport(TransportContext ctx);
 
-}  // namespace sc
+}  // namespace st

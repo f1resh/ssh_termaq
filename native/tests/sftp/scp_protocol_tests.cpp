@@ -3,7 +3,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace sc::scp;
+using namespace st::scp;
 
 TEST_CASE("scp: control records", "[scp]") {
     std::string err;

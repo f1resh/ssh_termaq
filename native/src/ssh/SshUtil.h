@@ -15,7 +15,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace sc::ssh {
+namespace st::ssh {
 
 /* ---- RAII ------------------------------------------------------------------------------------------ */
 
@@ -164,4 +164,4 @@ inline void putU32(std::string& out, uint32_t v) {
     out.push_back(char(v & 0xff));
 }
 
-}  // namespace sc::ssh
+}  // namespace st::ssh

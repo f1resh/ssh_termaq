@@ -1,6 +1,6 @@
 import type { AppSettings, CommandId, PortForward, Protocol, SessionConfig } from './types';
 
-export const APP_NAME = 'SSH Crawler';
+export const APP_NAME = 'SSHTerm';
 
 export const DEFAULT_PORTS: Record<Protocol, number> = {
   ssh: 22,
@@ -103,7 +103,7 @@ export function createDefaultSession(overrides: Partial<SessionConfig> = {}): Se
       localLineEditing: 'auto',
       implicitCrInLf: false,
       implicitLfInCr: false,
-      answerback: 'SSHCrawler',
+      answerback: 'SSHTerm',
       bell: 'visual',
       bellSoundPath: '',
       scrollbackLines: 0,

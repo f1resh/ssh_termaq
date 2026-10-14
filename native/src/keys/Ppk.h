@@ -12,7 +12,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::keys {
+namespace st::keys {
 
 struct PpkFile {
     int version = 0;          // 2 | 3
@@ -67,4 +67,4 @@ struct PpkWriteOptions {
 /** Serializes `m` as a .ppk file (LF line endings, 64-column base64 like PuTTYgen). */
 bool writePpk(const KeyMaterial& m, const PpkWriteOptions& opts, std::string& out, std::string& error);
 
-}  // namespace sc::keys
+}  // namespace st::keys

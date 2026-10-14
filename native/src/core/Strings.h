@@ -3,7 +3,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 std::wstring widen(std::string_view utf8);
 std::string narrow(std::wstring_view wide);
@@ -28,4 +28,4 @@ std::string lastWsaErrorMessage();
 std::string hexEncode(std::string_view bytes);
 bool hexDecode(std::string_view hex, std::string& out);
 
-}  // namespace sc
+}  // namespace st

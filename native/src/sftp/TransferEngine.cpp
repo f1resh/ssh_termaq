@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 namespace {
 
 constexpr auto kProgressInterval = std::chrono::milliseconds(100);
-const wchar_t* const kPartialSuffix = L".sc-partial";
+const wchar_t* const kPartialSuffix = L".st-partial";
 
 std::string u8(const fs::path& p) { return narrow(p.wstring()); }
 
@@ -869,4 +869,4 @@ void TransferEngine::stop() {
     for (auto& q : all) impl_->closeQueue(q);
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

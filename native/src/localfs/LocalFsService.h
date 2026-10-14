@@ -6,7 +6,7 @@
 
 struct HWND__;
 
-namespace sc {
+namespace st {
 
 class Bridge;
 
@@ -25,4 +25,4 @@ private:
     std::shared_ptr<Impl> impl_;
 };
 
-}  // namespace sc
+}  // namespace st

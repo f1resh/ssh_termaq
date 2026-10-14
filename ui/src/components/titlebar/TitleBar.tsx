@@ -31,7 +31,7 @@ function appMenu(): MenuItem[] {
     item('Full screen', 'app.fullscreen', <Maximize size={14} />, { checked: useUi.getState().fullscreen }),
     item('Settings', 'app.settings', <Settings size={14} />),
     { type: 'separator' },
-    { label: 'About SSH Crawler', icon: <Info size={14} />, onClick: () => useUi.getState().openDialog({ type: 'about' }) },
+    { label: 'About SSHTerm', icon: <Info size={14} />, onClick: () => useUi.getState().openDialog({ type: 'about' }) },
     { label: 'Exit', icon: <LogOut size={14} />, onClick: () => api.window.close() }
   ];
 }

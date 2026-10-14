@@ -1,7 +1,7 @@
 #pragma once
 // Header-only helpers for tests that drive bridge handlers: a dispatcher running everything inline and a Bridge
 // wired to a capturing sink (invoke() sends a request and waits for its response; events are collected).
-// Tests using it must link sc_bridge.
+// Tests using it must link st_bridge.
 #include "bridge/Bridge.h"
 #include "core/Threading.h"
 
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace sc::test {
+namespace st::test {
 
 struct InlineDispatcher : Dispatcher {
     void post(std::function<void()> fn) override { fn(); }
@@ -119,4 +119,4 @@ inline void spit(const std::filesystem::path& p, const std::string& data) {
     f << data;
 }
 
-}  // namespace sc::test
+}  // namespace st::test

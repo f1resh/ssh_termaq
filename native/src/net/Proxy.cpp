@@ -17,7 +17,7 @@
 #include <optional>
 #include <thread>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -941,4 +941,4 @@ void closeConnection(SOCKET& s) {
     if (relay) relay->kill();
 }
 
-}  // namespace sc
+}  // namespace st

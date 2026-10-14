@@ -26,7 +26,7 @@
 #include <mutex>
 #include <string>
 
-namespace sc {
+namespace st {
 
 class LineDiscipline {
 public:
@@ -73,4 +73,4 @@ private:
     std::string partial_;
 };
 
-}  // namespace sc
+}  // namespace st

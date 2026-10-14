@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Bridge;
 class Store;
@@ -124,7 +124,7 @@ private:
     DWORD uiThreadId_ = 0;
     std::unique_ptr<WebView> web_;
     std::string browserVersion_;
-    std::wstring appOrigin_;  // "https://app.sshcrawler.local" or the dev server origin
+    std::wstring appOrigin_;  // "https://app.sshterm.local" or the dev server origin
 
     std::mutex dispatchMutex_;
     std::deque<std::function<void()>> dispatchQueue_;
@@ -143,4 +143,4 @@ private:
     std::shared_ptr<std::atomic<uint64_t>> placementSeq_;
 };
 
-}  // namespace sc
+}  // namespace st

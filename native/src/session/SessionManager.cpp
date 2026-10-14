@@ -44,7 +44,7 @@
 #include <thread>
 #include <unordered_map>
 
-namespace sc {
+namespace st {
 
 namespace {
 
@@ -913,4 +913,4 @@ void registerConnHandlers(Bridge& bridge, SessionManager& sessions) {
     });
 }
 
-}  // namespace sc
+}  // namespace st

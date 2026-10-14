@@ -5,7 +5,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace sc;
+using namespace st;
 
 TEST_CASE("strings: widen/narrow roundtrip") {
     std::string s = "h\xC3\xA9llo \xE2\x82\xAC \xF0\x9F\x98\x80";

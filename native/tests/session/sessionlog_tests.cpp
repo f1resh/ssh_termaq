@@ -9,8 +9,8 @@
 #include <fstream>
 #include <sstream>
 
-using namespace sc;
-using sc::test::TempDir;
+using namespace st;
+using st::test::TempDir;
 
 namespace {
 
@@ -159,7 +159,7 @@ TEST_CASE("sessionlog: off mode, header, directories", "[sessionlog]") {
     log.output("hello", "hello");
     log.close();
     const std::string content = slurp(expected);
-    CHECK(startsWith(content, "=~=~=~=~=~=~=~=~=~=~=~= SSH Crawler log "));
+    CHECK(startsWith(content, "=~=~=~=~=~=~=~=~=~=~=~= SSHTerm log "));
     CHECK(endsWith(content, " =~=~=~=~=~=~=~=~=~=~=~=\r\nhello"));
 
     // Absolute template paths are used as is.

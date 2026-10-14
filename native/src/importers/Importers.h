@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 class Store;
 }
 
-namespace sc::importers {
+namespace st::importers {
 
 ImportPreview previewPuttyRegistry(const Store& store);
 /** Throws std::runtime_error when the file cannot be read or is not a .reg export. */
@@ -30,4 +30,4 @@ std::string exportPuttyReg(const std::vector<SessionConfig>& sessions);
 /** Our JSON backup format (pretty printed). */
 std::string exportJsonBackup(const Json& sessions, const std::vector<std::string>& folders);
 
-}  // namespace sc::importers
+}  // namespace st::importers

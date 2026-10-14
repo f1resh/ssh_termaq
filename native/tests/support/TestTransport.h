@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace sc::test {
+namespace st::test {
 
 struct RecordingListener : TransportListener {
     std::mutex m;
@@ -85,4 +85,4 @@ struct ScriptedPrompter : Prompter {
     }
 };
 
-}  // namespace sc::test
+}  // namespace st::test

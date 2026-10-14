@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 class Store;
 class Bridge;
@@ -59,4 +59,4 @@ private:
 /** Registers conn:* and prompts:* bridge handlers. */
 void registerConnHandlers(Bridge& bridge, SessionManager& sessions);
 
-}  // namespace sc
+}  // namespace st

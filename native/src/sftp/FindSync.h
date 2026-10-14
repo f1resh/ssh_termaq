@@ -12,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 /** Glob on one name: '*', '?', '[abc]', '[a-z]', '[!x]' / '[^x]'. ASCII case folding when !caseSensitive. */
 bool globMatch(std::string_view pattern, std::string_view name, bool caseSensitive);
@@ -53,4 +53,4 @@ Tree walkLocal(const std::filesystem::path& root, const SyncFilter& filter, cons
 /** Remote folder tree (links to files count as files; links to folders are not followed). */
 Tree walkRemote(RemoteFs& rfs, const std::string& root, const SyncFilter& filter, const std::atomic<bool>& cancel);
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-namespace sc::sftputil {
+namespace st::sftputil {
 
 /** "drwxr-xr-x" style string from a POSIX st_mode (type bits + permission bits incl. setuid/setgid/sticky). */
 std::string permissionsString(uint32_t mode);
@@ -33,4 +33,4 @@ std::string statusText(int code);
 /** "1.5 MiB"-style size (used in log lines). */
 std::string humanSize(uint64_t bytes);
 
-}  // namespace sc::sftputil
+}  // namespace st::sftputil

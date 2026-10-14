@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace sc::keys {
+namespace st::keys {
 
 /**
  * Generates a key pair: type 'ed25519' | 'rsa' (bits 2048/3072/4096, default 3072) | 'ecdsa' (bits 256/384/521,
@@ -30,4 +30,4 @@ KeyInfo inspectKey(const std::string& path, const std::string& passphrase);
  */
 std::string convertKey(const std::string& path, const std::string& passphrase, const std::string& to);
 
-}  // namespace sc::keys
+}  // namespace st::keys

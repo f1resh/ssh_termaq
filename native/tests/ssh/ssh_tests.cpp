@@ -25,8 +25,8 @@
 #include <mutex>
 #include <thread>
 
-using namespace sc;
-using namespace sc::test;
+using namespace st;
+using namespace st::test;
 using namespace std::chrono_literals;
 
 namespace {

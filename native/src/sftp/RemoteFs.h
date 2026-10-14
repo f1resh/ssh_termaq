@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 /** Operation failed (message is user-facing). */
 struct SftpError : std::runtime_error {
@@ -119,4 +119,4 @@ public:
 /** "'path'" for messages. */
 inline std::string quotePath(const std::string& path) { return "'" + path + "'"; }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

@@ -13,12 +13,12 @@
 #include <map>
 #include <stdexcept>
 
-namespace sc {
+namespace st {
 
 namespace {
 
 // Constant application entropy mixed into every DPAPI blob (see header). Changing it invalidates stored secrets.
-constexpr char kEntropy[] = "SSH Crawler/credentials/v1:6f1d9c2e-4b7a-4e15-9a3c-1d2b8e7f0a64";
+constexpr char kEntropy[] = "SSHTerm/credentials/v1:6f1d9c2e-4b7a-4e15-9a3c-1d2b8e7f0a64";
 
 DATA_BLOB entropyBlob() {
     DATA_BLOB b{};
@@ -129,7 +129,7 @@ std::string Credentials::protect(const std::string& plain) {
     in.pbData = reinterpret_cast<BYTE*>(const_cast<char*>(plain.data()));
     DATA_BLOB entropy = entropyBlob();
     DATA_BLOB out{};
-    if (!CryptProtectData(&in, L"SSH Crawler", &entropy, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out))
+    if (!CryptProtectData(&in, L"SSHTerm", &entropy, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out))
         throw std::runtime_error("Cannot encrypt secret (CryptProtectData): " + lastErrorMessage());
     BlobGuard guard{out, false};
     return crypto::base64Encode(std::string_view(reinterpret_cast<const char*>(out.pbData), out.cbData));
@@ -157,4 +157,4 @@ void Credentials::saveLocked() const {
     storeio::saveJson(file_, root);
 }
 
-}  // namespace sc
+}  // namespace st

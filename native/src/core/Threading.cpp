@@ -2,7 +2,7 @@
 
 #include "core/Log.h"
 
-namespace sc {
+namespace st {
 
 ThreadPool::ThreadPool(size_t threads) {
     for (size_t i = 0; i < threads; ++i) threads_.emplace_back([this] { run(); });
@@ -51,4 +51,4 @@ ThreadPool& ThreadPool::shared() {
     return pool;
 }
 
-}  // namespace sc
+}  // namespace st

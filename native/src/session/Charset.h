@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-namespace sc {
+namespace st {
 
 /** Streaming decoder: keeps incomplete multi-byte sequences between calls. Invalid bytes -> U+FFFD. */
 class Decoder {
@@ -31,4 +31,4 @@ std::string binaryStringToBytes(std::string_view utf8);
 unsigned int codePageForCharset(const std::string& charset);
 std::vector<std::string> supportedCharsets();
 
-}  // namespace sc
+}  // namespace st

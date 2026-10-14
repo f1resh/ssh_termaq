@@ -4,7 +4,7 @@
 #include "keys/KeyFile.h"
 #include "keys/SshWire.h"
 
-namespace sc {
+namespace st {
 
 ssh_key loadPrivateKey(const std::string& path, const PassphraseCallback& askPassphrase, std::string& error) {
     using namespace keys;
@@ -63,4 +63,4 @@ ssh_key loadPrivateKey(const std::string& path, const PassphraseCallback& askPas
 
 std::string detectKeyFormat(const std::string& fileContent) { return keys::formatName(keys::detectFormat(fileContent)); }
 
-}  // namespace sc
+}  // namespace st

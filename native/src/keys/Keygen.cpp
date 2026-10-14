@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-namespace sc::keys {
+namespace st::keys {
 
 namespace {
 
@@ -154,4 +154,4 @@ std::string convertKey(const std::string& path, const std::string& passphrase, c
     return to == "ppk" ? ppkText(loaded.material, loaded.passphrase) : openSshText(loaded.material, loaded.passphrase);
 }
 
-}  // namespace sc::keys
+}  // namespace st::keys

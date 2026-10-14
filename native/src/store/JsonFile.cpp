@@ -16,11 +16,11 @@
 
 namespace fs = std::filesystem;
 
-namespace sc {
+namespace st {
 
 namespace {
 
-/** Minimal RAII wrapper for a Win32 file HANDLE (sc_store does not depend on WIL). */
+/** Minimal RAII wrapper for a Win32 file HANDLE (st_store does not depend on WIL). */
 class FileHandle {
 public:
     explicit FileHandle(HANDLE h) : h_(h) {}
@@ -173,4 +173,4 @@ void saveJson(const fs::path& path, const Json& value) {
 }
 
 }  // namespace storeio
-}  // namespace sc
+}  // namespace st

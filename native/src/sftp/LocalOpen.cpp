@@ -13,7 +13,7 @@
 #include <fstream>
 #include <mutex>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace fs = std::filesystem;
 
@@ -78,7 +78,7 @@ fs::path tempRoot() {
     wchar_t buf[MAX_PATH + 1];
     const DWORD n = GetTempPathW(MAX_PATH + 1, buf);
     fs::path root = n ? fs::path(std::wstring(buf, n)) : fs::temp_directory_path();
-    return root / L"SSH Crawler";
+    return root / L"SSHTerm";
 }
 
 fs::path newTempFolder() {
@@ -137,4 +137,4 @@ void shellEdit(const fs::path& file, const std::string& editor) {
     }
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl

@@ -15,7 +15,7 @@
 #include <mutex>
 #include <thread>
 
-namespace sc::dnd {
+namespace st::dnd {
 
 namespace {
 
@@ -569,4 +569,4 @@ void startFileDrag(Dispatcher& dispatcher, std::vector<std::string> paths, std::
     });
 }
 
-}  // namespace sc::dnd
+}  // namespace st::dnd

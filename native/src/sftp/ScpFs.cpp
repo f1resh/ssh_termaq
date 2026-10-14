@@ -9,7 +9,7 @@
 #include <cstring>
 #include <ctime>
 
-namespace sc::sftpimpl {
+namespace st::sftpimpl {
 
 namespace {
 
@@ -607,4 +607,4 @@ std::shared_ptr<RemoteFs> openScpFs(const std::weak_ptr<Transport>& transport) {
     return fs;
 }
 
-}  // namespace sc::sftpimpl
+}  // namespace st::sftpimpl
