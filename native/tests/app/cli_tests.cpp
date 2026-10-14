@@ -376,7 +376,6 @@ TEST_CASE("paths: portable vs installed vs override", "[app][paths]") {
     REQUIRE(p.dataDir == appData / "SSHTerm");
     REQUIRE(p.logsDir == appData / "SSHTerm" / "logs");
     REQUIRE(p.webViewDataDir == appData / "SSHTerm" / "WebView2");
-    REQUIRE(p.uiDir == exe / "ui");
 
     writeFileAtomic(exe / "portable.flag", "");
     p = resolveAppPaths(exe, appData);

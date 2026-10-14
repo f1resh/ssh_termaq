@@ -11,6 +11,7 @@
 #include <WebView2.h>
 #include <dwmapi.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <windowsx.h>
 #include <wrl.h>
 
@@ -54,20 +55,6 @@ std::wstring hrMessage(HRESULT hr) {
     }() + L")";
 }
 
-std::wstring htmlEscape(const std::wstring& s) {
-    std::wstring out;
-    for (wchar_t c : s) {
-        switch (c) {
-            case L'<': out += L"&lt;"; break;
-            case L'>': out += L"&gt;"; break;
-            case L'&': out += L"&amp;"; break;
-            case L'"': out += L"&quot;"; break;
-            default: out += c;
-        }
-    }
-    return out;
-}
-
 std::wstring originOf(const std::wstring& uri) {
     // scheme://host[:port]
     auto p = uri.find(L"://");
@@ -91,10 +78,13 @@ MainWindow::MainWindow(Store& store, AppPaths paths, MainWindowOptions options)
       web_(std::make_unique<WebView>()),
       placementSeq_(std::make_shared<std::atomic<uint64_t>>(0)) {
     uiThreadId_ = GetCurrentThreadId();
-    if (!options_.devUrl.empty())
+    if (!options_.devUrl.empty()) {
         appOrigin_ = originOf(widen(options_.devUrl));
-    else
+    } else {
         appOrigin_ = std::wstring(L"https://") + kAppHost;
+        ui_ = UiResources::load(GetModuleHandleW(nullptr));
+        applog::info("Embedded UI: " + std::to_string(ui_.size()) + " file(s)");
+    }
 }
 
 MainWindow::~MainWindow() {
@@ -492,13 +482,22 @@ void MainWindow::configureWebView() {
         if (SUCCEEDED(settings.As(&s9))) s9->put_IsNonClientRegionSupportEnabled(TRUE);
     }
 
-    // Bundled UI served from <exe>/ui through a virtual host (no file:// URLs).
-    ComPtr<ICoreWebView2_3> v3;
-    if (SUCCEEDED(web_->view.As(&v3)))
-        v3->SetVirtualHostNameToFolderMapping(kAppHost, paths_.uiDir.wstring().c_str(),
-                                              COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_DENY_CORS);
-
     EventRegistrationToken token{};
+
+    // Bundled UI: every request for https://app.sshterm.local/* is answered from the resources embedded in the
+    // executable (no files on disk, no file:// URLs).
+    if (options_.devUrl.empty()) {
+        view->AddWebResourceRequestedFilter((std::wstring(L"https://") + kAppHost + L"/*").c_str(),
+                                            COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        view->add_WebResourceRequested(
+            Callback<ICoreWebView2WebResourceRequestedEventHandler>(
+                [this](ICoreWebView2*, ICoreWebView2WebResourceRequestedEventArgs* args) -> HRESULT {
+                    serveUiResource(args);
+                    return S_OK;
+                })
+                .Get(),
+            &token);
+    }
 
     view->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
                                      [this](ICoreWebView2*, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
@@ -596,18 +595,50 @@ void MainWindow::navigateToUi() {
         web_->view->Navigate(widen(options_.devUrl).c_str());
         return;
     }
-    std::error_code ec;
-    if (!std::filesystem::exists(paths_.uiDir / "index.html", ec)) {
-        std::wstring html =
+    if (!ui_.find("index.html")) {
+        const std::wstring html =
             L"<!doctype html><meta charset=utf-8><body style=\"font:14px 'Segoe UI';background:#1b1d22;color:#e6e8ec;"
-            L"padding:40px\"><h2>SSHTerm</h2><p>The user interface files were not found in:</p><pre>" +
-            htmlEscape(paths_.uiDir.wstring()) +
-            L"</pre><p>Build them with <code>npm run build</code> in the <code>ui</code> folder (the build copies them "
-            L"next to the executable), or start with <code>--dev-url http://localhost:5173</code>.</p></body>";
+            L"padding:40px\"><h2>SSHTerm</h2><p>This copy of SSHTerm was built without its user interface: "
+            L"<code>ui/dist</code> did not exist when <code>SSHTerm.exe</code> was built.</p>"
+            L"<p>Run <code>npm run build</code> in the <code>ui</code> folder, then build SSHTerm again (the build embeds "
+            L"the interface into the executable), or start with <code>--dev-url http://localhost:5173</code>.</p></body>";
         web_->view->NavigateToString(html.c_str());
         return;
     }
     web_->view->Navigate((std::wstring(L"https://") + kAppHost + L"/index.html").c_str());
+}
+
+void MainWindow::serveUiResource(void* argsPtr) {
+    auto* args = static_cast<ICoreWebView2WebResourceRequestedEventArgs*>(argsPtr);
+    ComPtr<ICoreWebView2WebResourceRequest> request;
+    LPWSTR uriPtr = nullptr;
+    if (!args || !web_->env || FAILED(args->get_Request(&request)) || !request || FAILED(request->get_Uri(&uriPtr)) ||
+        !uriPtr)
+        return;
+    const std::string uri = narrow(uriPtr);
+    CoTaskMemFree(uriPtr);
+
+    int status = 404;
+    const wchar_t* reason = L"Not Found";
+    std::string_view body = "Not found";
+    std::string contentType = "text/plain; charset=utf-8";
+    if (const auto path = uiPathFromUri(uri, narrow(appOrigin_))) {
+        if (const auto data = ui_.find(*path)) {
+            status = 200;
+            reason = L"OK";
+            body = *data;
+            contentType = uiContentType(*path);
+        }
+    }
+    if (status != 200) applog::warn("Embedded UI has no file for " + uri);
+
+    // SHCreateMemStream copies the bytes, so the stream does not depend on the resource's lifetime.
+    ComPtr<IStream> stream;
+    stream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(body.data()), static_cast<UINT>(body.size())));
+    const std::wstring headers = L"Content-Type: " + widen(contentType) + L"\r\nCache-Control: no-cache";
+    ComPtr<ICoreWebView2WebResourceResponse> response;
+    if (stream && SUCCEEDED(web_->env->CreateWebResourceResponse(stream.Get(), status, reason, headers.c_str(), &response)))
+        args->put_Response(response.Get());
 }
 
 bool MainWindow::isAppOrigin(const std::wstring& uri) const { return !appOrigin_.empty() && originOf(uri) == appOrigin_; }

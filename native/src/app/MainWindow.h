@@ -7,6 +7,7 @@
 // treats points the WebView hands back (CSS "app-region: drag", WebView2 non-client region support) as caption.
 // Threading: everything except post()/isUiThread() must be called on the UI thread.
 #include "app/Paths.h"
+#include "app/UiResources.h"
 #include "core/Json.h"
 #include "core/Threading.h"
 #include "core/Win.h"
@@ -101,6 +102,8 @@ private:
     void onWebViewController(HRESULT hr, void* controller);
     void configureWebView();
     void navigateToUi();
+    /** Answers a WebView2 request for the bundled UI from the embedded resources (UI thread). */
+    void serveUiResource(void* args);
     void handleWebMessage(void* args);
     void showFatalWebViewError(const std::wstring& message);
     void resizeWebView();
@@ -125,6 +128,7 @@ private:
     std::unique_ptr<WebView> web_;
     std::string browserVersion_;
     std::wstring appOrigin_;  // "https://app.sshterm.local" or the dev server origin
+    UiResources ui_;          // the web UI embedded in the executable (see app/UiResources.h)
 
     std::mutex dispatchMutex_;
     std::deque<std::function<void()>> dispatchQueue_;

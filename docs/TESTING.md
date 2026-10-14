@@ -10,7 +10,7 @@ them depends on another.
 
 | Part | What it tests | Framework | Where | Automated | Size | Run time |
 |---|---|---|---|---|---|---|
-| **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 159 test cases | about 1 minute |
+| **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 163 test cases | about 1 minute |
 | **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab persistence | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 4 files, 69 tests | under 1 second |
 | **End-to-end and visual checks** | the whole UI, either inside the real app or in a browser against the mock backend | Playwright scripts | `ui/scripts/app.mjs`, `ui/scripts/shot.mjs` | no, run by hand | no saved scenarios | seconds |
 
@@ -62,7 +62,9 @@ skip those test cases (they don't fail) when a tool is missing:
 | `support_tests.cpp` | self-tests of all of the above |
 
 The file manager tests add [native/tests/sftp/SftpFixture.h](../native/tests/sftp/SftpFixture.h): a connected SSH
-session plus `SftpService` against the test server, driven through the bridge.
+session plus `SftpService` against the test server, driven through the bridge. The `app` tests also link
+[native/tests/app/ui_test.rc](../native/tests/app/ui_test.rc): a few small files embedded as resources in the same
+format the real build uses for the web UI, so loading the embedded UI is tested against real Windows resources.
 
 ### UI unit tests
 
@@ -151,14 +153,14 @@ TEST_CASE("ssh: password authentication, shell echo and exit code", "[ssh]") {
 
 ## 5. What is tested
 
-### Native tests (159 test cases)
+### Native tests (163 test cases)
 
-158 run by default; `putty: real registry smoke test` is hidden. The **Needs** column shows the tool without which a
+162 run by default; `putty: real registry smoke test` is hidden. The **Needs** column shows the tool without which a
 test case is skipped.
 
-#### app — `st_test_app.exe` (14)
+#### app — `st_test_app.exe` (18)
 
-Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`) and data-folder resolution (portable / installed / override). *Kind: unit.* Source: [native/tests/app](../native/tests/app).
+Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`) data-folder resolution (portable / installed / override), and the embedded web UI (index parsing, request paths, content types, loading the test resources in `ui_test.rc`). *Kind: unit.* Source: [native/tests/app](../native/tests/app).
 
 | Test case | Tags | Needs (skipped without) | File |
 |---|---|---|---|
@@ -176,6 +178,10 @@ Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`) and 
 | cli: splitCommandLine follows Windows quoting rules | `[app][cli]` |  | `cli_tests.cpp` |
 | cli: parse with a real Store (-load + default template) | `[app][cli]` |  | `cli_tests.cpp` |
 | paths: portable vs installed vs override | `[app][paths]` |  | `cli_tests.cpp` |
+| ui: index lines map paths to resource ids | `[app][ui]` |  | `ui_tests.cpp` |
+| ui: request URIs become paths relative to the UI root | `[app][ui]` |  | `ui_tests.cpp` |
+| ui: content types by extension | `[app][ui]` |  | `ui_tests.cpp` |
+| ui: files embedded as resources are found by path | `[app][ui]` |  | `ui_tests.cpp` |
 
 #### core — `st_test_core.exe` (4)
 

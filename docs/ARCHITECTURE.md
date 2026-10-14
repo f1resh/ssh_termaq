@@ -31,8 +31,10 @@ OpenSSL 3.6, zlib, nlohmann-json 3.12, WebView2 SDK, WIL, Catch2 3. libssh sourc
 implementing) are in `vcpkg_installed/vcpkg/blds/libssh/src/libssh-0-e5f4972781.clean/`.
 
 UI: `ui/` — Vite + React 19 + TypeScript 5.9 + zustand + xterm.js 5.5 (+ fit/webgl/search/web-links/unicode11
-addons) + lucide-react icons. Served by the host from `<exe dir>/ui` via WebView2 virtual host mapping
-`https://app.sshterm.local/` (dev: `--dev-url http://localhost:5173`).
+addons) + lucide-react icons. The built UI (`ui/dist`) is embedded in `SSHTerm.exe` as resources
+(`cmake/EmbedUi.cmake` generates the resource script) and served from memory for `https://app.sshterm.local/` by
+WebView2's `WebResourceRequested` (`app/UiResources.h`, `MainWindow::serveUiResource`); there is no `ui` folder on
+disk (dev: `--dev-url http://localhost:5173`).
 
 ## Contracts (read before writing code)
 
@@ -138,7 +140,7 @@ OpenSSH `scp` run through Git for Windows' `sh.exe` by the test server, drag out
 
 ```powershell
 # UI
-cd ui; npm run typecheck; npm test; npm run build          # build -> ui/dist (copied next to the exe)
+cd ui; npm run typecheck; npm test; npm run build          # build -> ui/dist (embedded into the exe by the native build)
 node scripts/shot.mjs --name <you> --out ../artifacts/<you>.png [--steps my-steps.mjs]   # mock-mode screenshot (headless Edge)
 
 # Native — use YOUR OWN build dir (build/<module>) so parallel builds don't collide

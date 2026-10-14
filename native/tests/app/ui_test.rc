@@ -1,0 +1,4 @@
+// Embedded UI resources for ui_tests.cpp, in the format cmake/EmbedUi.cmake generates (see app/UiResources.h).
+1 UIFILE "ui_test/index.txt"
+2 UIFILE "ui_test/index.html"
+3 UIFILE "ui_test/assets/app.js"

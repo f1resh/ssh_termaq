@@ -13,7 +13,6 @@ struct AppPaths {
     std::filesystem::path dataDir;         // sessions.json, settings.json, ...
     std::filesystem::path logsDir;         // <dataDir>/logs (app log + default session log directory)
     std::filesystem::path webViewDataDir;  // <dataDir>/WebView2 (WebView2 user data folder)
-    std::filesystem::path uiDir;           // <exeDir>/ui (bundled web UI)
     bool portable = false;
 };
 

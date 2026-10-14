@@ -38,7 +38,6 @@ fs::path roamingAppDataDirectory() {
 AppPaths resolveAppPaths(const fs::path& exeDir, const fs::path& appData, const fs::path& overrideDataDir) {
     AppPaths p;
     p.exeDir = exeDir;
-    p.uiDir = exeDir / L"ui";
     std::error_code ec;
     if (!overrideDataDir.empty()) {
         p.dataDir = overrideDataDir.is_relative() ? fs::absolute(overrideDataDir, ec) : overrideDataDir;

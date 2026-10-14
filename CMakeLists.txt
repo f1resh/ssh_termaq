@@ -116,18 +116,27 @@ set(app_res "")
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.rc)
   set(app_res ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.rc)
 endif()
-add_executable(SSHTerm WIN32 ${ST_SRC}/app/main.cpp ${app_res})
+# The built UI (ui/dist, produced by `npm run build` in ui/) is embedded into the executable as resources
+# (app/UiResources.h). The resource script is generated at configure time and refreshed on every build; it only
+# changes, and so only relinks the executable, when ui/dist does.
+set(ST_UI_EMBED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ui_embed)
+set(ST_UI_EMBED_ARGS -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/ui/dist -DOUT=${ST_UI_EMBED_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedUi.cmake)
+execute_process(COMMAND ${CMAKE_COMMAND} ${ST_UI_EMBED_ARGS})
+add_custom_target(st_ui_embed
+  COMMAND ${CMAKE_COMMAND} ${ST_UI_EMBED_ARGS}
+  BYPRODUCTS ${ST_UI_EMBED_DIR}/ui.rc ${ST_UI_EMBED_DIR}/ui_index.txt
+  COMMENT "Embedding the web UI (ui/dist)"
+  VERBATIM)
+set_target_properties(st_ui_embed PROPERTIES FOLDER "tools")
+
+add_executable(SSHTerm WIN32 ${ST_SRC}/app/main.cpp ${app_res} ${ST_UI_EMBED_DIR}/ui.rc)
+add_dependencies(SSHTerm st_ui_embed)
 target_link_libraries(SSHTerm PRIVATE st_app)
 set_target_properties(SSHTerm PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SSHTerm>")
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
   target_sources(SSHTerm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
 endif()
-
-# Copy the built UI (ui/dist, produced by `npm run build` in ui/) next to the executable as ./ui
-add_custom_command(TARGET SSHTerm POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/ui/dist -DDST=$<TARGET_FILE_DIR:SSHTerm>/ui
-          -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyUi.cmake
-  VERBATIM)
 
 # ------------------------------------------------------------------ tests ---
 if(ST_BUILD_TESTS)
@@ -163,6 +172,8 @@ if(ST_BUILD_TESTS)
   st_test(localfs st_localfs)
   st_test(dnd st_dnd)
   st_test(app st_app)
+  # Embedded-UI resources in the generated ui.rc format, for ui_tests.cpp.
+  target_sources(st_test_app PRIVATE ${ST_TESTS}/app/ui_test.rc)
 
   # Standalone test SSH server for manual / end-to-end testing (owner: testinfra).
   st_glob(testserver_src ${CMAKE_CURRENT_SOURCE_DIR}/native/tools/testserver/*.cpp)

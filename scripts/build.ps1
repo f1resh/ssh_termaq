@@ -58,10 +58,8 @@ if (Test-Path $dist) { Remove-Item -Recurse -Force $dist }
 New-Item -ItemType Directory -Force $dist | Out-Null
 
 $bin = 'build/release/Release'
-Copy-Item "$bin/SSHTerm.exe" $dist
+Copy-Item "$bin/SSHTerm.exe" $dist      # the web UI is embedded in the executable
 Get-ChildItem $bin -Filter *.dll | Copy-Item -Destination $dist
-Copy-Item -Recurse ui/dist (Join-Path $dist 'ui')
-Get-ChildItem (Join-Path $dist 'ui') -Recurse -Filter *.map | Remove-Item -Force
 if ($Portable) { New-Item -ItemType File (Join-Path $dist 'portable.flag') | Out-Null }
 
 @"

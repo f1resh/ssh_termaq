@@ -37,10 +37,10 @@ A second invocation opens a new tab in the already running window.
 
 ### Requirements
 
-Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11). The release folder holds
-`SSHTerm.exe`, `ssh.dll` (libssh, kept separate so it can be replaced under the LGPL) and the `ui` folder.
-Everything else, including the C/C++ runtime and OpenSSL, is linked in statically: no Visual C++
-Redistributable is needed.
+Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11). The release consists of
+two files: `SSHTerm.exe`, which also contains the user interface, and `ssh.dll` (libssh, kept separate so it can be
+replaced under the LGPL). Everything else, including the C/C++ runtime and OpenSSL, is linked in statically: no
+Visual C++ Redistributable is needed.
 
 ### Data and portable mode
 

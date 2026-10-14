@@ -73,8 +73,9 @@ npm run build      # type-checks, then bundles into ui\dist
 cd ..
 ```
 
-The native build copies `ui\dist` next to the executable. Build the UI first, or the app opens with
-"The user interface files were not found".
+The native build embeds `ui\dist` into `SSHTerm.exe`, so there is no `ui` folder next to the executable. Build the
+UI first, or the app opens with "This copy of SSHTerm was built without its user interface". After changing the UI,
+run `npm run build` and then the native build again; the executable is relinked only when `ui\dist` changed.
 
 ## 6. Build and run the native app
 
@@ -127,8 +128,8 @@ The tests use only localhost: an in-process libssh server (`native/tests/support
 .\scripts\build.ps1 -Tests     # run all test suites first
 ```
 
-The folder holds `SSHTerm.exe`, `ssh.dll` and `ui\`; nothing else is needed on the target machine except the
-WebView2 Runtime. Compile `scripts\installer.iss` with Inno Setup 6 for an installer.
+The folder holds `SSHTerm.exe` (with the UI inside) and `ssh.dll`; nothing else is needed on the target machine
+except the WebView2 Runtime. Compile `scripts\installer.iss` with Inno Setup 6 for an installer.
 
 ## Troubleshooting
 
@@ -137,7 +138,7 @@ WebView2 Runtime. Compile `scripts\installer.iss` with Inno Setup 6 for an insta
 | `vcpkg install` fails with `Operation REMOVE_DUPLICATES not recognized` | vcpkg is too old: update Visual Studio (step 3). |
 | `cmake --preset vs` fails with `Could not find toolchain file: …/vcpkg.cmake` | `CMakePresets.json` points `VCPKG_ROOT` at VS 2022 **Community**. For Professional / Enterprise add a local, uncommitted `CMakeUserPresets.json` (below). |
 | `Could not find a package configuration file provided by "libssh"` | Step 4 was not run, or was run with another triplet / install root. |
-| App starts with "The user interface files were not found" | Build the UI (step 5), then rebuild `SSHTerm` so `ui\dist` is copied. |
+| App shows "This copy of SSHTerm was built without its user interface" | `ui\dist` was missing during the native build: build the UI (step 5), then rebuild `SSHTerm` to embed it. |
 | App asks to install the WebView2 Runtime | Install the Evergreen WebView2 Runtime (Windows 10). |
 | `npm ci` warns `EBADENGINE` | Node.js is older than 20.19; install the current LTS. |
 
