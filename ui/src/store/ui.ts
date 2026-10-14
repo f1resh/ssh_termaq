@@ -1,5 +1,5 @@
 /**
- * Transient UI state: which dialog is open, command palette, SFTP panel, sidebar search.
+ * Transient UI state: which dialog is open, command palette, sidebar search.
  * Dialog components are rendered by <DialogHost/> based on `dialog.type`.
  */
 import { create } from 'zustand';
@@ -38,7 +38,6 @@ export interface UiState {
   paletteOpen: boolean;
   paletteMode: 'all' | 'sessions' | 'commands';
   /** Pane id whose SFTP browser is shown in the side panel (null = closed). */
-  sftpPaneId: string | null;
   sidebarFilter: string;
   fullscreen: boolean;
   windowFocused: boolean;
@@ -51,7 +50,6 @@ export interface UiState {
   openDialog(d: DialogState): void;
   closeDialog(): void;
   setPalette(open: boolean, mode?: UiState['paletteMode']): void;
-  setSftpPane(paneId: string | null): void;
   setSidebarFilter(v: string): void;
   set(patch: Partial<Pick<UiState, 'fullscreen' | 'windowFocused' | 'maximized'>>): void;
   setRenamingTab(tabId: string | null): void;
@@ -63,7 +61,6 @@ export const useUi = create<UiState>((set) => ({
   dialog: null,
   paletteOpen: false,
   paletteMode: 'all',
-  sftpPaneId: null,
   sidebarFilter: '',
   fullscreen: false,
   windowFocused: true,
@@ -74,7 +71,6 @@ export const useUi = create<UiState>((set) => ({
   closeDialog: () => set({ dialog: null }),
   setPalette: (paletteOpen, paletteMode = 'all') =>
     set({ paletteOpen, paletteMode, paletteQuery: paletteMode === 'commands' ? '>' : paletteMode === 'sessions' ? '@' : '' }),
-  setSftpPane: (sftpPaneId) => set({ sftpPaneId }),
   setSidebarFilter: (sidebarFilter) => set({ sidebarFilter }),
   set: (patch) => set(patch),
   setRenamingTab: (renamingTabId) => set({ renamingTabId }),

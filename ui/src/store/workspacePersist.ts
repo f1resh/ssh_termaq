@@ -16,6 +16,10 @@ export interface SnapshotPane {
   sessionId: string | null;
   /** Ad-hoc sessions only (secrets removed). */
   session?: SessionConfig;
+  /** File manager panes (restored with a connection of their own). */
+  kind?: 'files';
+  localPath?: string;
+  remotePath?: string;
 }
 
 export type SnapshotNode =
@@ -54,7 +58,13 @@ export function serializeWorkspace(
       const p = state.panes[n.paneId];
       if (!p) return null;
       const saved = p.sessionId && isSaved(p.sessionId);
-      return { type: 'pane', pane: saved ? { sessionId: p.sessionId } : { sessionId: null, session: stripSecrets(p.session) } };
+      const pane: SnapshotPane = saved ? { sessionId: p.sessionId } : { sessionId: null, session: stripSecrets(p.session) };
+      if (p.kind === 'files') {
+        pane.kind = 'files';
+        if (p.files?.localPath) pane.localPath = p.files.localPath;
+        if (p.files?.remotePath) pane.remotePath = p.files.remotePath;
+      }
+      return { type: 'pane', pane };
     }
     const kids: SnapshotNode[] = [];
     const sizes: number[] = [];
@@ -110,9 +120,12 @@ export function deserializeWorkspace(
         const session = saved ?? (n.pane?.session ? normalizeSession(n.pane.session, template) : undefined);
         if (!session) return null;
         const id = newId();
+        const files = n.pane?.kind === 'files';
         panes[id] = {
           id,
           tabId,
+          kind: files ? 'files' : 'terminal',
+          files: files ? { localPath: n.pane.localPath, remotePath: n.pane.remotePath } : undefined,
           sessionId: saved ? saved.id : null,
           session: structuredClone(session),
           generation: 1,
@@ -185,9 +198,20 @@ export function startWorkspaceAutosave(enabled: () => boolean, isSaved: (id: str
     last = json;
     api.app.setState(WORKSPACE_STATE_KEY, snap).catch((e) => console.warn('workspace save failed', e));
   };
+  const filesSignature = (panes: Record<string, PaneState>) =>
+    Object.values(panes)
+      .filter((p) => p.kind === 'files')
+      .map((p) => `${p.id}:${p.files?.localPath ?? ''}:${p.files?.remotePath ?? ''}`)
+      .join('|');
   const unsub = useWorkspace.subscribe((s, prev) => {
-    // Only structural changes matter (status / activity updates do not).
-    if (s.tabs === prev.tabs && s.activeTabId === prev.activeTabId && Object.keys(s.panes).length === Object.keys(prev.panes).length) return;
+    // Only structural changes and file manager folders matter (status / activity updates do not).
+    if (
+      s.tabs === prev.tabs &&
+      s.activeTabId === prev.activeTabId &&
+      Object.keys(s.panes).length === Object.keys(prev.panes).length &&
+      (s.panes === prev.panes || filesSignature(s.panes) === filesSignature(prev.panes))
+    )
+      return;
     if (timer) clearTimeout(timer);
     timer = setTimeout(flush, delayMs);
   });

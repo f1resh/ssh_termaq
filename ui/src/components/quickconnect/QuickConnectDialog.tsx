@@ -39,7 +39,7 @@ export async function rememberQuickConnect(text: string): Promise<void> {
 /** Opens a parsed target in a new tab and records it in the history. */
 export function quickConnectTo(target: QuickConnectTarget): void {
   const session = applyQuickConnect(createAdHocSession(), target);
-  connectSession(session, 'tab');
+  connectSession(session, 'tab', undefined, target.files ? { view: 'files', remotePath: target.files.path } : { view: 'terminal' });
   void rememberQuickConnect(formatQuickConnect(target));
 }
 

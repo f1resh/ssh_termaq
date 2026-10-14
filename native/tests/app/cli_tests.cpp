@@ -109,6 +109,31 @@ TEST_CASE("cli: protocol flags set the default port unless -P is given", "[app][
     r = parse({"ssh://bob@s.test:2222"});
     REQUIRE(r.request->session.username == "bob");
     REQUIRE(r.request->session.port == 2222);
+    REQUIRE(r.request->view.empty());
+}
+
+TEST_CASE("cli: sftp:// and scp:// open the file manager", "[app][cli]") {
+    auto r = parse({"sftp://deploy%40corp@files.test:2200/var/www/my%20site"});
+    REQUIRE(r.request);
+    const auto& s = r.request->session;
+    CHECK(s.protocol == Protocol::Ssh);
+    CHECK(s.host == "files.test");
+    CHECK(s.port == 2200);
+    CHECK(s.username == "deploy@corp");
+    CHECK(s.ssh.fileProtocol == FileProtocol::Sftp);
+    CHECK(r.request->view == "files");
+    CHECK(r.request->remotePath == "/var/www/my site");
+
+    r = parse({"scp://router.test"});
+    REQUIRE(r.request);
+    CHECK(r.request->session.port == 22);
+    CHECK(r.request->session.ssh.fileProtocol == FileProtocol::Scp);
+    CHECK(r.request->view == "files");
+    CHECK(r.request->remotePath.empty());
+
+    const Json j = toJson(*r.request);
+    CHECK(j["view"] == "files");
+    CHECK_FALSE(j.contains("remotePath"));
 }
 
 TEST_CASE("cli: -l, -pw, -i, flags", "[app][cli]") {

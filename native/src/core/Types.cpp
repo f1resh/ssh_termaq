@@ -144,7 +144,37 @@ Json toJson(const OpenRequest& r) {
     Json j = {{"session", r.session}};
     if (!r.savedSessionId.empty()) j["savedSessionId"] = r.savedSessionId;
     if (!r.password.empty()) j["password"] = r.password;
+    if (!r.view.empty()) j["view"] = r.view;
+    if (!r.remotePath.empty()) j["remotePath"] = r.remotePath;
     return j;
+}
+
+/* ---- file manager -------------------------------------------------------- */
+
+void to_json(Json& j, const SyncItem& v) {
+    j = Json{{"relPath", v.relPath}, {"isDir", v.isDir}, {"action", v.action}, {"reason", v.reason}};
+    if (v.local) j["local"] = *v.local;
+    if (v.remote) j["remote"] = *v.remote;
+}
+
+void from_json(const Json& j, SyncItem& v) {
+    v = SyncItem{};
+    v.relPath = j.value("relPath", std::string());
+    v.isDir = j.value("isDir", false);
+    v.action = j.value("action", std::string());
+    v.reason = j.value("reason", std::string());
+    if (j.contains("local") && j["local"].is_object()) v.local = j["local"].get<SyncSide>();
+    if (j.contains("remote") && j["remote"].is_object()) v.remote = j["remote"].get<SyncSide>();
+}
+
+void to_json(Json& j, const LocalEntry& v) {
+    j = Json{{"name", v.name},     {"path", v.path},         {"type", v.type},
+             {"size", v.size},     {"mtime", v.mtime},       {"hidden", v.hidden},
+             {"system", v.system}, {"readonly", v.readonly}, {"link", v.link}};
+    if (!v.label.empty()) j["label"] = v.label;
+    if (v.freeBytes >= 0) j["freeBytes"] = v.freeBytes;
+    if (v.totalBytes >= 0) j["totalBytes"] = v.totalBytes;
+    if (!v.icon.empty()) j["icon"] = v.icon;
 }
 
 }  // namespace sc

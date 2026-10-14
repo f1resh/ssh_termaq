@@ -17,7 +17,7 @@ import { api } from '@/bridge/api';
 import { Button, IconButton, NumberInput, Switch, TextArea, TextInput, cx } from '@/components/ui';
 import { createPortForward } from '@shared/defaults';
 import { SSH_CIPHERS, SSH_HOSTKEYS, SSH_KEX, SSH_MACS, WEAK_ALGORITHMS } from '@shared/algorithms';
-import type { AddressFamily, AgentKind, ForwardType, KeyInfo, PortForward } from '@shared/types';
+import type { AddressFamily, AgentKind, FileProtocol, ForwardType, KeyInfo, PortForward } from '@shared/types';
 import {
   Badge,
   Callout,
@@ -77,13 +77,29 @@ export function SshSection() {
         </div>
         {warning('ssh.noShell') && <Callout tone="warning">{warning('ssh.noShell')}</Callout>}
       </Section>
-      <Section title="SFTP">
-        <FormField label="Initial remote directory" hint="Leave empty to start in the home directory">
+      <Section title="File manager">
+        <FormField label="File protocol" hint="Auto uses SFTP and falls back to SCP for servers without SFTP (routers, BusyBox, Dropbear).">
+          <SegmentedControl
+            ariaLabel="File protocol"
+            value={s.fileProtocol ?? 'auto'}
+            options={FILE_PROTOCOL_OPTIONS}
+            onChange={(v) => update((d) => void (d.ssh.fileProtocol = v))}
+          />
+        </FormField>
+        <FormField label="Initial remote folder" hint="Leave empty to start in the home folder">
           <TextInput
             className="mono-input"
             value={s.sftpStartPath}
             placeholder="~"
             onChange={(v) => update((d) => void (d.ssh.sftpStartPath = v))}
+          />
+        </FormField>
+        <FormField label="Initial local folder" hint="Leave empty to start where the file manager was last used">
+          <TextInput
+            className="mono-input"
+            value={s.localStartPath ?? ''}
+            placeholder="C:\Users\…"
+            onChange={(v) => update((d) => void (d.ssh.localStartPath = v))}
           />
         </FormField>
       </Section>
@@ -94,6 +110,12 @@ export function SshSection() {
 /* -------------------------------------------------------------------------- */
 /* SSH › Authentication                                                       */
 /* -------------------------------------------------------------------------- */
+
+const FILE_PROTOCOL_OPTIONS: readonly SegmentOption<FileProtocol>[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'sftp', label: 'SFTP' },
+  { value: 'scp', label: 'SCP', title: 'Legacy SCP with shell commands for browsing; no resume' }
+];
 
 const AGENT_OPTIONS: readonly SegmentOption<AgentKind>[] = [
   { value: 'auto', label: 'Auto', title: 'Pageant if running, otherwise the Windows OpenSSH agent' },

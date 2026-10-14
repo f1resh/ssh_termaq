@@ -4,6 +4,7 @@
 // channel opens and global requests arrive through the message callback; per-channel requests (pty, shell, exec,
 // env, subsystem, window-change, signal, x11, agent) through ssh_channel_callbacks. All channel output is queued
 // and flushed by the loop according to the channel window, so large outputs never block inside callbacks.
+#include "TestExecProcess.h"
 #include "TestNet.h"
 #include "TestServers.h"
 #include "TestSftpServer.h"
@@ -71,7 +72,9 @@ struct ChannelState {
     std::string term;
     int cols = 0, rows = 0;
     std::map<std::string, std::string> env;
-    enum class Mode { None, Shell, Exec, Sftp } mode = Mode::None;
+    enum class Mode { None, Shell, Exec, ExecProc, Sftp } mode = Mode::None;
+    std::unique_ptr<ExecProcess> proc;  // Mode::ExecProc
+    std::string errOut;                 // pending stderr to the client
     std::string line;
     bool lastCr = false;
     bool waitingForSignal = false;
@@ -257,6 +260,7 @@ int onData(ssh_session, ssh_channel, void* data, uint32_t len, int, void* ud) {
             queue(ch, out);
             break;
         }
+        case ChannelState::Mode::ExecProc: ch->proc->writeInput(std::string(d)); break;
         default: break;  // exec ignores stdin
     }
     return static_cast<int>(len);
@@ -268,6 +272,8 @@ void onEof(ssh_session, ssh_channel, void* ud) {
         ch->chanEof = true;  // pumpChannel half-closes after flushing pending data
     } else if (ch->mode == ChannelState::Mode::Sftp) {
         finishChannel(ch, 0);
+    } else if (ch->mode == ChannelState::Mode::ExecProc) {
+        ch->proc->closeInput();
     }
 }
 
@@ -313,9 +319,21 @@ int onShell(ssh_session, ssh_channel, void* ud) {
 int onExec(ssh_session, ssh_channel, const char* command, void* ud) {
     ChannelState* ch = st(ud);
     if (ch->mode != ChannelState::Mode::None) return -1;
-    ch->mode = ChannelState::Mode::Exec;
     const std::string c = command ? command : "";
-    ch->conn->server->event("exec:" + c);
+    TestSshServer::Impl* s = ch->conn->server;
+    s->event("exec:" + c);
+    if (!s->opts.execShell.empty()) {
+        ch->mode = ChannelState::Mode::ExecProc;
+        try {
+            ch->proc = ExecProcess::spawn(s->opts.execShell, s->opts.execCwd.empty() ? s->opts.sftpRoot : s->opts.execCwd, c);
+        } catch (const std::exception& e) {
+            ch->mode = ChannelState::Mode::Exec;
+            queue(ch, std::string("cannot run: ") + e.what() + "\n");
+            finishChannel(ch, 127);
+        }
+        return 0;
+    }
+    ch->mode = ChannelState::Mode::Exec;
     execCommand(ch, c);
     return 0;
 }
@@ -541,6 +559,19 @@ bool pumpChannel(ChannelState* ch) {
             else if (n == 0 || !net::wouldBlock()) ch->closeAfterFlush = true;
         }
     }
+    if (ch->mode == ChannelState::Mode::ExecProc && ch->proc && !ch->closeAfterFlush) {
+        if (ch->out.size() < 256 * 1024) ch->proc->takeOutput(ch->out, ch->errOut, 256 * 1024 - ch->out.size());
+        int code = 0;
+        if (ch->out.empty() && ch->errOut.empty() && ch->proc->finished(code)) finishChannel(ch, code);
+    }
+    while (!ch->errOut.empty() && !ch->remoteClosed) {
+        uint32_t window = ssh_channel_window_size(ch->channel);
+        if (window == 0) break;
+        const size_t chunk = std::min<size_t>({ch->errOut.size(), window, 32768});
+        int n = ssh_channel_write_stderr(ch->channel, ch->errOut.data(), static_cast<uint32_t>(chunk));
+        if (n <= 0) break;
+        ch->errOut.erase(0, static_cast<size_t>(n));
+    }
     while (!ch->out.empty() && !ch->remoteClosed) {
         uint32_t window = ssh_channel_window_size(ch->channel);
         if (window == 0) break;
@@ -550,7 +581,7 @@ bool pumpChannel(ChannelState* ch) {
         ch->out.erase(0, static_cast<size_t>(n));
     }
     if (ch->remoteClosed) return false;
-    if (ch->closeAfterFlush && ch->out.empty()) {
+    if (ch->closeAfterFlush && ch->out.empty() && ch->errOut.empty()) {
         if (!ch->eofSent) {
             ssh_channel_send_eof(ch->channel);
             ch->eofSent = true;

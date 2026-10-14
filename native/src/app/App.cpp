@@ -10,13 +10,16 @@
 #include "core/Log.h"
 #include "core/Strings.h"
 #include "core/Win.h"
+#include "dnd/DragDrop.h"
 #include "importers/ImportHandlers.h"
+#include "localfs/LocalFsService.h"
 #include "net/Socket.h"
 #include "session/SessionManager.h"
 #include "sftp/SftpService.h"
 #include "store/Store.h"
 
 #include <objbase.h>
+#include <ole2.h>
 
 #include <exception>
 #include <filesystem>
@@ -140,7 +143,8 @@ int runApp(int argc, wchar_t** argv) {
         applog::warn("Another instance holds the lock but could not be reached; starting anyway");
     }
 
-    HRESULT com = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    // OLE (not just COM): drag & drop needs it on the UI thread.
+    HRESULT com = OleInitialize(nullptr);
     WsaInit wsa;
 
     int exitCode = 0;
@@ -158,11 +162,13 @@ int runApp(int argc, wchar_t** argv) {
 
         SessionManager sessions(store, bridge);
         SftpService sftp(sessions, bridge);
+        LocalFsService localFs(bridge, [&window] { return window.hwnd(); });
         OpenRequestQueue openRequests(bridge);
 
         registerConnHandlers(bridge, sessions);
         registerImportHandlers(bridge, store);
         sftp.registerHandlers();
+        localFs.registerHandlers();
         registerCoreHandlers({bridge, store, window, paths, openRequests});
 
         window.activeSessionCount = [&sessions] { return sessions.activeCount(); };
@@ -182,6 +188,7 @@ int runApp(int argc, wchar_t** argv) {
             exitCode = 1;
         } else {
             dialogs::init(window.hwnd(), &window);
+            dnd::init(window.hwnd());
             MSG msg;
             while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
                 TranslateMessage(&msg);
@@ -192,15 +199,17 @@ int runApp(int argc, wchar_t** argv) {
 
         applog::info("Shutting down");
         dialogs::init(nullptr, nullptr);
+        dnd::init(nullptr);
         bridge.setSink(nullptr);
         sftp.closeAll();
+        localFs.closeAll();
         sessions.closeAll();
         store.onSessionsChanged = nullptr;
         store.onSettingsChanged = nullptr;
         store.knownHosts().onChanged = nullptr;
     }
 
-    if (SUCCEEDED(com)) CoUninitialize();
+    if (SUCCEEDED(com)) OleUninitialize();
     applog::info("Bye");
     return exitCode;
 }

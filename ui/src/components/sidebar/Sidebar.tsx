@@ -14,6 +14,8 @@ import {
   Folder,
   FolderInput,
   FolderOpen,
+  HardDriveDownload,
+  SquareTerminal,
   FolderPlus,
   Pencil,
   Play,
@@ -82,10 +84,19 @@ function moveToFolderItems(onPick: (folder: string) => void, exclude?: (f: strin
 }
 
 function sessionMenu(s: SessionConfig): MenuItem[] {
+  const ssh = s.protocol === 'ssh';
+  const files = ssh && s.openAs === 'files';
   return [
     { label: 'Connect', icon: <Play size={14} />, onClick: () => connectSession(s, 'tab') },
-    { label: 'Connect in split right', icon: <Columns2 size={14} />, onClick: () => connectSession(s, 'split-right') },
-    { label: 'Connect in split down', icon: <Rows2 size={14} />, onClick: () => connectSession(s, 'split-down') },
+    ...(ssh
+      ? [
+          files
+            ? { label: 'Open terminal', icon: <SquareTerminal size={14} />, onClick: () => connectSession(s, 'tab', undefined, { view: 'terminal' }) }
+            : { label: 'Open file manager', icon: <HardDriveDownload size={14} />, onClick: () => connectSession(s, 'tab', undefined, { view: 'files' }) }
+        ]
+      : []),
+    { label: 'Connect in split right', icon: <Columns2 size={14} />, disabled: files, onClick: () => connectSession(s, 'split-right', undefined, { view: 'terminal' }) },
+    { label: 'Connect in split down', icon: <Rows2 size={14} />, disabled: files, onClick: () => connectSession(s, 'split-down', undefined, { view: 'terminal' }) },
     { type: 'separator' },
     { label: 'Edit…', icon: <SlidersHorizontal size={14} />, onClick: () => editSession(s.id) },
     { label: 'Duplicate', icon: <Copy size={14} />, onClick: () => void duplicateSession(s) },

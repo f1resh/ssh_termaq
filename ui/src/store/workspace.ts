@@ -1,11 +1,13 @@
 /**
- * Workspace = open tabs, each holding a split-pane layout tree of terminal panes.
- * One pane == one connection. A pane's connection id is `${paneId}#${generation}`; restarting a pane
+ * Workspace = open tabs, each holding a split-pane layout tree of panes.
+ * A terminal pane owns one connection. A pane's connection id is `${paneId}#${generation}`; restarting a pane
  * bumps the generation so late events from the previous connection are ignored.
+ * A files pane (the file manager, always alone in its tab) either borrows the connection of a terminal pane
+ * (`linkedPaneId`) or owns a shell-less SSH connection of its own.
  */
 import { create } from 'zustand';
 import { newId, sessionLabel } from '@shared/defaults';
-import type { ConnStatus, SessionConfig } from '@shared/types';
+import type { ConnStatus, SessionConfig, SessionView } from '@shared/types';
 
 /** 'row' = children side by side (split right), 'column' = stacked (split down). */
 export type SplitDirection = 'row' | 'column';
@@ -16,9 +18,21 @@ export type LayoutNode =
 
 export type PaneStatus = ConnStatus | 'idle';
 
+export type PaneKind = 'terminal' | 'files';
+
+/** File manager folders (kept with the workspace so a restored tab reopens where it was). */
+export interface FilesPaneState {
+  localPath?: string;
+  remotePath?: string;
+}
+
 export interface PaneState {
   id: string;
   tabId: string;
+  kind: PaneKind;
+  /** Files panes opened from a terminal: the terminal pane whose connection they use. */
+  linkedPaneId?: string;
+  files?: FilesPaneState;
   /** Saved session id; null for ad-hoc (quick connect / CLI). */
   sessionId: string | null;
   /** Effective configuration used for the connection (snapshot at open/restart time). */
@@ -57,6 +71,12 @@ export interface OpenOptions {
   password?: string;
   /** Pane to split beside (defaults to the active pane). */
   besidePaneId?: string;
+  /** 'files' opens the file manager (always in a new tab). */
+  view?: SessionView;
+  /** Files view: use this terminal pane's connection. */
+  linkedPaneId?: string;
+  remotePath?: string;
+  localPath?: string;
 }
 
 export interface WorkspaceState {
@@ -141,9 +161,11 @@ function mapSplit(node: LayoutNode, splitId: string, fn: (n: Extract<LayoutNode,
   return { ...node, children: node.children.map((c) => mapSplit(c, splitId, fn)) };
 }
 
-function makePane(tabId: string, session: SessionConfig, sessionId: string | null, password?: string): PaneState {
+function makePane(tabId: string, session: SessionConfig, sessionId: string | null, password?: string, extra: Partial<PaneState> = {}): PaneState {
   const id = newId();
   return {
+    kind: 'terminal',
+    ...extra,
     id,
     tabId,
     sessionId,
@@ -166,6 +188,7 @@ export function tabTitle(tab: TabState, panes: Record<string, PaneState>): strin
 }
 
 export function paneTitle(p: PaneState): string {
+  if (p.kind === 'files') return sessionLabel(p.session) || p.session.host || 'Files';
   if (p.session.terminal.windowTitle) return p.session.terminal.windowTitle;
   if (p.remoteTitle && p.session.terminal.allowRemoteTitle) return p.remoteTitle;
   return sessionLabel(p.session) || p.session.host || 'Session';
@@ -177,10 +200,11 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   panes: {},
 
   openSession(session, opts = {}) {
-    const target = opts.target ?? 'tab';
+    const files = opts.view === 'files';
+    const target = files ? 'tab' : (opts.target ?? 'tab');
     const sessionId = opts.sessionId === undefined ? session.id ?? null : opts.sessionId;
     const st = get();
-    if (target !== 'tab') {
+    if (target !== 'tab' && st.panes[opts.besidePaneId ?? '']?.kind !== 'files') {
       const tab = st.tabs.find((t) => t.id === st.activeTabId);
       const beside = opts.besidePaneId ?? tab?.activePaneId;
       if (tab && beside && st.panes[beside]) {
@@ -197,7 +221,13 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       }
     }
     const tabId = newId();
-    const p = makePane(tabId, session, sessionId, opts.password);
+    const p = makePane(
+      tabId,
+      session,
+      sessionId,
+      opts.password,
+      files ? { kind: 'files', linkedPaneId: opts.linkedPaneId, files: { remotePath: opts.remotePath, localPath: opts.localPath } } : {}
+    );
     const tab: TabState = {
       id: tabId,
       layout: { type: 'pane', paneId: p.id },
@@ -299,7 +329,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
   splitPane(paneId, direction, session, sessionId) {
     const src = get().panes[paneId];
-    if (!src) return '';
+    if (!src || src.kind === 'files') return '';
     return get().openSession(session ?? src.session, {
       target: direction === 'row' ? 'split-right' : 'split-down',
       besidePaneId: paneId,
@@ -310,6 +340,10 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   duplicatePane(paneId, target) {
     const src = get().panes[paneId];
     if (!src) return undefined;
+    if (src.kind === 'files') {
+      // A file manager duplicates into a new file manager tab with its own connection.
+      return get().openSession(src.session, { view: 'files', sessionId: src.sessionId, remotePath: src.files?.remotePath, localPath: src.files?.localPath });
+    }
     return get().openSession(src.session, { target, besidePaneId: paneId, sessionId: src.sessionId });
   },
 
@@ -328,7 +362,9 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
             status: 'idle',
             statusMessage: undefined,
             serverInfo: undefined,
-            oneTimePassword: undefined
+            oneTimePassword: undefined,
+            // A file manager whose terminal is gone reconnects on its own.
+            linkedPaneId: p.linkedPaneId && s.panes[p.linkedPaneId] ? p.linkedPaneId : undefined
           }
         }
       };

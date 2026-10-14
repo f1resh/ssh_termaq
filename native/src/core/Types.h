@@ -6,6 +6,7 @@
 #include "core/Json.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -101,6 +102,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ConnStatus, {{ConnStatus::Connecting, "connecting"}
 enum class LogLevel { Info, Warn, Error, Debug };
 NLOHMANN_JSON_SERIALIZE_ENUM(LogLevel, {{LogLevel::Info, "info"}, {LogLevel::Warn, "warn"}, {LogLevel::Error, "error"}, {LogLevel::Debug, "debug"}})
 
+enum class FileProtocol { Auto, Sftp, Scp };
+NLOHMANN_JSON_SERIALIZE_ENUM(FileProtocol, {{FileProtocol::Auto, "auto"}, {FileProtocol::Sftp, "sftp"}, {FileProtocol::Scp, "scp"}})
+
 enum class HostKeyCheck { Match, Mismatch, Unknown };
 NLOHMANN_JSON_SERIALIZE_ENUM(HostKeyCheck, {{HostKeyCheck::Match, "match"}, {HostKeyCheck::Mismatch, "mismatch"}, {HostKeyCheck::Unknown, "unknown"}})
 
@@ -177,10 +181,12 @@ struct SshOptions {
     bool localPortsAcceptAll = false;
     bool remotePortsAcceptAll = false;
     std::string sftpStartPath;
+    FileProtocol fileProtocol = FileProtocol::Auto;
+    std::string localStartPath;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SshOptions, remoteCommand, noShell, allocatePty, compression, kex, ciphers,
                                                 hostKeyAlgorithms, macs, auth, x11, tunnels, localPortsAcceptAll,
-                                                remotePortsAcceptAll, sftpStartPath)
+                                                remotePortsAcceptAll, sftpStartPath, fileProtocol, localStartPath)
 
 struct TelnetOptions {
     bool passive = false;
@@ -287,6 +293,7 @@ struct SessionConfig {
     std::string host;
     int port = 22;
     std::string username;
+    std::string openAs = "terminal";  // 'terminal' | 'files'
     int64_t createdAt = 0;
     int64_t updatedAt = 0;
     int64_t lastUsedAt = 0;
@@ -304,7 +311,7 @@ struct SessionConfig {
     LoggingOptions logging;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SessionConfig, id, name, folder, color, notes, protocol, host, port, username,
-                                                createdAt, updatedAt, lastUsedAt, connection, proxy, ssh, telnet, rlogin, serial,
+                                                openAs, createdAt, updatedAt, lastUsedAt, connection, proxy, ssh, telnet, rlogin, serial,
                                                 terminal, keyboard, appearance, translation, logging)
 
 /** Default port for a protocol (ssh 22, telnet 23, rlogin 513, raw/serial 0). */
@@ -461,6 +468,18 @@ struct SftpEntry {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SftpEntry, name, path, type, size, mtime, mode, permissions, uid, gid, linkTargetIsDir)
 
+struct RemoteCapabilities {
+    bool resume = true;
+    bool preciseTimes = true;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(RemoteCapabilities, resume, preciseTimes)
+
+struct SftpOpenOptions {
+    FileProtocol fileProtocol = FileProtocol::Auto;
+    int parallelTransfers = 2;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SftpOpenOptions, fileProtocol, parallelTransfers)
+
 struct TransferProgress {
     std::string transferId;
     std::string sftpId;
@@ -472,9 +491,150 @@ struct TransferProgress {
     double total = 0;
     std::string state = "queued";  // 'queued' | 'running' | 'done' | 'error' | 'cancelled'
     std::string error;
+    bool move = false;
+    int filesDone = 0;
+    int filesTotal = 0;
+    std::string currentFile;
+    int skipped = 0;
+    std::string origin = "transfer";  // 'transfer' | 'edit' | 'sync' | 'drag' | 'open'
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(TransferProgress, transferId, sftpId, direction, name, localPath, remotePath,
-                                                transferred, total, state, error)
+                                                transferred, total, state, error, move, filesDone, filesTotal, currentFile,
+                                                skipped, origin)
+
+struct TransferOptions {
+    std::string conflict = "ask";  // 'ask' | 'overwrite' | 'newer' | 'skip' | 'resume' | 'rename'
+    bool move = false;
+    bool preserveTimestamps = true;
+    bool deleteToRecycleBin = true;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(TransferOptions, conflict, move, preserveTimestamps, deleteToRecycleBin)
+
+struct FileStat {
+    std::string path;
+    double size = 0;
+    int64_t mtime = 0;  // ms
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(FileStat, path, size, mtime)
+
+struct TransferConflict {
+    std::string conflictId;
+    std::string transferId;
+    std::string sftpId;
+    std::string direction;
+    std::string name;
+    FileStat source;
+    FileStat target;
+    bool canResume = false;
+    std::string reason = "exists";  // 'exists' | 'changed'
+    bool multiple = false;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(TransferConflict, conflictId, transferId, sftpId, direction, name, source,
+                                                target, canResume, reason, multiple)
+
+struct ConflictResolution {
+    std::string action = "cancel";  // 'overwrite' | 'newer' | 'skip' | 'resume' | 'rename' | 'cancel'
+    std::string newName;
+    bool applyToAll = false;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ConflictResolution, action, newName, applyToAll)
+
+struct FindRequest {
+    std::string root;
+    std::string pattern;
+    bool caseSensitive = false;
+    bool includeHidden = false;
+    int maxResults = 10000;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(FindRequest, root, pattern, caseSensitive, includeHidden, maxResults)
+
+struct FindEvent {
+    std::string findId;
+    std::string sftpId;
+    std::vector<SftpEntry> results;
+    int scannedDirs = 0;
+    std::string currentDir;
+    bool done = false;
+    bool truncated = false;
+    std::string error;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(FindEvent, findId, sftpId, results, scannedDirs, currentDir, done, truncated,
+                                                error)
+
+struct SyncRequest {
+    std::string localDir;
+    std::string remoteDir;
+    std::string direction = "upload";  // 'upload' | 'download' | 'both'
+    bool compareTime = true;
+    bool compareSize = true;
+    bool deleteExtra = false;
+    std::string exclude;
+    bool includeHidden = true;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SyncRequest, localDir, remoteDir, direction, compareTime, compareSize,
+                                                deleteExtra, exclude, includeHidden)
+
+struct SyncSide {
+    double size = 0;
+    int64_t mtime = 0;  // ms
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SyncSide, size, mtime)
+
+struct SyncItem {
+    std::string relPath;
+    bool isDir = false;
+    std::string action;  // 'upload' | 'download' | 'deleteLocal' | 'deleteRemote'
+    std::string reason;  // 'new' | 'newer' | 'older' | 'size' | 'extra'
+    std::optional<SyncSide> local;
+    std::optional<SyncSide> remote;
+};
+void to_json(Json& j, const SyncItem& v);
+void from_json(const Json& j, SyncItem& v);
+
+struct EditOptions {
+    std::string editor;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(EditOptions, editor)
+
+struct EditEvent {
+    std::string editId;
+    std::string sftpId;
+    std::string remotePath;
+    std::string localPath;
+    std::string state;  // 'opened' | 'uploading' | 'uploaded' | 'error' | 'closed'
+    std::string error;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(EditEvent, editId, sftpId, remotePath, localPath, state, error)
+
+struct DragResult {
+    std::string result = "cancelled";  // 'external' | 'internal' | 'cancelled'
+    int x = 0;
+    int y = 0;
+    bool move = false;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(DragResult, result, x, y, move)
+
+/* ------------------------------------------------------------------------ */
+/* Local files                                                               */
+/* ------------------------------------------------------------------------ */
+
+struct LocalEntry {
+    std::string name;
+    std::string path;
+    std::string type = "file";  // 'file' | 'dir' | 'drive' | 'place'
+    double size = 0;
+    int64_t mtime = 0;  // ms
+    bool hidden = false;
+    bool system = false;
+    bool readonly = false;
+    bool link = false;
+    // Drives and places only; omitted from JSON when empty / negative.
+    std::string label;
+    double freeBytes = -1;
+    double totalBytes = -1;
+    std::string icon;
+};
+void to_json(Json& j, const LocalEntry& v);
 
 /* ------------------------------------------------------------------------ */
 /* Keys                                                                      */
@@ -515,6 +675,8 @@ struct OpenRequest {
     SessionConfig session;
     std::string savedSessionId;  // '' => none
     std::string password;        // '' => none
+    std::string view;            // '' (session default) | 'terminal' | 'files'
+    std::string remotePath;      // '' => none
 };
 Json toJson(const OpenRequest& r);
 

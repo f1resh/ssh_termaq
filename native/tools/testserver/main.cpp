@@ -1,6 +1,9 @@
 // Standalone test SSH server for manual / end-to-end testing.
 // Usage: sc_testserver [--port N] [--user U] [--password P] [--sftp-root DIR] [--authorized-keys FILE]
 //                      [--banner TEXT] [--host-key-type ed25519|rsa|ecdsa]
+//                      [--sftp on|off] [--exec-shell git|PATH]
+//   --sftp off           refuse the SFTP subsystem (clients fall back to SCP)
+//   --exec-shell git     run exec requests through Git for Windows' sh.exe in the SFTP root (real ls / scp)
 // Prints "LISTENING <port> <host key fingerprint>" and runs until stdin is closed or Ctrl+C.
 #include "TestServers.h"
 
@@ -20,6 +23,14 @@ int main(int argc, char** argv) {
         else if (k == "--sftp-root") o.sftpRoot = v;
         else if (k == "--banner") o.banner = v;
         else if (k == "--host-key-type") o.hostKeyType = v;
+        else if (k == "--sftp") o.enableSftp = v != "off";
+        else if (k == "--exec-shell") {
+            o.execShell = v == "git" ? sc::test::gitShell() : std::filesystem::path(v);
+            if (o.execShell.empty()) {
+                std::cerr << "Git for Windows' sh.exe was not found\n";
+                return 2;
+            }
+        }
         else if (k == "--authorized-keys") {
             std::ifstream f(v);
             for (std::string line; std::getline(f, line);)

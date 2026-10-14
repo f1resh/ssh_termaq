@@ -78,9 +78,27 @@ struct HostSpec {
     std::string host;
     std::optional<int> port;
     std::optional<Protocol> protocol;  // from a URL scheme
+    std::optional<FileProtocol> fileProtocol;  // sftp:// / scp:// open the file manager
+    std::string remotePath;                    // path part of sftp:// / scp:// URLs
 };
 
-/** "[user@]host[:port]", "[v6]:port", bare IPv6, "telnet://host:port/", "ssh://user@host:port". */
+/** "%20" -> " " (invalid escapes are kept as they are). */
+std::string percentDecode(const std::string& s) {
+    std::string out;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '%' && i + 2 < s.size() && std::isxdigit(static_cast<unsigned char>(s[i + 1])) &&
+            std::isxdigit(static_cast<unsigned char>(s[i + 2]))) {
+            out += static_cast<char>(std::stoi(s.substr(i + 1, 2), nullptr, 16));
+            i += 2;
+        } else {
+            out += s[i];
+        }
+    }
+    return out;
+}
+
+/** "[user@]host[:port]", "[v6]:port", bare IPv6, "telnet://host:port/", "ssh://user@host:port",
+ *  "sftp://user@host:port/path", "scp://host/path". */
 HostSpec parseHostSpec(std::string spec) {
     HostSpec out;
     auto scheme = spec.find("://");
@@ -92,11 +110,18 @@ HostSpec parseHostSpec(std::string spec) {
             out.protocol = Protocol::Ssh;
         else if (s == "rlogin")
             out.protocol = Protocol::Rlogin;
-        else
+        else if (s == "sftp" || s == "scp") {
+            out.protocol = Protocol::Ssh;
+            out.fileProtocol = s == "sftp" ? FileProtocol::Sftp : FileProtocol::Scp;
+        } else
             throw std::invalid_argument("unsupported URL scheme \"" + s + "\"");
         spec = spec.substr(scheme + 3);
         auto slash = spec.find('/');
-        if (slash != std::string::npos) spec.resize(slash);
+        if (slash != std::string::npos) {
+            if (out.fileProtocol) out.remotePath = percentDecode(spec.substr(slash));
+            spec.resize(slash);
+        }
+        if (out.fileProtocol) out.user = percentDecode(out.user);
     }
     auto at = spec.rfind('@');
     if (at != std::string::npos) {
@@ -314,6 +339,8 @@ CliResult parseCommandLine(const std::vector<std::string>& args, const CliContex
     std::optional<std::string> positional;
     std::string password;
     bool verbose = false;
+    bool fileView = false;   // sftp:// / scp:// URL
+    std::string remotePath;  // its path part
 
     for (size_t i = 0; i < args.size(); ++i) {
         const std::string& a = args[i];
@@ -440,9 +467,14 @@ CliResult parseCommandLine(const std::vector<std::string>& args, const CliContex
             } else {
                 HostSpec h = parseHostSpec(*positional);
                 s.host = h.host;
-                if (!h.user.empty()) s.username = h.user;
+                if (!h.user.empty()) s.username = percentDecode(h.user);
                 if (h.port && !explicitPort) explicitPort = h.port;
                 if (h.protocol && !protocol) protocol = h.protocol;
+                if (h.fileProtocol) {
+                    s.ssh.fileProtocol = *h.fileProtocol;
+                    fileView = true;
+                    remotePath = h.remotePath;
+                }
             }
         } catch (const std::exception& e) {
             res.errors.push_back("\"" + *positional + "\": " + e.what());
@@ -471,6 +503,10 @@ CliResult parseCommandLine(const std::vector<std::string>& args, const CliContex
         OpenRequest req;
         req.session = std::move(s);
         if (loaded) req.savedSessionId = loaded->id;
+        if (fileView && req.session.protocol == Protocol::Ssh) {
+            req.view = "files";
+            req.remotePath = remotePath;
+        }
         if (req.session.protocol == Protocol::Ssh) req.password = password;
         res.request = std::move(req);
     } else if (loadRequested && loaded && !hasTarget) {

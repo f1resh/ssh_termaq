@@ -121,3 +121,26 @@ describe('formatQuickConnect', () => {
     }
   });
 });
+
+describe('file manager URLs', () => {
+  it('parses sftp:// and scp:// with a folder', () => {
+    const t = ok('sftp://deploy@files.example.test:2200/var/www/my%20site');
+    expect(t.protocol).toBe('ssh');
+    expect(t.host).toBe('files.example.test');
+    expect(t.port).toBe(2200);
+    expect(t.username).toBe('deploy');
+    expect(t.files).toEqual({ protocol: 'sftp', path: '/var/www/my site' });
+    expect(ok('scp://router').files).toEqual({ protocol: 'scp', path: undefined });
+  });
+
+  it('sets the file protocol on the session', () => {
+    const s = applyQuickConnect(createDefaultSession(), ok('scp://root@nas'));
+    expect(s.protocol).toBe('ssh');
+    expect(s.ssh.fileProtocol).toBe('scp');
+    expect(s.username).toBe('root');
+  });
+
+  it('round-trips', () => {
+    for (const s of ['sftp://deploy@web-01:2222/srv', 'scp://router']) expect(formatQuickConnect(ok(s))).toBe(s);
+  });
+});

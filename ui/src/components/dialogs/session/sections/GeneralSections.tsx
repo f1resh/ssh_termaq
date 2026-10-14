@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { Cable, Lock, LogIn, Network, Plus, Trash2, Usb } from 'lucide-react';
 import { Button, IconButton, NumberInput, Select, TextArea, TextInput } from '@/components/ui';
 import { DEFAULT_PORTS, normalizeFolder, sessionLabel } from '@shared/defaults';
-import type { AddressFamily, Protocol, ProxyType, TriState } from '@shared/types';
+import type { AddressFamily, Protocol, ProxyType, SessionView, TriState } from '@shared/types';
 import {
   Callout,
   ColorSwatches,
@@ -21,6 +21,11 @@ import {
 import { useEditor } from '../editorContext';
 import { fallbackSessionName, splitHostInput, switchProtocol } from '../sessionModel';
 import { BaudRateInput, SerialLineInput } from './serialInputs';
+
+const OPEN_AS_OPTIONS: readonly SegmentOption<SessionView>[] = [
+  { value: 'terminal', label: 'Terminal' },
+  { value: 'files', label: 'File manager', title: 'Opens the dual-pane file manager (SFTP / SCP) instead of a terminal' }
+];
 
 export const PROTOCOL_OPTIONS: readonly SegmentOption<Protocol>[] = [
   { value: 'ssh', label: 'SSH', icon: <Lock size={14} /> },
@@ -151,6 +156,16 @@ export function SessionSection() {
               <BaudRateInput />
             </FormField>
           </FieldGrid>
+        )}
+        {draft.protocol === 'ssh' && (
+          <FormField label="Open as" hint="What opening this session shows. Both are always available from its context menu.">
+            <SegmentedControl
+              ariaLabel="Open as"
+              value={draft.openAs ?? 'terminal'}
+              options={OPEN_AS_OPTIONS}
+              onChange={(v) => update((d) => void (d.openAs = v))}
+            />
+          </FormField>
         )}
       </Section>
 

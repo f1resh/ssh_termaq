@@ -1,16 +1,13 @@
 /**
  * Main content area: every open tab stays mounted (only the active one is visible, so terminals keep their
- * state), each tab renders its split layout with draggable splitters, and an optional SFTP side panel.
+ * state) and renders its split layout with draggable splitters; a file manager tab holds a single files pane.
  * Panes are absolutely positioned siblings keyed by pane id — splitting or closing never remounts a terminal.
  */
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { useShallow } from 'zustand/react/shallow';
-import { api } from '@/bridge/api';
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { cx } from '@/components/ui';
-import { SftpPanel } from '@/components/sftp/SftpPanel';
+import { FileManager } from '@/components/files/FileManager';
 import { Welcome } from '@/components/welcome/Welcome';
 import { TerminalPane } from '@/terminal/TerminalPane';
-import { useUi } from '@/store/ui';
 import { paneIdsOf, useWorkspace, type TabState } from '@/store/workspace';
 import { computeGeometry, cssLin, dragSizes, evalLin, findSplit, leavesAlong, normSizes, type SplitterGeom } from './paneGeometry';
 import './layout.css';
@@ -98,6 +95,7 @@ function TabView({ tab, visible }: { tab: TabState; visible: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const geom = useMemo(() => computeGeometry(tab.layout, GUTTER), [tab.layout]);
   const paneIds = useMemo(() => paneIdsOf(tab.layout), [tab.layout]);
+  const kinds = useWorkspace((s) => paneIds.map((id) => s.panes[id]?.kind ?? 'terminal').join(','));
   const multi = paneIds.length > 1;
 
   return (
@@ -122,7 +120,11 @@ function TabView({ tab, visible }: { tab: TabState; visible: boolean }) {
               if (t && t.activePaneId !== id) ws.activatePane(id);
             }}
           >
-            <TerminalPane paneId={id} active={active} visible={visible} />
+            {kinds.split(',')[paneIds.indexOf(id)] === 'files' ? (
+              <FileManager paneId={id} visible={visible} />
+            ) : (
+              <TerminalPane paneId={id} active={active} visible={visible} />
+            )}
           </div>
         );
       })}
@@ -135,64 +137,11 @@ function TabView({ tab, visible }: { tab: TabState; visible: boolean }) {
 
 /* -------------------------------------------------------------------------- */
 
-const SFTP_WIDTH_KEY = 'shell.sftpWidth';
-
-function SftpSide({ paneId }: { paneId: string }) {
-  const [width, setWidth] = useState(420);
-  const widthRef = useRef(width);
-  widthRef.current = width;
-
-  useEffect(() => {
-    api.app
-      .getState<number>(SFTP_WIDTH_KEY)
-      .then((w) => {
-        if (typeof w === 'number' && Number.isFinite(w)) setWidth(Math.min(900, Math.max(280, w)));
-      })
-      .catch(() => undefined);
-  }, []);
-
-  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    const target = e.currentTarget;
-    target.setPointerCapture(e.pointerId);
-    const startX = e.clientX;
-    const startW = widthRef.current;
-    const maxW = Math.max(320, window.innerWidth - 360);
-    const onMove = (ev: PointerEvent) => setWidth(Math.min(maxW, Math.max(280, startW - (ev.clientX - startX))));
-    const onUp = (ev: PointerEvent) => {
-      target.releasePointerCapture(ev.pointerId);
-      target.removeEventListener('pointermove', onMove);
-      target.removeEventListener('pointerup', onUp);
-      target.removeEventListener('pointercancel', onUp);
-      api.app.setState(SFTP_WIDTH_KEY, widthRef.current).catch(() => undefined);
-    };
-    target.addEventListener('pointermove', onMove);
-    target.addEventListener('pointerup', onUp);
-    target.addEventListener('pointercancel', onUp);
-  };
-
-  return (
-    <aside className="sftp-side" style={{ width }}>
-      <div className="sftp-side__resizer" role="separator" aria-orientation="vertical" onPointerDown={onPointerDown} />
-      <div className="sftp-side__body">
-        <SftpPanel paneId={paneId} onClose={() => useUi.getState().setSftpPane(null)} />
-      </div>
-    </aside>
-  );
-}
-
 /* -------------------------------------------------------------------------- */
 
 export function Workspace() {
   const tabs = useWorkspace((s) => s.tabs);
   const activeTabId = useWorkspace((s) => s.activeTabId);
-  const sftpPaneId = useUi((s) => s.sftpPaneId);
-  const sftpPaneExists = useWorkspace(useShallow((s) => (sftpPaneId ? !!s.panes[sftpPaneId] : false)));
-
-  useEffect(() => {
-    if (sftpPaneId && !sftpPaneExists) useUi.getState().setSftpPane(null);
-  }, [sftpPaneId, sftpPaneExists]);
 
   return (
     <div className="workspace">
@@ -202,7 +151,6 @@ export function Workspace() {
         ))}
         {tabs.length === 0 && <Welcome />}
       </div>
-      {sftpPaneId && sftpPaneExists && <SftpSide paneId={sftpPaneId} />}
     </div>
   );
 }

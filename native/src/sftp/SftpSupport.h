@@ -11,6 +11,7 @@
 // touched from functors executed by runOnSsh().
 #include "core/Types.h"
 #include "core/Win.h"
+#include "sftp/RemoteFs.h"
 #include "ssh/SshTransport.h"
 #include "transport/Transport.h"
 
@@ -43,19 +44,6 @@ constexpr size_t kMaxInflight = 16;
 constexpr std::chrono::milliseconds kStepBudget{30};
 /** Poll granularity while a step waits for replies. */
 constexpr int kPollMs = 10;
-
-/** Operation failed (message is user-facing). */
-struct SftpError : std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-/** The SSH connection is gone (or never was SSH). */
-struct ConnectionLost : SftpError {
-    ConnectionLost() : SftpError("The SSH connection is closed") {}
-};
-/** User cancelled. */
-struct Cancelled : std::runtime_error {
-    Cancelled() : std::runtime_error("Cancelled") {}
-};
 
 /** "<what>: <reason>" from the SFTP status code / libssh error of `sftp`. */
 std::string sftpErrorText(sftp_session sftp, const std::string& what);
@@ -147,10 +135,10 @@ public:
     RemoteFile& operator=(const RemoteFile&) = delete;
     ~RemoteFile();
 
-    /** Opens for reading, fstat()s (size + mtime) and starts the read pipeline. */
-    void openRead(sftp_session sftp, const std::string& path);
-    /** Opens for writing (create/truncate, `mode` for new files). */
-    void openWrite(sftp_session sftp, const std::string& path, uint32_t mode);
+    /** Opens for reading, fstat()s (size + mtime) and starts the read pipeline at `offset`. */
+    void openRead(sftp_session sftp, const std::string& path, uint64_t offset = 0);
+    /** Opens for writing (`mode` for new files): truncates, or with offset > 0 continues an existing file there. */
+    void openWrite(sftp_session sftp, const std::string& path, uint32_t mode, uint64_t offset = 0);
 
     /** Collects up to kStepBytes of data (in file order). done = EOF reached and nothing in flight. */
     ReadResult readStep(sftp_session sftp);

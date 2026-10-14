@@ -5,12 +5,13 @@
  *   user@host[:port]             deploy@web-01:2222   (the last '@' separates user and host)
  *   [v6]:port                    [::1]:2222
  *   proto://[user[:pw]@]host[:port][/...]   ssh://root@h:22  (password part is ignored, path ignored)
+ *   sftp://[user@]host[:port][/path]   scp://...   open the file manager (SSH) in that folder
  *   serial://COM3[?baud=115200&data=8&parity=n&stop=1&flow=xonxoff]   also serial://COM3:9600, COM3
  *   proto host [port]            telnet router 2323, ssh deploy@web-01 2222
  *   CLI flags                    -ssh/-telnet/-rlogin/-raw/-serial, -P/-p <port>, -l <user>
  */
 import { DEFAULT_PORTS } from '@shared/defaults';
-import type { FlowControl, Parity, Protocol, SerialOptions, SessionConfig } from '@shared/types';
+import type { FileProtocol, FlowControl, Parity, Protocol, SerialOptions, SessionConfig } from '@shared/types';
 
 export const PROTOCOLS: Protocol[] = ['ssh', 'telnet', 'rlogin', 'raw', 'serial'];
 
@@ -23,6 +24,8 @@ export interface QuickConnectTarget {
   username?: string;
   /** Serial line settings given in the input (serial only). */
   serial?: Partial<SerialOptions>;
+  /** sftp:// / scp:// URLs: open the file manager with this protocol. */
+  files?: { protocol: FileProtocol; path?: string };
 }
 
 export type QuickConnectParse = { ok: true; target: QuickConnectTarget } | { ok: false; error: string };
@@ -148,6 +151,15 @@ export function parseQuickConnect(input: string, defaultProtocol: Protocol = 'ss
   const url = /^([a-z]+):\/\/(.*)$/i.exec(text);
   if (url) {
     const proto = url[1].toLowerCase();
+    if (proto === 'sftp' || proto === 'scp') {
+      const slash = url[2].search(/[/?#]/);
+      const authority = slash < 0 ? url[2] : url[2].slice(0, slash);
+      const rest = slash < 0 ? '' : url[2].slice(slash).replace(/[?#].*$/, '');
+      const a = parseAuthority(decodeSafe(authority));
+      if (typeof a === 'string') return fail(a);
+      const path = rest.startsWith('/') && rest.length > 1 ? decodeSafe(rest) : undefined;
+      return finish({ protocol: 'ssh', ...a, files: { protocol: proto, path } });
+    }
     if (!isProtocol(proto)) return fail(`Unknown protocol "${url[1]}"`);
     if (proto === 'serial') {
       const r = parseSerial(url[2]);
@@ -212,10 +224,19 @@ export function parseQuickConnect(input: string, defaultProtocol: Protocol = 'ss
   return finish({ protocol: protocol ?? defaultProtocol, ...a });
 }
 
+function decodeSafe(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
 function finish(t: QuickConnectTarget): QuickConnectParse {
   if (t.protocol === 'raw' && !t.port) return { ok: false, error: 'Raw connections need a port, e.g. host:7000' };
   if (t.username === undefined) delete t.username;
   if (t.port === undefined) delete t.port;
+  if (t.files === undefined) delete t.files;
   return { ok: true, target: t };
 }
 
@@ -232,6 +253,7 @@ export function applyQuickConnect(base: SessionConfig, t: QuickConnectTarget): S
   s.host = t.host;
   s.port = t.port ?? (DEFAULT_PORTS[t.protocol] || s.port);
   if (t.username !== undefined) s.username = t.username;
+  if (t.files) s.ssh = { ...s.ssh, fileProtocol: t.files.protocol };
   return s;
 }
 
@@ -249,6 +271,7 @@ export function formatQuickConnect(t: QuickConnectTarget): string {
   const host = t.host.includes(':') ? `[${t.host}]` : t.host;
   const user = t.username ? `${t.username}@` : '';
   const port = t.port && t.port !== DEFAULT_PORTS[t.protocol] ? `:${t.port}` : '';
+  if (t.files) return `${t.files.protocol}://${user}${host}${port}${t.files.path ?? ''}`;
   const scheme = t.protocol === 'ssh' ? '' : `${t.protocol}://`;
   return `${scheme}${user}${host}${port}`;
 }

@@ -196,3 +196,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* File manager page: text field with buttons on one line */
+.settings-inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.settings-inline > .input,
+.settings-inline > input {
+  flex: 1;
+  min-width: 0;
+}

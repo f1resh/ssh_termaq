@@ -38,7 +38,16 @@ struct TestSshServerOptions {
     /** keyboard-interactive INFO_REQUEST name / instruction strings. */
     std::string kbdIntName;
     std::string kbdIntInstruction;
+    /**
+     * Run exec requests as real processes: `<execShell> -c <command>` in execCwd (default: sftpRoot) with stdin /
+     * stdout / stderr relayed and the exit status reported. Empty => the built-in echo / exit commands.
+     */
+    std::filesystem::path execShell;
+    std::filesystem::path execCwd;
 };
+
+/** Git for Windows' sh.exe (GNU coreutils + OpenSSH scp next to it), or empty when not installed. */
+std::filesystem::path gitShell();
 
 /**
  * Minimal SSH server for tests. Behaviour:
@@ -52,6 +61,7 @@ struct TestSshServerOptions {
  *        "big <n>"      -> n bytes of 'x' followed by "\r\nEND\r\n"
  *        "signal"       -> waits for a signal request and replies "got signal <NAME>\r\n"
  *  - exec channel: "echo <text>" -> "<text>\n" exit 0; "exit <n>" -> exit n; anything else -> exit 127
+ *      (with execShell set: the command runs as a real process instead)
  *  - direct-tcpip channels (local/dynamic forwarding) are connected to the requested host:port
  *  - tcpip-forward global requests (remote forwarding) are honoured on 127.0.0.1
  *  - "sftp" subsystem served from sftpRoot

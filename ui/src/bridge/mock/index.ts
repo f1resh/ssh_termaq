@@ -8,6 +8,7 @@ import { registerCoreMocks } from './core';
 import { registerConnMocks } from './conn';
 import { registerImporterMocks } from './importer';
 import { registerKeysMocks } from './keys';
+import { registerLocalMocks } from './local';
 import { registerSftpMocks } from './sftp';
 
 export type MockInvoke = (...args: any[]) => unknown;
@@ -40,6 +41,7 @@ export function createMockBackend(): Transport {
   registerCoreMocks(ctx);
   registerConnMocks(ctx);
   registerSftpMocks(ctx);
+  registerLocalMocks(ctx);
   registerImporterMocks(ctx);
   registerKeysMocks(ctx);
 

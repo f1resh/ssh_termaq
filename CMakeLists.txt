@@ -93,13 +93,19 @@ sc_library(sc_session SOURCES ${session_src} DEPS sc_transport sc_ssh sc_store s
 sc_glob(putty_src ${SC_SRC}/putty/*.cpp ${SC_SRC}/importers/*.cpp)
 sc_library(sc_putty SOURCES ${putty_src} DEPS sc_core sc_store sc_keys sc_bridge sc_dialogs advapi32)
 
+sc_glob(dnd_src ${SC_SRC}/dnd/*.cpp)
+sc_library(sc_dnd SOURCES ${dnd_src} DEPS sc_core ole32 shell32 uuid)
+
+sc_glob(localfs_src ${SC_SRC}/localfs/*.cpp)
+sc_library(sc_localfs SOURCES ${localfs_src} DEPS sc_core sc_bridge sc_dnd ole32 shell32 uuid)
+
 sc_glob(sftp_src ${SC_SRC}/sftp/*.cpp)
-sc_library(sc_sftp SOURCES ${sftp_src} DEPS sc_ssh sc_session sc_bridge sc_dialogs)
+sc_library(sc_sftp SOURCES ${sftp_src} DEPS sc_ssh sc_session sc_bridge sc_dialogs sc_localfs sc_dnd shlwapi)
 
 sc_glob(app_src ${SC_SRC}/app/*.cpp)
 list(FILTER app_src EXCLUDE REGEX "/app/(main|Dialogs)\\.cpp$")
 sc_library(sc_app SOURCES ${app_src}
-  DEPS sc_bridge sc_store sc_session sc_putty sc_sftp sc_dialogs sc_transport
+  DEPS sc_bridge sc_store sc_session sc_putty sc_sftp sc_localfs sc_dnd sc_dialogs sc_transport
        unofficial::webview2::webview2 WIL::WIL dwmapi shcore comctl32 shlwapi winmm version)
 
 # ------------------------------------------------------------- executable ---
@@ -151,6 +157,8 @@ if(SC_BUILD_TESTS)
   sc_test(session sc_session)
   sc_test(putty sc_putty)
   sc_test(sftp sc_sftp)
+  sc_test(localfs sc_localfs)
+  sc_test(dnd sc_dnd)
   sc_test(app sc_app)
 
   # Standalone test SSH server for manual / end-to-end testing (owner: testinfra).

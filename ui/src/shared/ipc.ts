@@ -24,11 +24,17 @@ import type {
   AppInfo,
   AppSettings,
   BackgroundMaterial,
+  ConflictResolution,
   ConnOpenRequest,
   ConnStatusEvent,
   DeepPartial,
+  DragResult,
+  EditEvent,
+  EditOptions,
   EventLogEntry,
   FileDialogOptions,
+  FindEvent,
+  FindRequest,
   ImportPreview,
   ImportRequest,
   ImportResult,
@@ -36,13 +42,20 @@ import type {
   KeygenResult,
   KeyInfo,
   KnownHost,
+  LocalEntry,
   OpenRequest,
   PromptRequest,
   PromptResponse,
   SerialPortInfo,
   SessionConfig,
   SftpEntry,
+  SftpOpenOptions,
+  SftpOpenResult,
   SpecialCommandDef,
+  SyncItem,
+  SyncRequest,
+  TransferConflict,
+  TransferOptions,
   TransferProgress
 } from './types';
 
@@ -117,24 +130,68 @@ export interface Api {
     exportPuttyRegFile(sessionIds: string[]): Promise<string | null>;
     exportJsonFile(sessionIds: string[]): Promise<string | null>;
   };
+  /**
+   * Remote files of a connected SSH connection, over SFTP or (fallback / per session) SCP. The namespace keeps its
+   * historical name; `open` reports which protocol is in use.
+   */
   sftp: {
-    /** Opens an SFTP channel on an existing connected SSH connection. */
-    open(connId: string): Promise<{ sftpId: string; home: string }>;
+    open(connId: string, opts?: SftpOpenOptions): Promise<SftpOpenResult>;
     list(sftpId: string, path: string): Promise<SftpEntry[]>;
+    /** null when the path does not exist. Follows symlinks. */
+    stat(sftpId: string, path: string): Promise<SftpEntry | null>;
     realpath(sftpId: string, path: string): Promise<string>;
     mkdir(sftpId: string, path: string): Promise<void>;
     rename(sftpId: string, from: string, to: string): Promise<void>;
     remove(sftpId: string, path: string, recursive: boolean): Promise<void>;
     chmod(sftpId: string, path: string, mode: number): Promise<void>;
     /** localDir omitted => folder picker. Returns transfer ids ([] when cancelled). */
-    download(sftpId: string, remotePaths: string[], localDir?: string): Promise<string[]>;
+    download(sftpId: string, remotePaths: string[], localDir?: string, opts?: TransferOptions): Promise<string[]>;
     /** localPaths omitted => file picker. Directories upload recursively. */
-    upload(sftpId: string, remoteDir: string, localPaths?: string[]): Promise<string[]>;
+    upload(sftpId: string, remoteDir: string, localPaths?: string[], opts?: TransferOptions): Promise<string[]>;
     cancelTransfer(transferId: string): void;
-    /** Download to a temp file and open it with the default application. */
+    /** Download to a temp file and open it with the default application (executables are only revealed). */
     openRemote(sftpId: string, remotePath: string): Promise<void>;
     close(sftpId: string): void;
     onProgress(cb: (p: TransferProgress) => void): Unsubscribe;
+    /** A transfer with conflict policy 'ask' hit an existing target and waits for resolveConflict. */
+    onConflict(cb: (c: TransferConflict) => void): Unsubscribe;
+    resolveConflict(conflictId: string, resolution: ConflictResolution): void;
+    /** Starts a recursive name search; results arrive via onFind. Returns the find id. */
+    find(sftpId: string, req: FindRequest): Promise<string>;
+    cancelFind(findId: string): void;
+    onFind(cb: (e: FindEvent) => void): Unsubscribe;
+    /** Compares a local and a remote folder tree. */
+    syncCompare(sftpId: string, req: SyncRequest): Promise<SyncItem[]>;
+    /** Queues the chosen items (deletes run in the queue too). Returns transfer ids. */
+    syncApply(sftpId: string, req: SyncRequest, items: SyncItem[], opts?: TransferOptions): Promise<string[]>;
+    /** Downloads to a temp file, opens an editor and uploads every saved change. Returns the edit id. */
+    edit(sftpId: string, remotePath: string, opts?: EditOptions): Promise<string>;
+    stopEdit(editId: string): void;
+    onEdit(cb: (e: EditEvent) => void): Unsubscribe;
+    /** Native drag of remote items (virtual files for Explorer). Resolves when the drag ends. */
+    startDrag(sftpId: string, remotePaths: string[]): Promise<DragResult>;
+  };
+  /** Local disks of this PC (the left pane of the file manager). */
+  local: {
+    /** '' => "This PC": known folders and drives. */
+    list(path: string): Promise<LocalEntry[]>;
+    /** null when the path does not exist. */
+    stat(path: string): Promise<LocalEntry | null>;
+    /** The user's Documents folder. */
+    home(): Promise<string>;
+    mkdir(path: string): Promise<void>;
+    rename(from: string, to: string): Promise<void>;
+    remove(paths: string[], toRecycleBin: boolean): Promise<void>;
+    /** Copies or moves into targetDir with the Windows progress UI. */
+    copy(paths: string[], targetDir: string, move: boolean): Promise<void>;
+    open(path: string): Promise<void>;
+    reveal(path: string): Promise<void>;
+    /** Watches one folder (not recursive); onChanged fires (debounced) after changes. Returns the watch id. */
+    watch(path: string): Promise<string>;
+    unwatch(watchId: string): void;
+    onChanged(cb: (watchId: string) => void): Unsubscribe;
+    /** Native drag of local files (to Explorer or back into this window). Resolves when the drag ends. */
+    startDrag(paths: string[]): Promise<DragResult>;
   };
   keys: {
     generate(req: KeygenRequest): Promise<KeygenResult>;
@@ -263,6 +320,7 @@ export const API_SCHEMA = {
   sftp: {
     open: 'invoke',
     list: 'invoke',
+    stat: 'invoke',
     realpath: 'invoke',
     mkdir: 'invoke',
     rename: 'invoke',
@@ -273,7 +331,33 @@ export const API_SCHEMA = {
     cancelTransfer: 'send',
     openRemote: 'invoke',
     close: 'send',
-    onProgress: 'event'
+    onProgress: 'event',
+    onConflict: 'event',
+    resolveConflict: 'send',
+    find: 'invoke',
+    cancelFind: 'send',
+    onFind: 'event',
+    syncCompare: 'invoke',
+    syncApply: 'invoke',
+    edit: 'invoke',
+    stopEdit: 'send',
+    onEdit: 'event',
+    startDrag: 'invoke'
+  },
+  local: {
+    list: 'invoke',
+    stat: 'invoke',
+    home: 'invoke',
+    mkdir: 'invoke',
+    rename: 'invoke',
+    remove: 'invoke',
+    copy: 'invoke',
+    open: 'invoke',
+    reveal: 'invoke',
+    watch: 'invoke',
+    unwatch: 'send',
+    onChanged: 'event',
+    startDrag: 'invoke'
   },
   keys: {
     generate: 'invoke',

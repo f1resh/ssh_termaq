@@ -1,4 +1,5 @@
-﻿// SFTP service end-to-end: Bridge requests -> SftpService -> SshTransport::post -> TestSshServer's SFTP subsystem.
+// SFTP service end-to-end: Bridge requests -> SftpService -> SshTransport::post -> TestSshServer's SFTP subsystem.
+#include "TestBridge.h"
 #include "TestServers.h"
 
 #include "bridge/Bridge.h"
@@ -11,7 +12,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <chrono>
-#include <condition_variable>
 #include <fstream>
 #include <thread>
 
@@ -19,64 +19,6 @@ using namespace sc;
 using namespace sc::test;
 using namespace std::chrono_literals;
 
-namespace {
-
-struct InlineDispatcher : Dispatcher {
-    void post(std::function<void()> fn) override { fn(); }
-    bool isUiThread() const override { return true; }
-};
-
-/** Bridge wired to a capturing sink: invoke() sends a request and waits for its response. */
-struct BridgeHarness {
-    InlineDispatcher dispatcher;
-    Bridge bridge{dispatcher};
-    std::mutex m;
-    std::condition_variable cv;
-    std::map<int64_t, Json> responses;
-    std::vector<Json> events;
-    int64_t nextId = 1;
-
-    BridgeHarness() {
-        bridge.setSink([this](const std::string& text) {
-            Json j = Json::parse(text);
-            std::lock_guard l(m);
-            if (j["t"] == "res") responses[j["id"].get<int64_t>()] = j;
-            else events.push_back(j);
-            cv.notify_all();
-        });
-    }
-
-    Json invoke(const std::string& ch, Json args, std::chrono::milliseconds timeout = 30s) {
-        int64_t id;
-        {
-            std::lock_guard l(m);
-            id = nextId++;
-        }
-        bridge.onWebMessage(Json{{"t", "req"}, {"id", id}, {"ch", ch}, {"args", args}}.dump());
-        std::unique_lock l(m);
-        if (!cv.wait_for(l, timeout, [&] { return responses.count(id) > 0; })) throw std::runtime_error("timeout waiting for " + ch);
-        Json r = responses[id];
-        if (!r["ok"].get<bool>()) throw std::runtime_error(ch + " failed: " + r["error"].get<std::string>());
-        return r["result"];
-    }
-
-    template <class Pred>
-    bool waitEvent(Pred pred, std::chrono::milliseconds timeout = 30s) {
-        std::unique_lock l(m);
-        return cv.wait_for(l, timeout, [&] {
-            for (const auto& e : events)
-                if (pred(e)) return true;
-            return false;
-        });
-    }
-};
-
-std::string slurp(const std::filesystem::path& p) {
-    std::ifstream f(p, std::ios::binary);
-    return std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-}
-
-}  // namespace
 
 TEST_CASE("sftp: browse, transfer and modify files over an SSH connection", "[sftp]") {
     TempDir remoteRoot, local, data;

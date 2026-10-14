@@ -1,11 +1,11 @@
 /**
- * Bottom status bar for the active pane: connection state, endpoint, server info, charset, broadcast, SFTP.
+ * Bottom status bar for the active pane: connection state, endpoint, server info, charset, broadcast, file manager.
  */
 import { FolderOpen, Radio } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { runCommand } from '@/commands/commands';
 import { cx } from '@/components/ui';
-import { useUi } from '@/store/ui';
+import { connOfFilesPane } from '@/components/files/filesConn';
 import { useWorkspace } from '@/store/workspace';
 import './statusbar.css';
 
@@ -25,7 +25,8 @@ export function StatusBar() {
       return { pane: tab ? s.panes[tab.activePaneId] : undefined, broadcast: !!tab?.broadcast, tabCount: s.tabs.length };
     })
   );
-  const sftpOpen = useUi((s) => !!pane && s.sftpPaneId === pane.id);
+  const filesTabOpen = useWorkspace((s) => !!pane && Object.values(s.panes).some((p) => p.kind === 'files' && p.linkedPaneId === pane.id));
+  const filesConn = useWorkspace(useShallow((s) => (pane?.kind === 'files' ? connOfFilesPane(pane, s.panes) : null)));
 
   if (!pane) {
     return (
@@ -42,15 +43,16 @@ export function StatusBar() {
       ? `${s.serial.line} · ${s.serial.baudRate} baud`
       : `${s.username ? s.username + '@' : ''}${s.host}${s.port && s.port !== 22 ? ':' + s.port : ''}`;
   const serverInfo = pane.serverInfo?.split('|').map((x) => x.trim()).filter(Boolean).slice(1).join(' · ');
+  const status = filesConn?.status ?? pane.status;
 
   return (
     <footer className="statusbar">
-      <span className="statusbar__item" title={pane.statusMessage}>
-        <span className={cx('statusbar__dot', `statusbar__dot--${pane.status}`)} />
-        {STATUS_LABEL[pane.status] ?? pane.status}
+      <span className="statusbar__item" title={filesConn?.message ?? pane.statusMessage}>
+        <span className={cx('statusbar__dot', `statusbar__dot--${status}`)} />
+        {STATUS_LABEL[status] ?? status}
       </span>
       <span className="statusbar__item">
-        <span className="statusbar__proto">{s.protocol}</span>
+        <span className="statusbar__proto">{pane.kind === 'files' ? 'files' : s.protocol}</span>
         {endpoint}
       </span>
       {serverInfo && (
@@ -64,15 +66,14 @@ export function StatusBar() {
           <Radio size={12} /> Broadcast
         </button>
       )}
-      <span className="statusbar__item statusbar__muted">{s.translation.charset}</span>
-      {s.protocol === 'ssh' && (
+      {pane.kind !== 'files' && <span className="statusbar__item statusbar__muted">{s.translation.charset}</span>}
+      {s.protocol === 'ssh' && pane.kind !== 'files' && (
         <button
-          className={cx('statusbar__btn', sftpOpen && 'statusbar__btn--on')}
-          disabled={pane.status !== 'connected'}
+          className={cx('statusbar__btn', filesTabOpen && 'statusbar__btn--on')}
           onClick={() => runCommand('pane.sftp')}
-          title="SFTP browser"
+          title="File manager (SFTP / SCP) on this connection"
         >
-          <FolderOpen size={12} /> SFTP
+          <FolderOpen size={12} /> Files
         </button>
       )}
     </footer>

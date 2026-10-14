@@ -5,9 +5,14 @@
 // (throttled to ~10/s per transfer, plus state changes).
 #include "core/Types.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
+namespace sc::dnd {
+class VirtualSource;
+}
 
 namespace sc {
 
@@ -23,6 +28,12 @@ public:
     void registerHandlers();
     /** Closes all SFTP sessions (app shutdown). */
     void closeAll();
+
+    /** Tests: the virtual-file source sftp:startDrag would offer to Explorer. */
+    std::shared_ptr<dnd::VirtualSource> dragSourceForTests(const std::string& sftpId, const std::vector<std::string>& paths);
+
+    /** Tests: replaces the editor launch of sftp:edit (localPath, editor). */
+    void setEditLauncherForTests(std::function<void(const std::string& localPath, const std::string& editor)> launcher);
 
 private:
     struct Impl;

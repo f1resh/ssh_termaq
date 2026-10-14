@@ -250,4 +250,18 @@ TempDir::~TempDir() {
     std::filesystem::remove_all(path_, ec);
 }
 
+// ==================================================================================================== gitShell
+
+std::filesystem::path gitShell() {
+    for (const wchar_t* dir : {L"C:\\Program Files\\Git\\usr\\bin", L"C:\\Program Files (x86)\\Git\\usr\\bin"}) {
+        const std::filesystem::path d = dir;
+        std::error_code ec;
+        if (std::filesystem::exists(d / L"sh.exe", ec) && std::filesystem::exists(d / L"scp.exe", ec) &&
+            std::filesystem::exists(d / L"ls.exe", ec)) {
+            return d / L"sh.exe";
+        }
+    }
+    return {};
+}
+
 }  // namespace sc::test

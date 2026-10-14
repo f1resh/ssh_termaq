@@ -20,7 +20,7 @@ import of your PuTTY sessions and trusted host keys.
 | Proxies | SOCKS 4/4a/5 (with auth), HTTP CONNECT, Telnet proxy, local proxy command, SSH jump host; exclusion lists |
 | Terminal | PuTTY keyboard modes (Backspace, Home/End, function-key variants, app cursor/keypad), local echo/line editing, charsets (UTF-8, ISO-8859-x, CP125x, KOI8, CP437/866, Shift_JIS, GBK, Big5, ...), bell modes, answerback, find, zoom, copy-on-select, right-click paste, bracketed paste, multi-line paste warning |
 | Sessions | Folders, colors, notes, duplicate, restart, broadcast input to all panes, workspace restore, reconnect, session logging (printable / all / SSH debug, PuTTY `&H &Y &M &D &T &P` placeholders) |
-| Files | SFTP browser per SSH pane: upload/download (drag & drop from Explorer), rename, delete, new folder, permissions, open remotely |
+| File manager | WinSCP-style tab: this PC on the left, the server on the right, transfer queue below. SFTP, with automatic fallback to SCP for servers without SFTP (routers, BusyBox, Dropbear). Copy / move with F5 / F6 or drag & drop — between the panes and to / from Explorer and the desktop. Overwrite / if newer / skip / resume / rename questions, resume of interrupted transfers, edit a server file in your editor with upload on every save, synchronize folders (preview first), find files on the server, bookmarks, permissions. Opens on a terminal's connection (no second login) or on its own |
 | Keys | Key generator (Ed25519, RSA, ECDSA), inspect and convert between OpenSSH and PPK |
 | Import/export | PuTTY registry and `.reg` files, `~/.ssh/config` (ProxyJump, forwards, ...), JSON backup; export sessions to a PuTTY `.reg` file |
 
@@ -31,6 +31,7 @@ SSHCrawler.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] 
                [-i key.ppk] [-load "Saved Session"] [-L|-R|-D spec] [-A|-a] [-X|-x] [-C] [-4|-6] [-N]
                [-m file] [-sercfg 115200,8,n,1,N] ...
 SSHCrawler.exe ssh://user@host:2222   telnet://host   @"Saved Session"
+SSHCrawler.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
 ```
 A second invocation opens a new tab in the already running window.
 
@@ -45,6 +46,10 @@ GSSAPI/Kerberos authentication, SSH-1, SUPDUP, bare ssh-connection, SSH certific
 X11 cookie substitution (X11 forwarding works with X servers that don't require authentication, e.g. VcXsrv with
 `-ac`). The ML-KEM post-quantum key exchanges are disabled because libssh 0.12's client side fails with them;
 sntrup761, curve25519 and ECDH are used instead.
+
+File manager over SCP (servers without SFTP): no resume; folders are listed with `ls`, so file names containing
+line breaks are not shown and times may only be precise to the minute; the server needs a POSIX shell.
+Remote-to-remote copies and text-mode (CRLF) transfers are not available.
 
 ## Building
 
@@ -77,7 +82,9 @@ An installer can be built with Inno Setup 6 from `scripts\installer.iss` after r
   conversion verified against `ssh-keygen` fingerprints), SFTP.
   Integration tests run against an in-process libssh test server (`native/tests/support`), itself validated with
   PuTTY's `plink`/`psftp`. `sc_testserver.exe --port 2222` runs that server standalone for manual testing
-  (user `test`, password `secret`).
+  (user `test`, password `secret`; `--sftp off --exec-shell git` makes it an SCP-only server using Git for Windows'
+  shell, GNU tools and OpenSSH `scp`). File manager tests cover transfers, conflicts, resume, move, find,
+  synchronize, edit, SCP and drag out into a real Explorer drop target.
 - UI (Vitest): `cd ui; npm test`
 - End-to-end: `node ui/scripts/app.mjs --steps <file>` drives the real app over the WebView2 DevTools protocol.
 

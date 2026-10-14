@@ -89,7 +89,7 @@ void RemoteFile::abandon() {
     file_ = nullptr;  // libssh handle intentionally not touched (its session may already be gone)
 }
 
-void RemoteFile::openRead(sftp_session sftp, const std::string& path) {
+void RemoteFile::openRead(sftp_session sftp, const std::string& path, uint64_t offset) {
     path_ = path;
     writing_ = false;
     file_ = sftp_open(sftp, path.c_str(), O_RDONLY, 0);
@@ -101,15 +101,24 @@ void RemoteFile::openRead(sftp_session sftp, const std::string& path) {
     }
     // Size 0 is treated as unknown (pseudo files report 0): read until EOF instead.
     sizeKnown_ = size_ > 0;
+    if (offset > 0) {
+        if (sftp_seek64(file_, offset) < 0) throwSftp(sftp, "Seek failed for '" + path + "'");
+        next_ = offset;
+    }
     sftp_file_set_nonblocking(file_);
     issueReads(sftp);
 }
 
-void RemoteFile::openWrite(sftp_session sftp, const std::string& path, uint32_t mode) {
+void RemoteFile::openWrite(sftp_session sftp, const std::string& path, uint32_t mode, uint64_t offset) {
     path_ = path;
     writing_ = true;
-    file_ = sftp_open(sftp, path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, static_cast<mode_t>(mode));
-    if (!file_) throwSftp(sftp, "Cannot create '" + path + "'");
+    const int flags = O_WRONLY | O_CREAT | (offset > 0 ? 0 : O_TRUNC);
+    file_ = sftp_open(sftp, path.c_str(), flags, static_cast<mode_t>(mode));
+    if (!file_) throwSftp(sftp, (offset > 0 ? "Cannot open '" : "Cannot create '") + path + "'");
+    if (offset > 0) {
+        if (sftp_seek64(file_, offset) < 0) throwSftp(sftp, "Seek failed for '" + path + "'");
+        next_ = offset;
+    }
     sftp_file_set_nonblocking(file_);
 }
 

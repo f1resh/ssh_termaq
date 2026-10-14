@@ -108,9 +108,15 @@ export interface SshOptions {
   localPortsAcceptAll: boolean;
   /** Remote ports do the same (bind 0.0.0.0 on server side when bindAddress empty). */
   remotePortsAcceptAll: boolean;
-  /** Initial directory for the SFTP browser ('' => home). */
+  /** Initial remote directory of the file manager ('' => home). */
   sftpStartPath: string;
+  /** File manager protocol: 'auto' tries SFTP and falls back to SCP. */
+  fileProtocol: FileProtocol;
+  /** Initial local folder of the file manager ('' => last used, else Documents). */
+  localStartPath: string;
 }
+
+export type FileProtocol = 'auto' | 'sftp' | 'scp';
 
 export interface TelnetOptions {
   /** Passive negotiation: wait for the server to start option negotiation. */
@@ -249,6 +255,8 @@ export interface SessionConfig {
   port: number;
   /** Auto-login username ('' => prompt). */
   username: string;
+  /** What opening the session shows (SSH only): a terminal or the file manager. */
+  openAs: SessionView;
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number;
@@ -264,6 +272,8 @@ export interface SessionConfig {
   translation: TranslationOptions;
   logging: LoggingOptions;
 }
+
+export type SessionView = 'terminal' | 'files';
 
 /* ------------------------------------------------------------------------ */
 /* Themes                                                                    */
@@ -442,6 +452,19 @@ export interface AppSettings {
     /** Directory used for relative log paths ('' => <userData>/logs). */
     directory: string;
   };
+  files: {
+    /** Editor program for "Edit" ('' => the system editor for the file type, else Notepad). */
+    editor: string;
+    /** What happens when a transfer target already exists. */
+    defaultConflict: ConflictPolicy;
+    showHidden: boolean;
+    confirmDelete: boolean;
+    /** Local deletes go to the Recycle Bin. */
+    deleteToRecycleBin: boolean;
+    preserveTimestamps: boolean;
+    /** Parallel transfers per connection (1-6). */
+    parallelTransfers: number;
+  };
 }
 
 /* ------------------------------------------------------------------------ */
@@ -618,17 +641,199 @@ export interface SftpEntry {
   linkTargetIsDir?: boolean;
 }
 
+export type RemoteProtocol = 'sftp' | 'scp';
+
+export interface RemoteCapabilities {
+  /** Interrupted transfers can continue where they stopped. */
+  resume: boolean;
+  /** Times are precise to the second (SCP over plain `ls` may only know minutes). */
+  preciseTimes: boolean;
+}
+
+export interface SftpOpenOptions {
+  fileProtocol?: FileProtocol;
+  /** Parallel transfers for this connection (1-6, default 2). */
+  parallelTransfers?: number;
+}
+
+export interface SftpOpenResult {
+  sftpId: string;
+  home: string;
+  protocol: RemoteProtocol;
+  capabilities: RemoteCapabilities;
+}
+
+/** 'delete' only appears for synchronize deletes. */
+export type TransferDirection = 'upload' | 'download' | 'delete';
+export type TransferState = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
+
 export interface TransferProgress {
   transferId: string;
   sftpId: string;
-  direction: 'upload' | 'download';
+  direction: TransferDirection;
   name: string;
   localPath: string;
   remotePath: string;
   transferred: number;
   total: number;
-  state: 'queued' | 'running' | 'done' | 'error' | 'cancelled';
+  state: TransferState;
   error?: string;
+  /** The source is deleted once copied. */
+  move?: boolean;
+  /** Folder transfers: files finished / total, file being copied now. */
+  filesDone?: number;
+  filesTotal?: number;
+  currentFile?: string;
+  /** Files left alone because of the conflict policy. */
+  skipped?: number;
+  /** What started the transfer. */
+  origin?: 'transfer' | 'edit' | 'sync' | 'drag' | 'open';
+}
+
+/** What happens when the target of a transfer already exists. */
+export type ConflictPolicy = 'ask' | 'overwrite' | 'newer' | 'skip' | 'resume' | 'rename';
+
+export interface TransferOptions {
+  /** Default 'ask'. */
+  conflict?: ConflictPolicy;
+  /** Delete the source after it was copied. */
+  move?: boolean;
+  /** Default true. */
+  preserveTimestamps?: boolean;
+  /** Local deletes (synchronize) go to the Recycle Bin. Default true. */
+  deleteToRecycleBin?: boolean;
+}
+
+export interface FileStat {
+  path: string;
+  size: number;
+  /** ms since epoch */
+  mtime: number;
+}
+
+export interface TransferConflict {
+  conflictId: string;
+  transferId: string;
+  sftpId: string;
+  direction: TransferDirection;
+  name: string;
+  source: FileStat;
+  target: FileStat;
+  /** The target is a shorter copy of the source that can be continued. */
+  canResume: boolean;
+  /** 'exists': the target exists; 'changed': (edit) the server copy changed since it was opened. */
+  reason: 'exists' | 'changed';
+  /** More files belong to this request: offer "apply to all". */
+  multiple: boolean;
+}
+
+export interface ConflictResolution {
+  /** 'newer' = overwrite only when the source is newer. */
+  action: 'overwrite' | 'newer' | 'skip' | 'resume' | 'rename' | 'cancel';
+  /** For 'rename': the new target name ('' => automatic "name (1).ext"). */
+  newName?: string;
+  /** Apply this answer to the remaining conflicts of the same request. */
+  applyToAll?: boolean;
+}
+
+export interface FindRequest {
+  root: string;
+  /** Glob on the file name: `*`, `?`, `[abc]`; several patterns separated by ';'. */
+  pattern: string;
+  caseSensitive?: boolean;
+  includeHidden?: boolean;
+  /** Default 10000. */
+  maxResults?: number;
+}
+
+export interface FindEvent {
+  findId: string;
+  sftpId: string;
+  /** New matches since the previous event. */
+  results: SftpEntry[];
+  scannedDirs: number;
+  /** The folder being searched now. */
+  currentDir?: string;
+  done: boolean;
+  truncated?: boolean;
+  error?: string;
+}
+
+export type SyncDirection = 'upload' | 'download' | 'both';
+
+export interface SyncRequest {
+  localDir: string;
+  remoteDir: string;
+  /** 'upload' makes the server match this PC, 'download' the other way, 'both' copies newer files each way. */
+  direction: SyncDirection;
+  compareTime: boolean;
+  compareSize: boolean;
+  /** Delete files that only exist on the target side (not used for 'both'). */
+  deleteExtra: boolean;
+  /** ';'-separated masks; a trailing '/' matches folders only, e.g. "*.tmp; .git/". */
+  exclude: string;
+  includeHidden: boolean;
+}
+
+export type SyncAction = 'upload' | 'download' | 'deleteLocal' | 'deleteRemote';
+
+export interface SyncItem {
+  /** '/'-separated path relative to both roots. */
+  relPath: string;
+  isDir: boolean;
+  action: SyncAction;
+  reason: 'new' | 'newer' | 'older' | 'size' | 'extra';
+  local?: { size: number; mtime: number };
+  remote?: { size: number; mtime: number };
+}
+
+export interface EditOptions {
+  /** Editor program ('' => system editor, else Notepad). */
+  editor?: string;
+}
+
+export interface EditEvent {
+  editId: string;
+  sftpId: string;
+  remotePath: string;
+  localPath: string;
+  state: 'opened' | 'uploading' | 'uploaded' | 'error' | 'closed';
+  error?: string;
+}
+
+/** End of a native drag started from a file pane. */
+export interface DragResult {
+  /** 'internal' = dropped back onto this window (the page decides where). */
+  result: 'external' | 'internal' | 'cancelled';
+  /** Internal drops: WebView client position in physical pixels. */
+  x?: number;
+  y?: number;
+  /** Shift was held at the drop (move instead of copy). */
+  move?: boolean;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Local files                                                               */
+/* ------------------------------------------------------------------------ */
+
+export interface LocalEntry {
+  name: string;
+  path: string;
+  /** 'drive' and 'place' only appear in the "This PC" list (path ''). */
+  type: 'file' | 'dir' | 'drive' | 'place';
+  size: number;
+  /** ms since epoch */
+  mtime: number;
+  hidden: boolean;
+  system: boolean;
+  readonly: boolean;
+  /** Symbolic link or junction. */
+  link: boolean;
+  /** Drives: volume label; places: display name. */
+  label?: string;
+  freeBytes?: number;
+  totalBytes?: number;
+  icon?: 'desktop' | 'documents' | 'downloads' | 'home' | 'drive' | 'removable' | 'network' | 'cdrom';
 }
 
 /* ------------------------------------------------------------------------ */
@@ -683,6 +888,10 @@ export interface OpenRequest {
   /** Saved session id when the request referenced a saved session (-load). */
   savedSessionId?: string;
   password?: string;
+  /** 'files' for sftp:// and scp:// URLs (default: the session's openAs). */
+  view?: SessionView;
+  /** Remote folder from an sftp:// / scp:// URL. */
+  remotePath?: string;
 }
 
 export interface SerialPortInfo {

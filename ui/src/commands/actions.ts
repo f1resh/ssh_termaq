@@ -9,7 +9,7 @@ import { useSessions, useSettings } from '@/store/data';
 import { confirmDialog, inputDialog, useUi } from '@/store/ui';
 import { paneIdsOf, useWorkspace, type OpenTarget, type PaneState } from '@/store/workspace';
 import { newId, normalizeFolder, sessionLabel } from '@shared/defaults';
-import type { SessionConfig } from '@shared/types';
+import type { SessionConfig, SessionView } from '@shared/types';
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -40,23 +40,65 @@ export function createAdHocSession(patch: Partial<SessionConfig> = {}): SessionC
   };
 }
 
-/** Opens a session (saved or ad-hoc) in a new tab or split. Saved sessions get their lastUsedAt bumped. */
-export function connectSession(session: SessionConfig, target: OpenTarget = 'tab', password?: string): string {
+/**
+ * Opens a session (saved or ad-hoc) in a new tab or split; SSH sessions saved with "Open as: file manager" (or
+ * view 'files') open the file manager instead. Saved sessions get their lastUsedAt bumped.
+ */
+export function connectSession(
+  session: SessionConfig,
+  target: OpenTarget = 'tab',
+  password?: string,
+  opts: { view?: SessionView; remotePath?: string } = {}
+): string {
   const saved = useSessions.getState().byId(session.id);
-  const paneId = useWorkspace.getState().openSession(session, { target, sessionId: saved ? saved.id : null, password });
+  const view: SessionView = session.protocol === 'ssh' ? (opts.view ?? session.openAs ?? 'terminal') : 'terminal';
+  const paneId = useWorkspace.getState().openSession(session, {
+    target,
+    sessionId: saved ? saved.id : null,
+    password,
+    view,
+    remotePath: opts.remotePath
+  });
   if (saved) {
     api.sessions.save({ ...saved, lastUsedAt: Date.now() }).catch((e) => console.warn('lastUsedAt update failed', e));
   }
   return paneId;
 }
 
-export function connectSavedSession(id: string, target: OpenTarget = 'tab'): void {
+export function connectSavedSession(id: string, target: OpenTarget = 'tab', view?: SessionView): void {
   const s = useSessions.getState().byId(id);
   if (!s) {
     toast.warning('Session not found', 'It may have been deleted.');
     return;
   }
-  connectSession(s, target);
+  connectSession(s, target, undefined, { view });
+}
+
+/**
+ * File manager for a pane: an SSH terminal gets (or re-focuses) a file manager tab on its own connection — no second
+ * login. Other panes are told why it is not available.
+ */
+export function openFileManagerFor(paneId: string | undefined): void {
+  if (!paneId) return;
+  const ws = useWorkspace.getState();
+  const p = ws.panes[paneId];
+  if (!p) return;
+  if (p.kind === 'files') return;
+  if (p.session.protocol !== 'ssh') {
+    toast.info('The file manager needs an SSH connection');
+    return;
+  }
+  const existing = Object.values(ws.panes).find((x) => x.kind === 'files' && x.linkedPaneId === paneId);
+  if (existing) {
+    ws.activatePane(existing.id);
+    return;
+  }
+  if (p.status !== 'connected') {
+    // Not connected (yet): open one with its own connection.
+    ws.openSession(p.session, { view: 'files', sessionId: p.sessionId });
+    return;
+  }
+  ws.openSession(p.session, { view: 'files', sessionId: p.sessionId, linkedPaneId: paneId });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -282,12 +324,7 @@ export async function closeTabs(tabIds: string[], what = tabIds.length === 1 ? '
   if (!tabIds.length) return;
   if (!(await confirmDropConnections(livePanesOfTabs(tabIds), what))) return;
   const ws = useWorkspace.getState();
-  const sftp = useUi.getState().sftpPaneId;
-  for (const id of tabIds) {
-    const tab = ws.tabs.find((t) => t.id === id);
-    if (tab && sftp && paneIdsOf(tab.layout).includes(sftp)) useUi.getState().setSftpPane(null);
-    ws.closeTab(id);
-  }
+  for (const id of tabIds) ws.closeTab(id);
 }
 
 export function closeTab(tabId: string): Promise<void> {
@@ -309,7 +346,6 @@ export async function closePane(paneId: string): Promise<void> {
   const p = useWorkspace.getState().panes[paneId];
   if (!p) return;
   if (!(await confirmDropConnections(isPaneLive(p) ? [p] : [], 'pane'))) return;
-  if (useUi.getState().sftpPaneId === paneId) useUi.getState().setSftpPane(null);
   useWorkspace.getState().closePane(paneId);
 }
 
@@ -327,17 +363,6 @@ export function changePaneSettings(paneId: string): void {
   const saved = useSessions.getState().byId(p.sessionId);
   if (saved) editSession(saved.id);
   else useUi.getState().openDialog({ type: 'sessionEditor', draft: structuredClone(p.session) });
-}
-
-export function toggleSftp(paneId: string | undefined): void {
-  const ui = useUi.getState();
-  if (!paneId) return;
-  const p = useWorkspace.getState().panes[paneId];
-  if (!p || p.session.protocol !== 'ssh') {
-    toast.info('SFTP is available for SSH sessions only');
-    return;
-  }
-  ui.setSftpPane(ui.sftpPaneId === paneId ? null : paneId);
 }
 
 export async function toggleSidebar(): Promise<void> {

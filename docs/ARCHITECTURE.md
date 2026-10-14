@@ -15,7 +15,10 @@ SSHCrawler.exe (C++20, Win32)
 ├─ keys/       key loading (OpenSSH/PEM/PPK v2/v3), PPK read/write, keygen (PuTTYgen equivalent)
 ├─ putty/      PuTTY registry/.reg import + export, PuTTY host key conversion
 ├─ importers/  ~/.ssh/config, JSON backup, OpenSSH known_hosts, import apply logic + bridge handlers
-└─ sftp/       SFTP browser backend (runs on SSH connections)
+├─ sftp/       file manager backend on SSH connections: RemoteFs over SFTP or SCP, transfer engine (queue,
+│              conflicts, resume, move), find, synchronize, edit with auto-upload, remote drag source
+├─ localfs/    local disks for the file manager ("This PC", listings, IFileOperation copy/move/delete, watchers)
+└─ dnd/        native OLE drag & drop: virtual-file data object (in the MTA), drop source with internal drops
 ```
 
 Dependencies (vcpkg manifest `vcpkg.json`, installed into `vcpkg_installed/`): libssh 0.12 (OpenSSL 3, zlib),
@@ -86,16 +89,45 @@ connId = `<paneId>#<generation>` (the UI restarts a pane by bumping the generati
 | `keys-import` | `native/src/keys/**`, `native/src/putty/**`, `native/src/importers/**`, `native/tests/{keys,putty}/**`, `native/tests/fixtures/**` |
 | `host` | `native/src/app/**`, `native/src/store/**`, `native/src/core/Types.*` (additions), `native/res/**`, `native/tests/{store,app}/**`, `CMakeLists.txt` (additions only) |
 | `session` | `native/src/session/{SessionManager,Charset,SessionLog}.*`, `native/src/transport/TransportFactory.*`, `native/tests/session/**` |
-| `sftp` | `native/src/sftp/**`, `native/tests/sftp/**`, `ui/src/components/sftp/**`, `ui/src/bridge/mock/sftp.ts` |
+| `sftp` | `native/src/sftp/**`, `native/src/localfs/**`, `native/src/dnd/**`, `native/tests/{sftp,localfs,dnd}/**`, `ui/src/components/files/**`, `ui/src/bridge/mock/{sftp,local}.ts` |
 | `testinfra` | `native/tests/support/**`, `scripts/**` |
 | `ui-shell` | `ui/src/App.tsx`, `ui/src/components/{titlebar,sidebar,layout,palette,welcome,statusbar,quickconnect}/**`, `ui/src/commands/**`, `ui/src/theme/**`, `ui/src/store/**` (keep exported APIs), `ui/src/bridge/mock/{index,core}.ts` |
 | `ui-terminal` | `ui/src/terminal/**`, `ui/src/bridge/mock/conn.ts` |
 | `ui-dialogs` | `ui/src/components/dialogs/**`, `ui/src/shared/types.ts` + `defaults.ts` (additions), `ui/src/bridge/mock/{importer,keys}.ts` |
 
 Bridge handler ownership: `conn:*`, `prompts:*` → session · `importer:*`, `keys:*`, `knownHosts:importOpenSsh` →
-keys-import · `sftp:*` → sftp · everything else (`sessions`, `credentials`, `settings`, `knownHosts` list/remove,
+keys-import · `sftp:*`, `local:*` → sftp · everything else (`sessions`, `credentials`, `settings`, `knownHosts` list/remove,
 `serial`, `dialog`, `app`, `window`) → host. The host's composition root calls `registerConnHandlers`,
-`registerImportHandlers`, `SftpService::registerHandlers` and its own core handlers.
+`registerImportHandlers`, `SftpService::registerHandlers`, `LocalFsService::registerHandlers` and its own core
+handlers, and calls `dnd::init(window)` once the main window exists (the UI thread runs `OleInitialize`).
+
+## File manager
+
+A file manager tab is a workspace pane of kind `files` (always alone in its tab). It works on the connection of
+the terminal it was opened from (`linkedPaneId`, no second login) or on a connection of its own: a shell-less copy
+of the session (`noShell`, no tunnels / X11 / agent forwarding) opened by `ui/src/components/files/filesConn.ts`.
+On that connection `sftp:open` picks the protocol (`ssh.fileProtocol`: auto = SFTP, falling back to SCP).
+
+Native layering (`native/src/sftp`):
+
+- `RemoteFs` — protocol-neutral remote file access. `SftpFs` (libssh sftp, pipelined `RemoteFile`) and `ScpFs`
+  (POSIX `sh -c` scripts on exec channels for browsing — `ls -la` parsed by `ScpProtocol` for GNU / BSD /
+  BusyBox / plain formats — and the scp protocol, one `scp -f` / `scp -t` channel per file). Every libssh call runs
+  in bounded steps on the connection thread through `SshTransport::post`, so the terminal on the same connection
+  stays responsive.
+- `TransferEngine` — one queue per remote session (1–6 workers), recursive planning, conflict policy per request
+  (ask → `sftp:onConflict` / `sftp:resolveConflict`, one question per request at a time, "apply to all"), resume
+  (`.sc-partial` files; SFTP offset writes), move, synchronize deletes, throttled `sftp:onProgress`.
+- `FindSync` — glob search (`sftp:find` → `sftp:onFind` batches) and the pure synchronize comparison
+  (`compareTrees`) with local / remote walkers. `EditWatcher` logic lives in `SftpService` (temp copy polled every
+  500 ms, upload after a quiet period; a changed server copy asks first).
+- `RemoteDragSource` + `dnd/` — drag out to Explorer: virtual files (`CFSTR_FILEDESCRIPTORW` / `CFSTR_FILECONTENTS`)
+  from a data object created in the MTA, so Explorer's reads run on RPC threads, never on the UI thread; drops back
+  on our own window are cancelled by the drop source and handed to the page as "internal" (pane-to-pane copy).
+
+Tests: `native/tests/sftp` (transfers, conflicts, resume, move, find, sync, edit, SCP against real GNU `ls` and
+OpenSSH `scp` run through Git for Windows' `sh.exe` by the test server, drag out into a real shell drop target),
+`native/tests/localfs`, `native/tests/dnd`. `sc_testserver --sftp off --exec-shell git` serves an SCP-only server.
 
 ## Building & testing
 
@@ -111,7 +143,7 @@ $cmake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Co
 & $cmake --build build/<module> --config Debug --target sc_test_<module> -- /nologo /v:minimal /m
 build/<module>/Debug/sc_test_<module>.exe                   # Catch2: add "[tag]" or a test name to filter
 ```
-Libraries: `sc_core sc_bridge sc_store sc_dialogs sc_net sc_transport sc_keys sc_ssh sc_session sc_putty sc_sftp sc_app`,
+Libraries: `sc_core sc_bridge sc_store sc_dialogs sc_net sc_transport sc_keys sc_ssh sc_session sc_putty sc_dnd sc_localfs sc_sftp sc_app`,
 executable `SSHCrawler`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
 Tests: `native/tests/<module>/*.cpp` → `sc_test_<module>`; `native/tests/support` (TestSshServer, TestEchoServer,
 TestScriptServer, TempDir) is linked into every test exe. `SC_FIXTURES_DIR` points at `native/tests/fixtures`.
@@ -144,7 +176,7 @@ substitution, ML-KEM key exchange (disabled: libssh client issue).
 - [x] Serial: line, speed, data/stop bits, parity, flow control; Telnet: active/passive, keyboard specials, Return=NEWLINE; Rlogin: local username
 - [x] Special commands menu (Break, EOF, IGNORE, signals, telnet AYT/Synch/EC/EL/GA/NOP/AO/IP/SUSP/EOR/EOF...)
 - [x] Context menu: event log, new/duplicate/restart session, saved sessions, change settings, copy all, clear scrollback, reset terminal, full screen
-- [x] PSFTP/PSCP → SFTP browser (upload/download/drag & drop, mkdir/rename/delete/chmod); PuTTYgen → keygen/convert/inspect; Pageant → agent support
+- [x] PSFTP/PSCP → file manager tab (WinSCP-style): local + server panes, SFTP with SCP fallback, copy/move (F5/F6, drag & drop both ways incl. Explorer), conflicts (ask/overwrite/newer/skip/resume/rename), resume, edit with auto-upload, synchronize, find, bookmarks, chmod; PuTTYgen → keygen/convert/inspect; Pageant → agent support
 - [x] Import: PuTTY registry sessions + Default Settings + SSH host keys, .reg files, export to .reg; ~/.ssh/config; OpenSSH known_hosts; JSON backup
-- [x] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`
+- [x] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`, `sftp://` / `scp://` URLs
 - [x] Modern: tabs (reorder, colours, rename), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode

@@ -23,10 +23,10 @@ import {
   Waypoints
 } from 'lucide-react';
 import { api } from '@/bridge/api';
+import { connectSession } from '@/commands/actions';
 import { Button, Modal, toast } from '@/components/ui';
 import { useSessions, useSettings } from '@/store/data';
 import type { DialogState } from '@/store/ui';
-import { useWorkspace } from '@/store/workspace';
 import type { ColorScheme, SessionConfig } from '@shared/types';
 import { NavList, type NavItem } from '../common/controls';
 import { CloseGuardContext, errorMessage, useCloseGuards, useStableCallback } from '../common/hooks';
@@ -278,7 +278,7 @@ export function SessionEditor({ dialog, onClose }: { dialog: SessionEditorState;
       }
       await useSessions.getState().reload();
       onClose();
-      if (connect) useWorkspace.getState().openSession(stored, { sessionId: stored.id });
+      if (connect) connectSession(stored);
     } catch (e) {
       toast.error('Could not save the session', errorMessage(e));
       setBusy(false);

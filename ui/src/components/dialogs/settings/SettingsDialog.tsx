@@ -6,6 +6,7 @@ import {
   Brush,
   Database,
   FileUp,
+  FolderOpen,
   Info,
   Keyboard,
   MonitorCog,
@@ -39,12 +40,13 @@ import { SchemeCard } from '../common/SchemeCard';
 import { ANSI_KEYS, TerminalSample } from '../common/SchemePreview';
 import './settings.css';
 
-type SectionId = 'appearance' | 'terminal' | 'behavior' | 'keys' | 'schemes' | 'hosts' | 'defaults' | 'data' | 'about';
+type SectionId = 'appearance' | 'terminal' | 'behavior' | 'files' | 'keys' | 'schemes' | 'hosts' | 'defaults' | 'data' | 'about';
 
 const NAV: NavItem[] = [
   { id: 'appearance', label: 'Appearance', icon: <Brush size={15} /> },
   { id: 'terminal', label: 'Terminal', icon: <SquareTerminal size={15} /> },
   { id: 'behavior', label: 'Behavior', icon: <MousePointerClick size={15} /> },
+  { id: 'files', label: 'File manager', icon: <FolderOpen size={15} /> },
   { id: 'keys', label: 'Keybindings', icon: <Keyboard size={15} /> },
   { id: 'schemes', label: 'Color schemes', icon: <Palette size={15} /> },
   { id: 'hosts', label: 'Known hosts', icon: <ShieldCheck size={15} /> },
@@ -65,6 +67,7 @@ export function SettingsDialog({ initialSection, onClose }: { initialSection?: s
     appearance: <AppearancePage />,
     terminal: <TerminalPage />,
     behavior: <BehaviorPage />,
+    files: <FilesPage />,
     keys: <KeybindingsPage />,
     schemes: <SchemesPage />,
     hosts: <KnownHostsPage />,
@@ -264,6 +267,55 @@ function BehaviorPage() {
       <Section title="Scrolling">
         <ToggleRow label="Scroll to the bottom on output" checked={b.scrollOnOutput} onChange={(scrollOnOutput) => update({ behavior: { scrollOnOutput } })} />
         <ToggleRow label="Scroll to the bottom on keystroke" checked={b.scrollOnKeystroke} onChange={(scrollOnKeystroke) => update({ behavior: { scrollOnKeystroke } })} />
+      </Section>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------- File manager */
+
+function FilesPage() {
+  const [s, update] = useSettingsState();
+  const f = s.files;
+  const pickEditor = async () => {
+    const path = await api.dialog.openFile({ title: 'Choose an editor', filters: [{ name: 'Programs', extensions: ['exe', 'cmd', 'bat'] }] });
+    if (path) update({ files: { editor: path } });
+  };
+  return (
+    <>
+      <h2 className="dlg-page-title">File manager</h2>
+      <Section title="Transfers">
+        <SettingRow label="When a file already exists" description="Also changeable from the file manager toolbar.">
+          <Select
+            value={f.defaultConflict}
+            onChange={(defaultConflict) => update({ files: { defaultConflict } })}
+            options={[
+              { value: 'ask', label: 'Ask' },
+              { value: 'overwrite', label: 'Overwrite' },
+              { value: 'newer', label: 'Overwrite if newer' },
+              { value: 'skip', label: 'Skip' },
+              { value: 'resume', label: 'Resume (SFTP)' }
+            ]}
+          />
+        </SettingRow>
+        <SettingRow label="Parallel transfers per connection" description="Applies to file manager tabs opened from now on.">
+          <NumberInput value={f.parallelTransfers} min={1} max={6} onChange={(parallelTransfers) => update({ files: { parallelTransfers } })} />
+        </SettingRow>
+        <ToggleRow label="Keep modification times" description="Copies get the original file's date, which Synchronize relies on." checked={f.preserveTimestamps} onChange={(preserveTimestamps) => update({ files: { preserveTimestamps } })} />
+      </Section>
+      <Section title="Browsing">
+        <ToggleRow label="Show hidden files" description="Names starting with a dot and files with the Hidden attribute." checked={f.showHidden} onChange={(showHidden) => update({ files: { showHidden } })} />
+        <ToggleRow label="Confirm before deleting" checked={f.confirmDelete} onChange={(confirmDelete) => update({ files: { confirmDelete } })} />
+        <ToggleRow label="Delete local files to the Recycle Bin" checked={f.deleteToRecycleBin} onChange={(deleteToRecycleBin) => update({ files: { deleteToRecycleBin } })} />
+      </Section>
+      <Section title="Editing" description="Edit (F4) opens a server file in an editor and uploads it again every time you save.">
+        <FormField label="Editor" hint="Leave empty to use the program Windows uses to edit that file type (Notepad otherwise).">
+          <div className="settings-inline">
+            <TextInput value={f.editor} onChange={(editor) => update({ files: { editor } })} placeholder="C:\Program Files\Notepad++\notepad++.exe" className="mono-input" />
+            <Button onClick={() => void pickEditor()}>Browse…</Button>
+            {f.editor && <Button variant="ghost" onClick={() => update({ files: { editor: '' } })}>Reset</Button>}
+          </div>
+        </FormField>
       </Section>
     </>
   );

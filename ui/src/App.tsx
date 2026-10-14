@@ -14,6 +14,8 @@ import { CommandPalette } from '@/components/palette/CommandPalette';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { StatusBar } from '@/components/statusbar/StatusBar';
 import { TitleBar } from '@/components/titlebar/TitleBar';
+import { initFilesConnections } from '@/components/files/filesConn';
+import { initFilesEvents } from '@/components/files/filesStore';
 import { ContextMenuHost, ToastHost } from '@/components/ui';
 import { initDataStores, useSessions, useSettings } from '@/store/data';
 import { confirmDialog, useUi } from '@/store/ui';
@@ -26,7 +28,10 @@ import './app.css';
 
 function openRequest(req: OpenRequest) {
   const saved = req.savedSessionId ? useSessions.getState().byId(req.savedSessionId) : undefined;
-  connectSession(saved ? { ...saved, ...req.session, id: saved.id } : req.session, 'tab', req.password);
+  connectSession(saved ? { ...saved, ...req.session, id: saved.id } : req.session, 'tab', req.password, {
+    view: req.view,
+    remotePath: req.remotePath
+  });
 }
 
 async function handleCloseRequest() {
@@ -105,6 +110,8 @@ export function App() {
 
   useEffect(() => {
     initConnEvents();
+    initFilesEvents();
+    initFilesConnections();
     loadRecentCommands();
     const uninstall = installKeybindings((id) => runCommand(id));
     initDataStores()

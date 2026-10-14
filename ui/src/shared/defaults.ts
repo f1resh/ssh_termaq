@@ -29,6 +29,7 @@ export function createDefaultSession(overrides: Partial<SessionConfig> = {}): Se
     host: '',
     port: 22,
     username: '',
+    openAs: 'terminal',
     createdAt: now,
     updatedAt: now,
     lastUsedAt: 0,
@@ -78,7 +79,9 @@ export function createDefaultSession(overrides: Partial<SessionConfig> = {}): Se
       tunnels: [],
       localPortsAcceptAll: false,
       remotePortsAcceptAll: false,
-      sftpStartPath: ''
+      sftpStartPath: '',
+      fileProtocol: 'auto',
+      localStartPath: ''
     },
     telnet: {
       passive: false,
@@ -233,7 +236,16 @@ export function createDefaultSettings(): AppSettings {
     keybindings: { ...DEFAULT_KEYBINDINGS },
     customSchemes: [],
     defaultSession: createDefaultSession({ id: 'default', name: 'Default Settings', createdAt: 0, updatedAt: 0 }),
-    logging: { directory: '' }
+    logging: { directory: '' },
+    files: {
+      editor: '',
+      defaultConflict: 'ask',
+      showHidden: false,
+      confirmDelete: true,
+      deleteToRecycleBin: true,
+      preserveTimestamps: true,
+      parallelTransfers: 2
+    }
   };
 }
 

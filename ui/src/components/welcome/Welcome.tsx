@@ -57,7 +57,8 @@ export function Welcome() {
       return;
     }
     try {
-      connectSession(applyQuickConnect(createAdHocSession(), parsed.target));
+      const t = parsed.target;
+      connectSession(applyQuickConnect(createAdHocSession(), t), 'tab', undefined, t.files ? { view: 'files', remotePath: t.files.path } : { view: 'terminal' });
       setValue('');
     } catch (e) {
       reportError('Could not connect', e);

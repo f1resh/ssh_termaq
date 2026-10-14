@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Columns2,
   Copy,
+  FolderOpen,
   Palette,
   Pencil,
   Plus,
@@ -28,6 +29,7 @@ import { closeOtherTabs, closeTab, closeTabsToRight, connectSavedSession, newSes
 import { useSessions } from '@/store/data';
 import { useUi } from '@/store/ui';
 import { paneIdsOf, tabTitle, useWorkspace } from '@/store/workspace';
+import { connOfFilesPane } from '@/components/files/filesConn';
 import { sessionLabel } from '@shared/defaults';
 import type { SessionConfig } from '@shared/types';
 import { COLOR_SWATCHES, ProtocolIcon, STATUS_LABELS, StatusDot, Swatch, sessionSubtitle } from '@/components/layout/sessionVisuals';
@@ -155,8 +157,9 @@ function TabItem({
         color: tab?.color ?? '',
         broadcast: !!tab?.broadcast,
         active: s.activeTabId === tabId,
-        status: pane?.status ?? 'idle',
+        status: pane?.kind === 'files' ? connOfFilesPane(pane, s.panes).status : (pane?.status ?? 'idle'),
         protocol: pane?.session.protocol ?? 'ssh',
+        files: pane?.kind === 'files',
         subtitle: pane ? sessionSubtitle(pane.session) : '',
         message: pane?.statusMessage ?? '',
         activity: panes.some((p) => p.hasActivity),
@@ -222,7 +225,7 @@ function TabItem({
       onDragEnd={onDragEndTab}
     >
       <span className="tab__icon">
-        <ProtocolIcon protocol={info.protocol} size={14} />
+        {info.files ? <FolderOpen size={14} strokeWidth={1.75} aria-hidden /> : <ProtocolIcon protocol={info.protocol} size={14} />}
         <StatusDot status={info.status} className="tab__status" />
       </span>
       {renaming ? <RenameInput tabId={tabId} initial={info.title} /> : <span className="tab__title">{info.title}</span>}
