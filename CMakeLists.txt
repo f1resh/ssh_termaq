@@ -5,6 +5,9 @@ project(SSHCrawler VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# Static C/C++ runtime (/MT, /MTd), matching the vcpkg triplet triplets/x64-windows-sc.cmake: the app needs no
+# Visual C++ Redistributable. Only libssh is a DLL (ssh.dll, carrying its own runtime).
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # Static libraries without custom commands do not have to wait for their dependencies to build
 # (lets each module be compiled on its own: cmake --build <dir> --target sc_ssh).
 set(CMAKE_OPTIMIZE_DEPENDENCIES ON)

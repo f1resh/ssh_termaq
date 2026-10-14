@@ -21,6 +21,11 @@ SSHCrawler.exe (C++20, Win32)
 └─ dnd/        native OLE drag & drop: virtual-file data object (in the MTA), drop source with internal drops
 ```
 
+Linking: everything is static, including the C/C++ runtime (`/MT`), except libssh, which ships as `ssh.dll`
+(LGPL: replaceable) with its own static runtime. Custom vcpkg triplet `triplets/x64-windows-sc.cmake`. Because
+`ssh.dll` has a separate heap, memory allocated by libssh must be released with libssh functions
+(`ssh_string_free_char`, `ssh_key_free`, `sftp_attributes_free`, ...), never with `free()`.
+
 Dependencies (vcpkg manifest `vcpkg.json`, installed into `vcpkg_installed/`): libssh 0.12 (OpenSSL 3, zlib),
 OpenSSL 3.6, zlib, nlohmann-json 3.12, WebView2 SDK, WIL, Catch2 3. libssh sources (for reference while
 implementing) are in `vcpkg_installed/vcpkg/blds/libssh/src/libssh-0-e5f4972781.clean/`.

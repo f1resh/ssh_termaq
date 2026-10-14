@@ -70,7 +70,8 @@ SSH Crawler $version
 
 Modern tabbed SSH / Telnet / Rlogin / Raw / Serial client for Windows with PuTTY session import.
 
-Run SSHCrawler.exe. Requires the Microsoft Edge WebView2 Runtime (built into Windows 11).
+Run SSHCrawler.exe (keep ssh.dll next to it). No Visual C++ Redistributable or other runtime is needed
+except the Microsoft Edge WebView2 Runtime, which is built into Windows 11.
 Data is stored in %APPDATA%\SSH Crawler, or next to the program when a file named
 "portable.flag" (or a folder named "data") exists in this folder.
 
@@ -82,10 +83,10 @@ PuTTY-compatible command line:  SSHCrawler.exe [-ssh|-telnet|-rlogin|-raw|-seria
 SSH Crawler includes the following third-party components:
 
 libssh          LGPL-2.1   https://www.libssh.org/          (dynamically linked: ssh.dll)
-OpenSSL         Apache-2.0 https://www.openssl.org/         (libcrypto-3-x64.dll, libssl-3-x64.dll)
-zlib            zlib       https://zlib.net/                (z.dll)
+OpenSSL         Apache-2.0 https://www.openssl.org/         (statically linked into SSHCrawler.exe and ssh.dll)
+zlib            zlib       https://zlib.net/                (statically linked into ssh.dll)
 nlohmann/json   MIT        https://github.com/nlohmann/json
-WebView2 SDK    Microsoft  https://aka.ms/webview2          (WebView2Loader.dll)
+WebView2 SDK    Microsoft  https://aka.ms/webview2          (static WebView2 loader)
 WIL             MIT        https://github.com/microsoft/wil
 xterm.js        MIT        https://xtermjs.org/
 React           MIT        https://react.dev/

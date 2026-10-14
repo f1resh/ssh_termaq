@@ -10,7 +10,8 @@
       "binaryDir": "${sourceDir}/build/vs",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-sc",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets",
         "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed",
         "VCPKG_MANIFEST_INSTALL": "OFF"
       },

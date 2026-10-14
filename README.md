@@ -35,6 +35,13 @@ SSHCrawler.exe sftp://user@host/var/www   scp://user@router        (open the fil
 ```
 A second invocation opens a new tab in the already running window.
 
+### Requirements
+
+Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11). The release folder holds
+`SSHCrawler.exe`, `ssh.dll` (libssh, kept separate so it can be replaced under the LGPL) and the `ui` folder.
+Everything else, including the C/C++ runtime and OpenSSL, is linked in statically: no Visual C++
+Redistributable is needed.
+
 ### Data and portable mode
 
 Settings, sessions and trusted host keys live in `%APPDATA%\SSH Crawler`. Put a file named `portable.flag`
@@ -57,7 +64,7 @@ Requirements: Visual Studio 2022 (Desktop C++, includes vcpkg and CMake), Node.j
 
 ```powershell
 # one-time: C++ dependencies (libssh, OpenSSL, zlib, nlohmann-json, WebView2, WIL, Catch2)
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows --x-install-root=vcpkg_installed
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows-sc --overlay-triplets=triplets --x-install-root=vcpkg_installed
 
 # everything: UI + native Release + dist\SSHCrawler-<version>-win-x64 (+ zip)
 .\scripts\build.ps1            # -Tests runs all test suites first, -Portable adds portable.flag
