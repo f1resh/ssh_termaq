@@ -8,12 +8,17 @@
     - by scripts/build.ps1 -Sign:   SSHTermaq.exe and ssh.dll before zipping, then the installer
     - by Inno Setup (ISCC):         the installer and its uninstaller (build.ps1 passes this script as the sign tool)
 
-  The certificate is configured in scripts/signing.json (not committed; start from scripts/signing.example.json) or
-  with environment variables, which win over the file (for CI). Exactly one of these must be set:
+  With nothing configured it works like `signtool sign /a`: it uses the code-signing certificate in CurrentUser\My
+  (valid, with its private key; a CA's USB token shows up there too) when there is exactly one, and lists them and
+  stops when there are several.
 
-    Certificate in the Windows store (also USB tokens from a CA, whose certificate shows up there):
+  Otherwise the certificate is configured in scripts/signing.json (not committed; start from
+  scripts/signing.example.json) or with environment variables, which win over the file (for CI). Set at most one of:
+
+    A certificate in the Windows store, by thumbprint:
       "thumbprint": "<SHA-1>"            SSHTERMAQ_SIGN_THUMBPRINT
-      "machineStore": true               SSHTERMAQ_SIGN_MACHINE_STORE=1   (LocalMachine\My instead of CurrentUser\My)
+      "machineStore": true               SSHTERMAQ_SIGN_MACHINE_STORE=1   (LocalMachine\My instead of CurrentUser\My;
+                                                                         also for the automatic choice)
     PFX file (self-signed test certificates; CAs no longer issue exportable keys):
       "pfx": "C:\\keys\\test.pfx"         SSHTERMAQ_SIGN_PFX
       password only in the environment:  SSHTERMAQ_SIGN_PFX_PASSWORD
@@ -36,6 +41,34 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $CodeSigningOid = '1.3.6.1.5.5.7.3.3'
+
+function Test-CodeSigningUsage($cert, [switch]$Explicit) {
+    # Like Windows, a certificate without an Enhanced Key Usage extension is valid for every purpose; -Explicit wants
+    # the Code Signing usage itself (apps leave such unrestricted self-signed certificates in the user's store).
+    $eku = @($cert.Extensions | Where-Object { $_ -is [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension] } |
+        ForEach-Object { $_.EnhancedKeyUsages } | ForEach-Object { $_.Value })
+    ($eku.Count -eq 0 -and -not $Explicit) -or $eku -contains $CodeSigningOid
+}
+
+# The automatic choice (no certificate configured): the only valid certificate with a private key and the Code Signing
+# usage (as Get-ChildItem -CodeSigningCert shows them).
+function Select-AutoCertificate($certs, $store) {
+    $now = Get-Date
+    $usable = @($certs | Where-Object {
+        $_.HasPrivateKey -and $_.NotBefore -le $now -and $_.NotAfter -gt $now -and (Test-CodeSigningUsage $_ -Explicit)
+    })
+    if ($usable.Count -eq 0) {
+        throw "Code signing: no certificate configured, and no valid code-signing certificate with a private key in " +
+              "$store\My (plug in the USB token, install a certificate, or configure one: see docs/BUILDING.md, section 10)."
+    }
+    if ($usable.Count -gt 1) {
+        $list = ($usable | ForEach-Object {
+            "  $($_.Thumbprint)  $($_.Subject)  (until $($_.NotAfter.ToString('yyyy-MM-dd')))" }) -join "`n"
+        throw "Code signing: $($usable.Count) code-signing certificates in $store\My; choose one with `"thumbprint`" in " +
+              "scripts/signing.json or SSHTERMAQ_SIGN_THUMBPRINT:`n$list"
+    }
+    $usable[0]
+}
 
 function Get-SigningConfig {
     $path = $env:SSHTERMAQ_SIGN_CONFIG
@@ -63,10 +96,7 @@ function Get-SigningConfig {
     if ($cfg.Thumbprint) { $methods += 'store' }
     if ($cfg.Pfx) { $methods += 'pfx' }
     if ($cfg.AzureDlib -or $cfg.AzureMetadata) { $methods += 'azure' }
-    if ($methods.Count -eq 0) {
-        throw "Code signing is not configured: create $path from scripts/signing.example.json, or set " +
-              'SSHTERMAQ_SIGN_THUMBPRINT, SSHTERMAQ_SIGN_PFX or SSHTERMAQ_SIGN_AZURE_DLIB/_METADATA (see docs/BUILDING.md).'
-    }
+    if ($methods.Count -eq 0) { $methods += 'auto' }   # like signtool /a
     if ($methods.Count -gt 1) { throw "Code signing: set only one of thumbprint, pfx or azureDlib/azureMetadata (found: $($methods -join ', '))" }
     $cfg.Method = $methods[0]
     if (-not $cfg.TimestampUrl) {
@@ -89,6 +119,10 @@ function Find-SignTool {
 
 function Get-SigningCertificate($cfg) {
     switch ($cfg.Method) {
+        'auto' {
+            $store = $(if ($cfg.MachineStore) { 'LocalMachine' } else { 'CurrentUser' })
+            return Select-AutoCertificate @(Get-ChildItem "Cert:\$store\My") $store
+        }
         'store' {
             $store = $(if ($cfg.MachineStore) { 'LocalMachine' } else { 'CurrentUser' })
             $thumb = ($cfg.Thumbprint -replace '[^0-9A-Fa-f]', '').ToUpperInvariant()
@@ -116,15 +150,19 @@ function Get-SigningCertificate($cfg) {
 }
 
 function Show-Configuration($cfg, $cert, $signtool) {
-    Write-Host "Code signing: $($cfg.Method) ($($cfg.Source))"
+    if ($cfg.Method -eq 'auto') {
+        $store = $(if ($cfg.MachineStore) { 'LocalMachine' } else { 'CurrentUser' })
+        Write-Host "Code signing: auto (the only code-signing certificate in $store\My)"
+    } else {
+        Write-Host "Code signing: $($cfg.Method) ($($cfg.Source))"
+    }
     Write-Host "  signtool:  $signtool"
     if ($cert) {
         Write-Host "  signer:    $($cert.Subject)"
         Write-Host "  issuer:    $($cert.Issuer)"
         Write-Host "  valid:     $($cert.NotBefore.ToString('yyyy-MM-dd')) .. $($cert.NotAfter.ToString('yyyy-MM-dd'))"
-        $eku = @($cert.Extensions | Where-Object { $_ -is [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension] } |
-            ForEach-Object { $_.EnhancedKeyUsages } | ForEach-Object { $_.Value })
-        if ($eku.Count -and $eku -notcontains $CodeSigningOid) { throw 'The certificate is not valid for code signing (no Code Signing usage)' }
+        if ($cert.Thumbprint) { Write-Host "  thumbprint: $($cert.Thumbprint)" }
+        if (-not (Test-CodeSigningUsage $cert)) { throw 'The certificate is not valid for code signing (no Code Signing usage)' }
         if ($cert.NotAfter -lt (Get-Date)) { throw "The certificate expired on $($cert.NotAfter.ToString('yyyy-MM-dd'))" }
         if ($cert.Subject -eq $cert.Issuer) { Write-Warning 'Self-signed certificate: fine for testing, but Windows will not trust the signature.' }
     } else {
@@ -152,7 +190,7 @@ $paths = @(foreach ($f in $Files) {   # @(): one file must stay an array, or 5.1
 
 $signArgs = @('sign', '/fd', 'SHA256', '/d', 'SSHTermaq')
 switch ($cfg.Method) {
-    'store' {
+    { $_ -in @('store', 'auto') } {   # auto: the certificate chosen above, by thumbprint, so every file gets the same one
         $signArgs += @('/sha1', $cert.Thumbprint)
         if ($cfg.MachineStore) { $signArgs += '/sm' }
     }

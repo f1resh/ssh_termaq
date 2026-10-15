@@ -205,23 +205,32 @@ it are signed as well.
 | Option | Cost (approx.) | Configure |
 |---|---|---|
 | Azure Trusted Signing | about $10 a month | `azureDlib` + `azureMetadata`; identity validation, and individuals only in some countries |
-| OV certificate from a CA (Sectigo, SSL.com, DigiCert, Certum, ...) | $200–500 a year; Certum's open-source certificate is much cheaper | `thumbprint`: the key is on a USB token (or a cloud service with a "virtual token" driver), and its certificate shows up in the Windows store |
+| OV certificate from a CA (Sectigo, SSL.com, DigiCert, Certum, ...) | $200–500 a year; Certum's open-source certificate is much cheaper | nothing (automatic) or `thumbprint`: the key is on a USB token (or a cloud service with a "virtual token" driver), and its certificate shows up in the Windows store |
 | SignPath Foundation | free for open-source projects | signs in their CI service, not with this script |
-| Self-signed | free | `thumbprint` or `pfx`: for trying the pipeline; Windows does not trust it |
+| Self-signed | free | nothing (automatic), `thumbprint` or `pfx`: for trying the pipeline; Windows does not trust it |
 
 None of them removes the SmartScreen warning at once, not even an EV certificate: the reputation builds up as people
 download signed releases.
 
 ### Configuration
 
-Put the settings in `scripts\signing.json` (not committed; start from
+**With nothing configured** (no `signing.json`, or an empty `thumbprint`), `sign.ps1` chooses the certificate
+itself, like `signtool sign /a`. It looks in `CurrentUser\My` for certificates that are valid now, have their private
+key and carry the Code Signing usage (the ones `Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert` lists).
+- If there is exactly one, it signs with it. A CA's USB token counts once its driver is installed and it is plugged in.
+- If there are several, it lists them with their thumbprints and stops, rather than guessing: put the one you want in
+  `thumbprint`.
+- Certificates without any key-usage restriction are not picked, although Windows allows them for every purpose:
+  apps leave such self-signed certificates in the user's store.
+
+Otherwise put the settings in `scripts\signing.json` (not committed; start from
 [scripts/signing.example.json](../scripts/signing.example.json)) or in environment variables, which win over the
-file (for CI secrets). Set exactly one of `thumbprint`, `pfx` or the two `azure…` values.
+file (for CI secrets). Set at most one of `thumbprint`, `pfx` or the two `azure…` values.
 
 | `signing.json` | Environment variable | Meaning |
 |---|---|---|
-| `thumbprint` | `SSHTERMAQ_SIGN_THUMBPRINT` | SHA-1 thumbprint of a certificate in `CurrentUser\My` (USB tokens appear there when their driver is installed) |
-| `machineStore` | `SSHTERMAQ_SIGN_MACHINE_STORE` | `true` / `1`: look in `LocalMachine\My` instead |
+| `thumbprint` | `SSHTERMAQ_SIGN_THUMBPRINT` | SHA-1 thumbprint of a certificate in `CurrentUser\My` (USB tokens appear there when their driver is installed); empty: the automatic choice |
+| `machineStore` | `SSHTERMAQ_SIGN_MACHINE_STORE` | `true` / `1`: look in `LocalMachine\My` instead, also for the automatic choice |
 | `pfx` | `SSHTERMAQ_SIGN_PFX` | a `.pfx` file |
 | — | `SSHTERMAQ_SIGN_PFX_PASSWORD` | its password: only from the environment, never in the file |
 | `azureDlib` | `SSHTERMAQ_SIGN_AZURE_DLIB` | `bin\x64\Azure.CodeSigning.Dlib.dll` from the NuGet package `Microsoft.Trusted.Signing.Client` |
@@ -237,9 +246,8 @@ Subject, Thumbprint, NotAfter`. For Azure Trusted Signing, sign in first with `a
 
 ```powershell
 $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject 'CN=SSHTermaq Test' -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddMonths(1)
-$env:SSHTERMAQ_SIGN_THUMBPRINT = $cert.Thumbprint
 $env:SSHTERMAQ_SIGN_TIMESTAMP_URL = 'none'
-.\scripts\build.ps1 -Sign -Installer
+.\scripts\build.ps1 -Sign -Installer   # picks the certificate automatically when it is your only code-signing one
 Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)"   # afterwards
 ```
 
