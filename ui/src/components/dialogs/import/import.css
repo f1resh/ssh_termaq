@@ -62,7 +62,20 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 auto;
   min-height: 0;
+}
+/* On a short window only the session list gives up height (down to about three rows, then it scrolls); the rest
+   keeps its size, and whatever still does not fit makes the dialog body scroll. Children with overflow: hidden
+   would otherwise be squeezed to nothing (their automatic minimum height is 0). */
+.imp-preview > * {
+  flex: none;
+}
+.imp-preview > .imp-table {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 140px;
 }
 .imp-preview__origin {
   font-size: var(--fs-xs);
@@ -93,6 +106,8 @@
   min-height: 32px;
 }
 .imp-table__body {
+  flex: 1 1 auto;
+  min-height: 0;
   max-height: 320px;
   overflow: auto;
 }

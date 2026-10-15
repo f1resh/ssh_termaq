@@ -7,7 +7,7 @@
  */
 import { create } from 'zustand';
 import { newId, sessionLabel } from '@shared/defaults';
-import type { ConnStatus, SessionConfig, SessionView } from '@shared/types';
+import type { ConnStatus, SessionConfig, SessionView, TabTitleMode } from '@shared/types';
 
 /** 'row' = children side by side (split right), 'column' = stacked (split down). */
 export type SplitDirection = 'row' | 'column';
@@ -179,19 +179,26 @@ function makePane(tabId: string, session: SessionConfig, sessionId: string | nul
   };
 }
 
-/** Title shown on a tab: custom > fixed window title > remote title > session label. */
-export function tabTitle(tab: TabState, panes: Record<string, PaneState>): string {
+/** Title shown on a tab: its custom title, else its active pane's title (see paneTitle). */
+export function tabTitle(tab: TabState, panes: Record<string, PaneState>, mode: TabTitleMode = 'terminal'): string {
   if (tab.customTitle) return tab.customTitle;
   const p = panes[tab.activePaneId];
   if (!p) return 'Tab';
-  return paneTitle(p);
+  return paneTitle(p, mode);
 }
 
-export function paneTitle(p: PaneState): string {
-  if (p.kind === 'files') return sessionLabel(p.session) || p.session.host || 'Files';
-  if (p.session.terminal.windowTitle) return p.session.terminal.windowTitle;
-  if (p.remoteTitle && p.session.terminal.allowRemoteTitle) return p.remoteTitle;
-  return sessionLabel(p.session) || p.session.host || 'Session';
+/**
+ * Automatic title of a pane: the session's fixed window title, else by `mode` (settings.appearance.tabTitle):
+ * the title the server set (when allowed), the session name, or the host / serial line.
+ */
+export function paneTitle(p: PaneState, mode: TabTitleMode = 'terminal'): string {
+  const s = p.session;
+  const host = s.protocol === 'serial' ? s.serial.line : s.host;
+  if (p.kind === 'files') return (mode === 'host' ? host : sessionLabel(s)) || host || 'Files';
+  if (s.terminal.windowTitle) return s.terminal.windowTitle;
+  if (mode === 'host') return host || sessionLabel(s) || 'Session';
+  if (mode === 'terminal' && p.remoteTitle && s.terminal.allowRemoteTitle) return p.remoteTitle;
+  return sessionLabel(s) || host || 'Session';
 }
 
 export const useWorkspace = create<WorkspaceState>((set, get) => ({

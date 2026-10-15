@@ -101,6 +101,35 @@ export function openFileManagerFor(paneId: string | undefined): void {
   ws.openSession(p.session, { view: 'files', sessionId: p.sessionId, linkedPaneId: paneId });
 }
 
+/**
+ * SFTP side panel of a pane's tab: opens it on this pane, switches it to this pane, or closes it when it already
+ * shows this pane. Only SSH terminals have one; the full file manager is openFileManagerFor().
+ */
+export function toggleSftpPanel(paneId: string | undefined): void {
+  if (!paneId) return;
+  const p = useWorkspace.getState().panes[paneId];
+  if (!p || p.kind === 'files') return;
+  if (p.session.protocol !== 'ssh') {
+    toast.info('The SFTP panel needs an SSH connection');
+    return;
+  }
+  const ui = useUi.getState();
+  ui.setSftpPanel(p.tabId, ui.sftpPanels[p.tabId] === paneId ? null : paneId);
+}
+
+/** The SFTP panels whose tab still holds their pane (closed tabs / panes drop out). */
+export function liveSftpPanels(panels: Record<string, string>, panes: Record<string, PaneState>): Record<string, string> {
+  const live: Record<string, string> = {};
+  for (const [tabId, paneId] of Object.entries(panels)) if (panes[paneId]?.tabId === tabId) live[tabId] = paneId;
+  return live;
+}
+
+/** Hands keyboard focus to a tab's active pane: its terminal, or the prompt shown over it. */
+export function focusTabPane(tabId: string): void {
+  const tab = useWorkspace.getState().tabs.find((t) => t.id === tabId);
+  if (tab) useUi.getState().requestPaneFocus(tab.activePaneId);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Session CRUD                                                                */
 /* -------------------------------------------------------------------------- */

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, Download } from 'lucide-react';
 import { api } from '@/bridge/api';
 import { Button, Modal, toast } from '@/components/ui';
+import { useSettings } from '@/store/data';
 import { useWorkspace, paneTitle } from '@/store/workspace';
 import type { EventLogEntry } from '@shared/types';
 import { followEventLog } from './connEvents';
@@ -22,6 +23,7 @@ const fmt = (t: number) => {
 
 export function EventLogDialog({ paneId, onClose }: EventLogDialogProps) {
   const pane = useWorkspace((s) => s.panes[paneId]);
+  const titleMode = useSettings((s) => s.settings.appearance.tabTitle);
   const connId = pane?.connId ?? '';
   const [entries, setEntries] = useState<EventLogEntry[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -39,7 +41,7 @@ export function EventLogDialog({ paneId, onClose }: EventLogDialogProps) {
   return (
     <Modal
       open
-      title={`Event Log — ${pane ? paneTitle(pane) : 'session'}`}
+      title={`Event Log — ${pane ? paneTitle(pane, titleMode) : 'session'}`}
       onClose={onClose}
       width={820}
       height={560}

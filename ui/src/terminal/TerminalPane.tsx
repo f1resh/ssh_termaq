@@ -77,7 +77,14 @@ async function openContextMenu(session: TermSession, paneId: string, x: number, 
     { label: 'Duplicate Session', shortcut: shortcutLabel('tab.duplicate'), onClick: run('tab.duplicate') },
     { label: 'Restart Session', disabled: !ended, onClick: () => session.restart() },
     { label: 'Change Settings…', onClick: run('pane.changeSettings') },
-    { label: 'Open File Manager', disabled: !ssh, shortcut: shortcutLabel('pane.sftp'), onClick: run('pane.sftp') },
+    {
+      label: 'SFTP Panel',
+      disabled: !ssh,
+      checked: useUi.getState().sftpPanels[pane.tabId] === paneId,
+      shortcut: shortcutLabel('pane.sftp'),
+      onClick: run('pane.sftp')
+    },
+    { label: 'Open File Manager (SFTP/SCP)', disabled: !ssh, shortcut: shortcutLabel('pane.fileManager'), onClick: run('pane.fileManager') },
     { type: 'separator' },
     { label: 'Split Right', shortcut: shortcutLabel('pane.splitRight'), onClick: run('pane.splitRight') },
     { label: 'Split Down', shortcut: shortcutLabel('pane.splitDown'), onClick: run('pane.splitDown') },
@@ -96,6 +103,7 @@ export function TerminalPane({ paneId, active, visible }: TerminalPaneProps) {
   const [findOpen, setFindOpen] = useState(false);
   const [, forceTick] = useState(0);
   const prompt = usePrompts((s) => s.pending.find((p) => pane && p.connId === pane.connId && PANE_PROMPT_KINDS.has(p.kind)));
+  const focusSeq = useUi((s) => (s.focusRequest?.paneId === paneId ? s.focusRequest.seq : 0));
   const lastLine = useLastLogLine(pane?.connId ?? '');
 
   // Attach the long-lived session element to this container.
@@ -124,9 +132,11 @@ export function TerminalPane({ paneId, active, visible }: TerminalPaneProps) {
     session?.setVisible(visible);
   }, [session, visible]);
 
+  // Focus when the pane becomes the visible, active one, and on every focus request (a click on its tab moves focus
+  // to the tab first). A prompt over the pane takes the focus itself (focusSignal below).
   useEffect(() => {
     if (session && visible && active && !prompt) session.focus();
-  }, [session, visible, active, prompt]);
+  }, [session, visible, active, prompt, focusSeq]);
 
   // Reconnect countdown refresh.
   useEffect(() => {
@@ -208,7 +218,7 @@ export function TerminalPane({ paneId, active, visible }: TerminalPaneProps) {
         </div>
       )}
 
-      {prompt && <PromptOverlay prompt={prompt} host={host} />}
+      {prompt && <PromptOverlay prompt={prompt} host={host} focusSignal={focusSeq} />}
     </div>
   );
 }

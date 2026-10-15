@@ -1,11 +1,13 @@
 /**
- * Bottom status bar for the active pane: connection state, endpoint, server info, charset, broadcast, file manager.
+ * Bottom status bar for the active pane: connection state, endpoint, server info, charset, broadcast, SFTP panel.
  */
 import { FolderOpen, Radio } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { runCommand } from '@/commands/commands';
+import { shortcutLabel } from '@/commands/keybindings';
 import { cx } from '@/components/ui';
 import { connOfFilesPane } from '@/components/files/filesConn';
+import { useUi } from '@/store/ui';
 import { useWorkspace } from '@/store/workspace';
 import './statusbar.css';
 
@@ -25,7 +27,7 @@ export function StatusBar() {
       return { pane: tab ? s.panes[tab.activePaneId] : undefined, broadcast: !!tab?.broadcast, tabCount: s.tabs.length };
     })
   );
-  const filesTabOpen = useWorkspace((s) => !!pane && Object.values(s.panes).some((p) => p.kind === 'files' && p.linkedPaneId === pane.id));
+  const panelOpen = useUi((s) => !!pane && s.sftpPanels[pane.tabId] === pane.id);
   const filesConn = useWorkspace(useShallow((s) => (pane?.kind === 'files' ? connOfFilesPane(pane, s.panes) : null)));
 
   if (!pane) {
@@ -69,11 +71,13 @@ export function StatusBar() {
       {pane.kind !== 'files' && <span className="statusbar__item statusbar__muted">{s.translation.charset}</span>}
       {s.protocol === 'ssh' && pane.kind !== 'files' && (
         <button
-          className={cx('statusbar__btn', filesTabOpen && 'statusbar__btn--on')}
+          className={cx('statusbar__btn', panelOpen && 'statusbar__btn--on')}
+          disabled={pane.status !== 'connected' && !panelOpen}
+          aria-pressed={panelOpen}
           onClick={() => runCommand('pane.sftp')}
-          title="File manager (SFTP / SCP) on this connection"
+          title={`${panelOpen ? 'Hide' : 'Show'} this server's files in the SFTP panel${shortcutLabel('pane.sftp') ? ` (${shortcutLabel('pane.sftp')})` : ''}`}
         >
-          <FolderOpen size={12} /> Files
+          <FolderOpen size={12} /> SFTP
         </button>
       )}
     </footer>

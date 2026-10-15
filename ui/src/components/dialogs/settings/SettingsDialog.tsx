@@ -150,6 +150,23 @@ function AppearancePage() {
         </SettingRow>
         <ToggleRow label="Show the session sidebar" checked={a.showSidebar} onChange={(showSidebar) => update({ appearance: { showSidebar } })} />
       </Section>
+      <Section title="Tabs">
+        <SettingRow
+          label="Tab titles"
+          description="Terminal title is what the server sets, such as the running program or the current folder (the session name until it sets one). A renamed tab and a session's fixed window title always win."
+        >
+          <SegmentedControl
+            value={a.tabTitle}
+            onChange={(tabTitle) => update({ appearance: { tabTitle } })}
+            options={[
+              { value: 'terminal', label: 'Terminal title' },
+              { value: 'session', label: 'Session name' },
+              { value: 'host', label: 'Host address' }
+            ]}
+            size="sm"
+          />
+        </SettingRow>
+      </Section>
     </>
   );
 }
@@ -169,7 +186,7 @@ function TerminalPage() {
       <Section title="Font">
         <TerminalSample
           scheme={preview}
-          height={150}
+          minHeight={150}
           font={{
             fontFamily: t.fontFamily,
             fontSize: t.fontSize,
@@ -520,7 +537,7 @@ function SchemesPage() {
             </div>
             <TerminalSample
               scheme={editing}
-              height={220}
+              minHeight={220}
               font={{ ...s.terminal, boldIsBright: s.terminal.drawBoldTextInBrightColors }}
             />
           </div>

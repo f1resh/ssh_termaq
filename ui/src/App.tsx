@@ -92,14 +92,16 @@ function useHostWiring(ready: boolean) {
     const update = () => {
       const ws = useWorkspace.getState();
       const tab = ws.tabs.find((t) => t.id === ws.activeTabId);
-      const title = tab ? `${tabTitle(tab, ws.panes)} - SSHTerm` : 'SSHTerm';
+      const mode = useSettings.getState().settings.appearance.tabTitle;
+      const title = tab ? `${tabTitle(tab, ws.panes, mode)} - SSHTerm` : 'SSHTerm';
       if (title !== last) {
         last = title;
         api.window.setTitle(title);
       }
     };
     update();
-    return useWorkspace.subscribe(update);
+    const offs = [useWorkspace.subscribe(update), useSettings.subscribe(update)];
+    return () => offs.forEach((off) => off());
   }, []);
 }
 

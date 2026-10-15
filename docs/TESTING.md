@@ -11,7 +11,7 @@ them depends on another.
 | Part | What it tests | Framework | Where | Automated | Size | Run time |
 |---|---|---|---|---|---|---|
 | **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 163 test cases | about 1 minute |
-| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab persistence | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 4 files, 69 tests | under 1 second |
+| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab titles and persistence, pane closing, SFTP panel, focus and sidebar actions | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 6 files, 85 tests | under 1 second |
 | **End-to-end and visual checks** | the whole UI, either inside the real app or in a browser against the mock backend | Playwright scripts | `ui/scripts/app.mjs`, `ui/scripts/shot.mjs` | no, run by hand | no saved scenarios | seconds |
 
 There are no automated tests of UI behaviour (clicking through screens, rendering, dialogs), and there is no CI:
@@ -405,11 +405,25 @@ Self-tests of the fake servers, validated with independent clients (`plink`, `ps
 | TestSshServer serves SFTP to psftp | `[support][plink]` | PuTTY `psftp.exe` | `support_tests.cpp` |
 | TestSshServer honours local forwarding from plink | `[support][plink]` | PuTTY `plink.exe` | `support_tests.cpp` |
 
-### UI unit tests (69 tests)
+### UI unit tests (85 tests)
+
+#### `actions.test.ts` (7)
+
+UI actions: the SFTP side panel per tab (open, switch, close, forget closed panes), focus after a tab click, and the sidebar button. Source: [src/commands/actions.test.ts](../src/commands/actions.test.ts).
+
+| Group | Test |
+|---|---|
+| SFTP panel per tab | opens on an SSH terminal and closes again |
+| SFTP panel per tab | switches to another pane of the same tab |
+| SFTP panel per tab | keeps one panel per tab |
+| SFTP panel per tab | is not offered for Telnet sessions or file manager tabs |
+| SFTP panel per tab | forgets panels whose tab or pane is gone |
+| focus after clicking a tab | asks the tab's active pane for focus, with a new request every time |
+| sidebar button | shows and hides the session sidebar |
 
 #### `paths.test.ts` (15)
 
-File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs, formatting, the list model (sorting, selection, filtering), dialog helpers, back/forward history. Source: [ui/src/components/files/paths.test.ts](../ui/src/components/files/paths.test.ts).
+File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs, formatting, the list model (sorting, selection, filtering), dialog helpers, back/forward history. Source: [src/components/files/paths.test.ts](../src/components/files/paths.test.ts).
 
 | Group | Test |
 |---|---|
@@ -431,7 +445,7 @@ File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs
 
 #### `parse.test.ts` (16)
 
-Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenSSH-style flags and `sftp://` / `scp://`; applying the result to a session; formatting it back. Source: [ui/src/components/quickconnect/parse.test.ts](../ui/src/components/quickconnect/parse.test.ts).
+Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenSSH-style flags and `sftp://` / `scp://`; applying the result to a session; formatting it back. Source: [src/components/quickconnect/parse.test.ts](../src/components/quickconnect/parse.test.ts).
 
 | Group | Test |
 |---|---|
@@ -452,9 +466,25 @@ Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenS
 | file manager URLs | sets the file protocol on the session |
 | file manager URLs | round-trips |
 
+#### `workspace.test.ts` (9)
+
+Workspace store: automatic tab titles for each Tab titles setting (terminal title, session name, host address) and closing panes of a split tab. Source: [src/store/workspace.test.ts](../src/store/workspace.test.ts).
+
+| Group | Test |
+|---|---|
+| tab titles | terminal mode: the title the server set, else the session name |
+| tab titles | session mode: the session name; unsaved sessions show user@host[:port] |
+| tab titles | host mode: the host name or address; the line for serial sessions |
+| tab titles | a session's fixed window title and a renamed tab always win |
+| tab titles | file manager tabs: the session name, or the host in host mode |
+| tab titles | defaults to terminal mode and uses the active pane |
+| closing panes of a split tab | keeps the tab and makes the remaining pane active |
+| closing panes of a split tab | keeps the active pane when another one closes |
+| closing panes of a split tab | closes the tab with its last pane |
+
 #### `workspacePersist.test.ts` (2)
 
-Saving and restoring open tabs, including file manager tabs and snapshots from older versions. Source: [ui/src/store/workspacePersist.test.ts](../ui/src/store/workspacePersist.test.ts).
+Saving and restoring open tabs, including file manager tabs and snapshots from older versions. Source: [src/store/workspacePersist.test.ts](../src/store/workspacePersist.test.ts).
 
 | Group | Test |
 |---|---|
@@ -463,7 +493,7 @@ Saving and restoring open tabs, including file manager tabs and snapshots from o
 
 #### `keymap.test.ts` (36)
 
-PuTTY keyboard modes: which escape sequence each key sends for every function-key, Home/End, cursor, keypad, Backspace and AltGr setting. Source: [ui/src/terminal/keymap.test.ts](../ui/src/terminal/keymap.test.ts).
+PuTTY keyboard modes: which escape sequence each key sends for every function-key, Home/End, cursor, keypad, Backspace and AltGr setting. Source: [src/terminal/keymap.test.ts](../src/terminal/keymap.test.ts).
 
 | Group | Test |
 |---|---|
@@ -636,8 +666,8 @@ complete at that point. A Node `DEP0190` deprecation warning at the start is har
 
 ## 8. What is not covered
 
-- **UI behaviour:** React components, dialogs, the terminal view, the stores (other than tab persistence) and the
-  bridge client have no automated tests. They are checked by hand with the scripts in section 7.
+- **UI behaviour:** React components, dialogs, the terminal view and the bridge client have no automated tests; of the stores
+  and actions, only the logic listed in section 5 is covered. They are checked by hand with the scripts in section 7.
 - **Native parts without tests:** the main window and WebView2 host (`app/MainWindow`), the core bridge handlers
   (`app/CoreHandlers`: sessions, settings, known hosts, window, ...), native file dialogs (`app/Dialogs`), the import
   bridge handlers (`importers/ImportHandlers`) and the serial port transport (needs hardware). The logic underneath

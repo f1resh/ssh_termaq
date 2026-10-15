@@ -179,6 +179,7 @@ export const DEFAULT_KEYBINDINGS: Record<CommandId, string> = {
   'pane.restart': '',
   'pane.toggleBroadcast': '',
   'pane.sftp': 'Ctrl+Shift+S',
+  'pane.fileManager': '',
   'pane.eventLog': '',
   'pane.changeSettings': '',
   'term.copy': 'Ctrl+Shift+C',
@@ -202,7 +203,8 @@ export function createDefaultSettings(): AppSettings {
       backgroundMaterial: 'none',
       showSidebar: true,
       sidebarWidth: 260,
-      uiScale: 1
+      uiScale: 1,
+      tabTitle: 'terminal'
     },
     terminal: {
       fontFamily: DEFAULT_FONT_FAMILY,

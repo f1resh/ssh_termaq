@@ -47,6 +47,32 @@
   background: var(--surface-active);
 }
 
+/* Sidebar show / hide, right after the app menu. */
+.titlebar__sidebar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: auto 4px auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: default;
+}
+.titlebar__sidebar:hover {
+  background: var(--tab-hover);
+  color: var(--text);
+}
+.titlebar__sidebar:active {
+  background: var(--surface-active);
+}
+.titlebar--inactive .titlebar__sidebar {
+  color: var(--text-faint);
+}
+
 .titlebar__drag {
   flex: 1 1 auto;
   min-width: 48px;

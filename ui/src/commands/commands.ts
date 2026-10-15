@@ -16,6 +16,7 @@ import {
   Copy,
   Eraser,
   FolderOpen,
+  FolderTree,
   Hash,
   Import,
   KeyRound,
@@ -52,6 +53,7 @@ import {
   reportError,
   openFileManagerFor,
   restartTab,
+  toggleSftpPanel,
   toggleSidebar
 } from './actions';
 
@@ -101,7 +103,8 @@ export const COMMANDS: CommandInfo[] = [
   c('pane.focusPrev', 'Focus previous pane', 'Pane', ArrowLeft, { needsPane: true }),
   c('pane.restart', 'Restart session', 'Pane', RotateCw, { needsPane: true, keywords: 'reconnect' }),
   c('pane.toggleBroadcast', 'Toggle broadcast input', 'Pane', Radio, { needsPane: true, keywords: 'send all panes multi' }),
-  c('pane.sftp', 'Open file manager', 'Pane', FolderOpen, { needsPane: true, keywords: 'files upload download sftp scp winscp psftp transfer' }),
+  c('pane.sftp', 'Toggle SFTP panel', 'Pane', FolderOpen, { needsPane: true, keywords: 'files browser side panel upload download sftp scp psftp' }),
+  c('pane.fileManager', 'Open file manager (SFTP/SCP)', 'Pane', FolderTree, { needsPane: true, keywords: 'files upload download sftp scp winscp transfer sync' }),
   c('pane.eventLog', 'Event log', 'Pane', ScrollText, { needsPane: true, keywords: 'log diagnostics' }),
   c('pane.changeSettings', 'Change session settings…', 'Pane', SlidersHorizontal, { needsPane: true, keywords: 'edit configure' }),
   c('term.copy', 'Copy', 'Terminal', ClipboardCopy, { needsPane: true }),
@@ -262,6 +265,9 @@ function execute(id: CommandId, target?: CommandTarget): void {
       if (tabId) ws.toggleBroadcast(tabId);
       return;
     case 'pane.sftp':
+      toggleSftpPanel(paneId);
+      return;
+    case 'pane.fileManager':
       openFileManagerFor(paneId);
       return;
     case 'pane.eventLog':

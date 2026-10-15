@@ -1,0 +1,232 @@
+.sftp {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--bg-elevated);
+  font-size: var(--fs-sm);
+}
+.sftp__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.sftp__title {
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+.sftp__host {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.sftp__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  flex: none;
+}
+.sftp__sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--border);
+}
+.sftp__spacer {
+  flex: 1;
+}
+.sftp__spin {
+  animation: term-spin 0.9s linear infinite;
+}
+.sftp__path {
+  position: relative;
+  padding: 0 8px 6px;
+  flex: none;
+}
+.sftp__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin-bottom: 4px;
+}
+.sftp__crumb {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--fs-xs);
+}
+.sftp__crumb:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.sftp__crumb + .sftp__crumb::before {
+  content: '›';
+  margin-right: 4px;
+  color: var(--text-faint);
+}
+.sftp__path-input {
+  height: 26px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+.sftp__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  outline: none;
+  border-top: 1px solid var(--border);
+}
+.sftp__list--drop {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.sftp__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 64px 118px 84px;
+  align-items: center;
+  height: 26px;
+  padding: 0 8px;
+  cursor: default;
+  user-select: none;
+}
+.sftp__row:not(.sftp__row--head):hover {
+  background: var(--surface-hover);
+}
+.sftp__row--selected,
+.sftp__row--selected:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent) !important;
+}
+.sftp__row--head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+.sftp__row--head .sftp__col {
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  padding: 0;
+}
+.sftp__sort {
+  margin-left: 4px;
+  font-size: 9px;
+}
+.sftp__col {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sftp__col--name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sftp__col--size,
+.sftp__col--mtime,
+.sftp__col--permissions {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+.sftp__col--size {
+  text-align: right;
+  padding-right: 10px;
+}
+.sftp__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sftp__icon {
+  flex: none;
+  color: var(--text-muted);
+}
+.sftp__icon--dir {
+  color: var(--accent);
+}
+.sftp__state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 28px 12px;
+  text-align: center;
+}
+.sftp__error {
+  margin: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+.sftp__transfers {
+  flex: none;
+  max-height: 40%;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  padding: 4px 8px 8px;
+}
+.sftp__transfers-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+.sftp__transfer {
+  padding: 4px 0;
+}
+.sftp__transfer-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sftp__transfer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sftp__transfer-meta {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+.sftp__bar {
+  height: 3px;
+  margin-top: 3px;
+  border-radius: 2px;
+  background: var(--surface-active);
+  overflow: hidden;
+}
+.sftp__bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+.sftp__transfer--done .sftp__bar span {
+  background: var(--success);
+}
+.sftp__transfer--error .sftp__bar span {
+  background: var(--danger);
+}
+.sftp__transfer--error .sftp__transfer-meta {
+  color: var(--danger);
+}

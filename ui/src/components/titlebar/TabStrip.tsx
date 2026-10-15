@@ -25,8 +25,8 @@ import {
 import { cx, showContextMenu, type MenuItem } from '@/components/ui';
 import { runCommand } from '@/commands/commands';
 import { shortcutLabel } from '@/commands/keybindings';
-import { closeOtherTabs, closeTab, closeTabsToRight, connectSavedSession, newSessionDraft } from '@/commands/actions';
-import { useSessions } from '@/store/data';
+import { closeOtherTabs, closeTab, closeTabsToRight, connectSavedSession, focusTabPane, newSessionDraft } from '@/commands/actions';
+import { useSessions, useSettings } from '@/store/data';
 import { useUi } from '@/store/ui';
 import { paneIdsOf, tabTitle, useWorkspace } from '@/store/workspace';
 import { connOfFilesPane } from '@/components/files/filesConn';
@@ -47,6 +47,8 @@ function tabMenu(tabId: string): MenuItem[] {
   if (!tab) return [];
   const index = ws.tabs.indexOf(tab);
   const target = { tabId };
+  const pane = ws.panes[tab.activePaneId];
+  const sshTerminal = !!pane && pane.kind !== 'files' && pane.session.protocol === 'ssh';
   return [
     { label: 'Rename…', icon: <Pencil size={14} />, shortcut: shortcutLabel('tab.rename'), onClick: () => runCommand('tab.rename', target) },
     {
@@ -77,6 +79,14 @@ function tabMenu(tabId: string): MenuItem[] {
       onClick: () => runCommand('pane.toggleBroadcast', target)
     },
     { label: 'Restart', icon: <RotateCw size={14} />, onClick: () => runCommand('pane.restart', target) },
+    { type: 'separator' },
+    {
+      label: 'Open file manager (SFTP/SCP)',
+      icon: <FolderOpen size={14} />,
+      disabled: !sshTerminal,
+      shortcut: shortcutLabel('pane.fileManager'),
+      onClick: () => runCommand('pane.fileManager', target)
+    },
     { type: 'separator' },
     { label: 'Close', icon: <X size={14} />, shortcut: shortcutLabel('tab.close'), onClick: () => void closeTab(tabId) },
     { label: 'Close others', disabled: ws.tabs.length < 2, onClick: () => void closeOtherTabs(tabId) },
@@ -146,6 +156,7 @@ function TabItem({
   onDropTab: (index: number, e: DragEvent) => void;
   onDragEndTab: () => void;
 }) {
+  const titleMode = useSettings((s) => s.settings.appearance.tabTitle);
   const info = useWorkspace(
     useShallow((s) => {
       const tab = s.tabs.find((t) => t.id === tabId);
@@ -153,7 +164,7 @@ function TabItem({
       const ids = tab ? paneIdsOf(tab.layout) : [];
       const panes = ids.map((id) => s.panes[id]).filter(Boolean);
       return {
-        title: tab ? tabTitle(tab, s.panes) : '',
+        title: tab ? tabTitle(tab, s.panes, titleMode) : '',
         color: tab?.color ?? '',
         broadcast: !!tab?.broadcast,
         active: s.activeTabId === tabId,
@@ -198,6 +209,10 @@ function TabItem({
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault(); // no autoscroll
         if (e.button === 0) useWorkspace.getState().activateTab(tabId);
+      }}
+      onClick={() => {
+        // The mouse-down focused the tab itself; hand focus on to the terminal (or its password prompt).
+        if (!renaming) focusTabPane(tabId);
       }}
       onAuxClick={(e) => {
         if (e.button === 1) {

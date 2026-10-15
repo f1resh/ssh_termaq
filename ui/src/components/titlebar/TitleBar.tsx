@@ -3,7 +3,7 @@
  * The whole bar is a drag region (WebView2 non-client region); interactive children opt out with no-drag.
  */
 import type { ReactNode } from 'react';
-import { Command, Download, Info, KeyRound, LogOut, Maximize, PanelLeft, Settings, SquarePlus, Zap } from 'lucide-react';
+import { Command, Download, Info, KeyRound, LogOut, Maximize, PanelLeft, PanelLeftClose, PanelLeftOpen, Settings, SquarePlus, Zap } from 'lucide-react';
 import { api } from '@/bridge/api';
 import { cx, showContextMenu, type MenuItem } from '@/components/ui';
 import { runCommand } from '@/commands/commands';
@@ -38,6 +38,9 @@ function appMenu(): MenuItem[] {
 
 export function TitleBar() {
   const focused = useUi((s) => s.windowFocused);
+  const sidebar = useSettings((s) => s.settings.appearance.showSidebar);
+  const sidebarKeys = shortcutLabel('app.toggleSidebar');
+  const sidebarLabel = sidebar ? 'Hide the session sidebar' : 'Show the session sidebar';
   return (
     <header className={cx('titlebar drag-region', !focused && 'titlebar--inactive')}>
       <button
@@ -50,6 +53,15 @@ export function TitleBar() {
         }}
       >
         <Logo size={18} />
+      </button>
+      <button
+        className="titlebar__sidebar no-drag"
+        title={sidebarKeys ? `${sidebarLabel} (${sidebarKeys})` : sidebarLabel}
+        aria-label={sidebarLabel}
+        aria-pressed={sidebar}
+        onClick={() => runCommand('app.toggleSidebar')}
+      >
+        {sidebar ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
       </button>
       <TabStrip />
       <div className="titlebar__drag" />

@@ -385,6 +385,7 @@ export type CommandId =
   | 'pane.restart'
   | 'pane.toggleBroadcast'
   | 'pane.sftp'
+  | 'pane.fileManager'
   | 'pane.eventLog'
   | 'pane.changeSettings'
   | 'term.copy'
@@ -400,6 +401,13 @@ export type CommandId =
 
 export type BackgroundMaterial = 'none' | 'mica' | 'acrylic';
 
+/**
+ * Automatic tab title: 'terminal' = the title the server sets (when the session allows it), else the session name;
+ * 'session' = the session name (user@host for unsaved sessions); 'host' = the host name or address (serial line for
+ * serial sessions). A renamed tab and a session's fixed window title always win.
+ */
+export type TabTitleMode = 'terminal' | 'session' | 'host';
+
 export interface AppSettings {
   version: 1;
   appearance: {
@@ -412,6 +420,8 @@ export interface AppSettings {
     sidebarWidth: number;
     /** UI zoom factor (1 = 100%). */
     uiScale: number;
+    /** What an automatic tab title shows. */
+    tabTitle: TabTitleMode;
   };
   terminal: {
     fontFamily: string;

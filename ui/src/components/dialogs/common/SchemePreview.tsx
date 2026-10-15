@@ -65,8 +65,8 @@ export interface SampleFont {
   padding?: number;
 }
 
-/** Larger sample that reflects font + colour settings. */
-export function TerminalSample({ scheme, font, height }: { scheme: ColorScheme; font: SampleFont; height?: number }) {
+/** Larger sample that reflects font + colour settings. Grows with the font size; `minHeight` keeps small fonts roomy. */
+export function TerminalSample({ scheme, font, minHeight }: { scheme: ColorScheme; font: SampleFont; minHeight?: number }) {
   const fg = (k: AnsiKey, bold = false): CSSProperties => {
     let key: AnsiKey = k;
     if (bold && font.boldIsBright && !k.startsWith('bright')) key = ('bright' + k[0].toUpperCase() + k.slice(1)) as AnsiKey;
@@ -100,7 +100,7 @@ export function TerminalSample({ scheme, font, height }: { scheme: ColorScheme; 
         letterSpacing: font.letterSpacing,
         fontWeight: font.fontWeight,
         padding: Math.max(6, font.padding ?? 10),
-        height
+        minHeight
       }}
       aria-label="Terminal preview"
     >

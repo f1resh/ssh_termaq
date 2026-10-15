@@ -37,7 +37,7 @@ export interface UiState {
   dialog: DialogState | null;
   paletteOpen: boolean;
   paletteMode: 'all' | 'sessions' | 'commands';
-  /** Pane id whose SFTP browser is shown in the side panel (null = closed). */
+  /** Sidebar search text. */
   sidebarFilter: string;
   fullscreen: boolean;
   windowFocused: boolean;
@@ -46,6 +46,13 @@ export interface UiState {
   renamingTabId: string | null;
   /** Initial query of the command palette when it opens (e.g. '>' or '@'). */
   paletteQuery: string;
+  /**
+   * Last request to give a pane keyboard focus (e.g. clicking its tab). The pane focuses its terminal, or the
+   * password / passphrase prompt shown over it; `seq` changes on every request.
+   */
+  focusRequest: { paneId: string; seq: number } | null;
+  /** SFTP side panels: tab id -> the pane whose remote files the tab's panel shows. */
+  sftpPanels: Record<string, string>;
 
   openDialog(d: DialogState): void;
   closeDialog(): void;
@@ -55,6 +62,9 @@ export interface UiState {
   setRenamingTab(tabId: string | null): void;
   /** Opens the palette with a prefilled query (mode derived from the prefix). */
   openPalette(query?: string): void;
+  requestPaneFocus(paneId: string): void;
+  /** Shows the tab's SFTP panel for `paneId`, or closes it (null). */
+  setSftpPanel(tabId: string, paneId: string | null): void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -67,6 +77,8 @@ export const useUi = create<UiState>((set) => ({
   maximized: false,
   renamingTabId: null,
   paletteQuery: '',
+  focusRequest: null,
+  sftpPanels: {},
   openDialog: (dialog) => set({ dialog, paletteOpen: false }),
   closeDialog: () => set({ dialog: null }),
   setPalette: (paletteOpen, paletteMode = 'all') =>
@@ -79,6 +91,15 @@ export const useUi = create<UiState>((set) => ({
       paletteOpen: true,
       paletteQuery: query,
       paletteMode: query.startsWith('>') ? 'commands' : query.startsWith('@') ? 'sessions' : 'all'
+    }),
+  requestPaneFocus: (paneId) => set((s) => ({ focusRequest: { paneId, seq: (s.focusRequest?.seq ?? 0) + 1 } })),
+  setSftpPanel: (tabId, paneId) =>
+    set((s) => {
+      if ((s.sftpPanels[tabId] ?? null) === paneId) return {};
+      const sftpPanels = { ...s.sftpPanels };
+      if (paneId) sftpPanels[tabId] = paneId;
+      else delete sftpPanels[tabId];
+      return { sftpPanels };
     })
 }));
 

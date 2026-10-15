@@ -27,7 +27,8 @@ function fieldsOf(p: PromptRequest): Field[] {
   }
 }
 
-export function PromptOverlay({ prompt, host }: { prompt: PromptRequest; host: string }) {
+/** `focusSignal`: a changed value focuses the first field again (the pane was asked for focus, e.g. by a tab click). */
+export function PromptOverlay({ prompt, host, focusSignal = 0 }: { prompt: PromptRequest; host: string; focusSignal?: number }) {
   const respond = usePrompts((s) => s.respond);
   const fields = fieldsOf(prompt);
   const [values, setValues] = useState<string[]>(() => fields.map(() => ''));
@@ -41,6 +42,10 @@ export function PromptOverlay({ prompt, host }: { prompt: PromptRequest; host: s
     const t = setTimeout(() => firstRef.current?.focus(), 0);
     return () => clearTimeout(t);
   }, [prompt.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (focusSignal) firstRef.current?.focus();
+  }, [focusSignal]);
 
   const allowSave = (prompt.kind === 'password' || prompt.kind === 'kbdint') && prompt.allowSave;
   const submit = () => respond(prompt.id, { cancelled: false, values, remember: allowSave ? remember : false });

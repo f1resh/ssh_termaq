@@ -110,7 +110,9 @@ handlers, and calls `dnd::init(window)` once the main window exists (the UI thre
 
 ## File manager
 
-A file manager tab is a workspace pane of kind `files` (always alone in its tab). It works on the connection of
+An SSH terminal can also show the lighter SFTP side panel (`ui/src/components/sftp/SftpPanel.tsx`, one per tab, toggled with `pane.sftp`):
+it opens its own `sftp:open` session on the terminal's connection and shares transfers and conflict questions with the
+file manager through `filesStore`. A file manager tab is a workspace pane of kind `files` (always alone in its tab). It works on the connection of
 the terminal it was opened from (`linkedPaneId`, no second login) or on a connection of its own: a shell-less copy
 of the session (`noShell`, no tunnels / X11 / agent forwarding) opened by `ui/src/components/files/filesConn.ts`.
 On that connection `sftp:open` picks the protocol (`ssh.fileProtocol`: auto = SFTP, falling back to SCP).
@@ -183,7 +185,7 @@ substitution, ML-KEM key exchange (disabled: libssh client issue).
 - [x] Serial: line, speed, data/stop bits, parity, flow control; Telnet: active/passive, keyboard specials, Return=NEWLINE; Rlogin: local username
 - [x] Special commands menu (Break, EOF, IGNORE, signals, telnet AYT/Synch/EC/EL/GA/NOP/AO/IP/SUSP/EOR/EOF...)
 - [x] Context menu: event log, new/duplicate/restart session, saved sessions, change settings, copy all, clear scrollback, reset terminal, full screen
-- [x] PSFTP/PSCP → file manager tab (WinSCP-style): local + server panes, SFTP with SCP fallback, copy/move (F5/F6, drag & drop both ways incl. Explorer), conflicts (ask/overwrite/newer/skip/resume/rename), resume, edit with auto-upload, synchronize, find, bookmarks, chmod; PuTTYgen → keygen/convert/inspect; Pageant → agent support
+- [x] PSFTP/PSCP → SFTP side panel + file manager tab (WinSCP-style): local + server panes, SFTP with SCP fallback, copy/move (F5/F6, drag & drop both ways incl. Explorer), conflicts (ask/overwrite/newer/skip/resume/rename), resume, edit with auto-upload, synchronize, find, bookmarks, chmod; PuTTYgen → keygen/convert/inspect; Pageant → agent support
 - [x] Import: PuTTY registry sessions + Default Settings + SSH host keys, .reg files, export to .reg; ~/.ssh/config; OpenSSH known_hosts; JSON backup
 - [x] CLI: `-ssh -telnet -rlogin -raw -serial [user@]host -P -l -pw -i -load -L -R -D -A -a -X -x -C -4 -6 -N -m -sercfg`, `sftp://` / `scp://` URLs
-- [x] Modern: tabs (reorder, colours, rename), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode
+- [x] Modern: tabs (reorder, colours, rename, title from terminal / session name / host), split panes, broadcast input, command palette, quick connect, sidebar (folders, search, drag & drop), app themes + terminal schemes, Mica, settings UI, custom keybindings, reconnect, workspace restore, find, zoom, portable mode
