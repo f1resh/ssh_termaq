@@ -1,9 +1,7 @@
 #include <winres.h>
 
-#ifndef ST_VERSION_RC
-#define ST_VERSION_RC 0,1,0,0
-#define ST_VERSION_STR "0.1.0"
-#endif
+// Version and build id (ST_VERSION_RC, ST_FILE_VERSION, ST_PRODUCT_VERSION) from cmake/BuildInfo.cmake.
+#include "st_build_info.h"
 
 1 ICON "app.ico"
 
@@ -22,11 +20,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SSHTermaq"
             VALUE "FileDescription", "SSHTermaq - SSH, Telnet, Rlogin, Raw and Serial client"
-            VALUE "FileVersion", ST_VERSION_STR
+            VALUE "FileVersion", ST_FILE_VERSION
             VALUE "InternalName", "SSHTermaq"
             VALUE "OriginalFilename", "SSHTermaq.exe"
             VALUE "ProductName", "SSHTermaq"
-            VALUE "ProductVersion", ST_VERSION_STR
+            VALUE "ProductVersion", ST_PRODUCT_VERSION
         END
     END
     BLOCK "VarFileInfo"

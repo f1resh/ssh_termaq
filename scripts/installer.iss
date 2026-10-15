@@ -1,13 +1,24 @@
-; Inno Setup script for SSHTermaq (compile with Inno Setup 6: ISCC.exe scripts\installer.iss)
+; Inno Setup 6 script for SSHTermaq. Built by scripts\build.ps1 -Installer, which passes the version from
+; CMakeLists.txt. By hand, after scripts\build.ps1: ISCC.exe /DAppVersion=x.y.z scripts\installer.iss
 ; Expects the folder produced by scripts\build.ps1 (dist\SSHTermaq-<version>-win-x64).
 
-#define AppVersion "0.1.0"
+#ifndef AppVersion
+  #error Pass the version from CMakeLists.txt: ISCC.exe /DAppVersion=x.y.z scripts\installer.iss (or use scripts\build.ps1 -Installer)
+#endif
 #define SourceDir "..\dist\SSHTermaq-" + AppVersion + "-win-x64"
 
 [Setup]
 AppId={{6C8B2E0B-6F5E-4C1E-9E3B-3C2E9D3A7F21}
 AppName=SSHTermaq
 AppVersion={#AppVersion}
+#ifdef AppFileVersion
+VersionInfoVersion={#AppFileVersion}
+#endif
+#ifdef SignToolName
+; Set by scripts\build.ps1 -Sign (ISCC /DSignToolName=... /S<name>=<command>): signs the uninstaller and setup.exe.
+SignTool={#SignToolName}
+SignedUninstaller=yes
+#endif
 AppPublisher=SSHTermaq
 DefaultDirName={autopf}\SSHTermaq
 DefaultGroupName=SSHTermaq

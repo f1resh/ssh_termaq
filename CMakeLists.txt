@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(SSHTermaq VERSION 0.1.0 LANGUAGES C CXX)
+# The version of SSHTermaq (x.y.z): the only place to change it. The 4th part of the file version, the build number,
+# and the commit come from git on every build (cmake/BuildInfo.cmake). See docs/BUILDING.md, "Versions".
+project(SSHTermaq VERSION 1.0.0 LANGUAGES C CXX)
+if(NOT PROJECT_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+  message(FATAL_ERROR "Give the version as x.y.z in project(SSHTermaq VERSION ...), not '${PROJECT_VERSION}'")
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,8 +33,7 @@ find_package(wil CONFIG REQUIRED)
 
 add_compile_definitions(
   WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _UNICODE _WIN32_WINNT=0x0A00 WINVER=0x0A00
-  _CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS
-  ST_VERSION="${PROJECT_VERSION}")
+  _CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS)
 add_compile_options(/utf-8 /W4 /permissive- /Zc:__cplusplus /Zc:preprocessor /EHsc /MP /bigobj
   /wd4100  # unreferenced formal parameter (stubs / callbacks)
   /wd4127) # conditional expression is constant
@@ -59,6 +63,22 @@ function(st_library name)
   target_link_libraries(${name} PUBLIC ${A_DEPS})
   set_target_properties(${name} PROPERTIES FOLDER "modules")
 endfunction()
+
+# ------------------------------------------------------- version and build id ---
+# st_build_info.h (version, build number, commit) is regenerated on every build and only changes when the version,
+# the commit or the uncommitted-changes state does; it is used by app/BuildInfo.cpp and native/res/app.rc.
+set(ST_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
+find_package(Git QUIET)
+set(ST_BUILD_INFO_ARGS -DVERSION=${PROJECT_VERSION} -DSRC=${CMAKE_CURRENT_SOURCE_DIR}
+    -DOUT=${ST_GEN_DIR}/st_build_info.h -DGIT=${GIT_EXECUTABLE} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/BuildInfo.cmake)
+execute_process(COMMAND ${CMAKE_COMMAND} ${ST_BUILD_INFO_ARGS})
+add_custom_target(st_build_info
+  COMMAND ${CMAKE_COMMAND} ${ST_BUILD_INFO_ARGS}
+  BYPRODUCTS ${ST_GEN_DIR}/st_build_info.h
+  COMMENT "Stamping the version and build id"
+  VERBATIM)
+set_target_properties(st_build_info PROPERTIES FOLDER "tools")
+configure_file(native/res/app.manifest.in ${ST_GEN_DIR}/app.manifest @ONLY)
 
 # ---------------------------------------------------------------- modules ---
 st_glob(core_src ${ST_SRC}/core/*.cpp)
@@ -110,6 +130,8 @@ list(FILTER app_src EXCLUDE REGEX "/app/(main|Dialogs)\\.cpp$")
 st_library(st_app SOURCES ${app_src}
   DEPS st_bridge st_store st_session st_putty st_sftp st_localfs st_dnd st_dialogs st_transport
        unofficial::webview2::webview2 WIL::WIL dwmapi shcore comctl32 shlwapi winmm version)
+target_include_directories(st_app PRIVATE ${ST_GEN_DIR})
+add_dependencies(st_app st_build_info)
 
 # ------------------------------------------------------------- executable ---
 set(app_res "")
@@ -130,13 +152,11 @@ add_custom_target(st_ui_embed
   VERBATIM)
 set_target_properties(st_ui_embed PROPERTIES FOLDER "tools")
 
-add_executable(SSHTermaq WIN32 ${ST_SRC}/app/main.cpp ${app_res} ${ST_UI_EMBED_DIR}/ui.rc)
-add_dependencies(SSHTermaq st_ui_embed)
+add_executable(SSHTermaq WIN32 ${ST_SRC}/app/main.cpp ${app_res} ${ST_UI_EMBED_DIR}/ui.rc ${ST_GEN_DIR}/app.manifest)
+add_dependencies(SSHTermaq st_ui_embed st_build_info)
+target_include_directories(SSHTermaq PRIVATE ${ST_GEN_DIR})  # st_build_info.h for app.rc
 target_link_libraries(SSHTermaq PRIVATE st_app)
 set_target_properties(SSHTermaq PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SSHTermaq>")
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
-  target_sources(SSHTermaq PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
-endif()
 
 # ------------------------------------------------------------------ tests ---
 if(ST_BUILD_TESTS)

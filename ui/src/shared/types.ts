@@ -885,7 +885,14 @@ export interface KeyInfo {
 
 export interface AppInfo {
   name: string;
+  /** x.y.z, set in CMakeLists.txt. */
   version: string;
+  /** Build number: commit count of HEAD when built (the 4th part of the exe's file version); 0 outside git. */
+  build: number;
+  /** Short commit hash, "-dirty" when built with uncommitted changes; "unknown" outside git. */
+  commit: string;
+  /** Link time of the executable, UTC ISO 8601; empty if unknown. */
+  buildTime: string;
   electron: string;
   chrome: string;
   node: string;

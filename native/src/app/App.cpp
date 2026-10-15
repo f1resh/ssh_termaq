@@ -1,5 +1,6 @@
 #include "app/App.h"
 
+#include "app/BuildInfo.h"
 #include "app/Cli.h"
 #include "app/CoreHandlers.h"
 #include "app/Dialogs.h"
@@ -130,11 +131,16 @@ int runApp(int argc, wchar_t** argv) {
     std::vector<std::string> args;
     for (int i = 1; i < argc; ++i) args.push_back(narrow(argv[i]));
     HostOptions host = parseHostOptions(args);
+    if (host.version) {  // like PuTTY's -V / --version: a message box, as there is no console
+        const std::wstring text = widen("SSHTermaq " + describeBuild(buildInfo()));
+        MessageBoxW(nullptr, text.c_str(), L"SSHTermaq", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
 
     AppPaths paths = initAppPaths(host.dataDir);
     applog::init(paths.logsDir / "sshtermaq.log");
-    applog::info(std::string("SSHTermaq starting, data dir: ") + narrow(paths.dataDir.wstring()) +
-                 (paths.portable ? " (portable)" : ""));
+    applog::info("SSHTermaq " + describeBuild(buildInfo()) + " starting, data dir: " +
+                 narrow(paths.dataDir.wstring()) + (paths.portable ? " (portable)" : ""));
     for (const auto& e : host.errors) applog::warn("Command line: " + e);
 
     SingleInstance instance(paths.dataDir);

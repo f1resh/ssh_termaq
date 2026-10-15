@@ -9,6 +9,7 @@ import { APP_NAME } from '@shared/defaults';
 import type { AppInfo } from '@shared/types';
 import { Badge, Spinner } from '../common/controls';
 import { useAsync } from '../common/hooks';
+import { formatBuildId, formatBuildTime } from './buildInfo';
 
 export interface ThirdPartyLicense {
   name: string;
@@ -32,6 +33,8 @@ export const THIRD_PARTY_LICENSES: ThirdPartyLicense[] = [
 
 export function AboutContent({ compact }: { compact?: boolean }) {
   const { data: info, loading } = useAsync<AppInfo>(() => api.app.info(), []);
+  const buildId = info && formatBuildId(info);
+  const buildTime = formatBuildTime(info?.buildTime);
   return (
     <div className={compact ? 'about about--compact' : 'about'}>
       <div className="about__hero">
@@ -39,7 +42,7 @@ export function AboutContent({ compact }: { compact?: boolean }) {
         <div>
           <div className="about__name">{info?.name || APP_NAME}</div>
           <div className="about__version">
-            {loading ? <Spinner size={12} /> : <>Version {info?.version ?? 'unknown'}</>}
+            {loading ? <Spinner size={12} /> : <>Version {info?.version ?? 'unknown'}{info?.build ? ` (build ${info.build})` : ''}</>}
             {info?.portable && (
               <Badge tone="accent" className="about__badge">
                 Portable
@@ -56,6 +59,20 @@ export function AboutContent({ compact }: { compact?: boolean }) {
 
       {info && (
         <dl className="about__facts">
+          {buildId && (
+            <>
+              <dt>Build</dt>
+              <dd className="mono-text" title="Build number (commits so far) and commit; -dirty: built with uncommitted changes">
+                {buildId}
+              </dd>
+            </>
+          )}
+          {buildTime && (
+            <>
+              <dt>Built</dt>
+              <dd>{buildTime}</dd>
+            </>
+          )}
           {info.chrome && (
             <>
               <dt>Web runtime</dt>

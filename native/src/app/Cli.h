@@ -13,7 +13,7 @@
 // ignored with a warning.
 // As in PuTTY, options given explicitly on the command line win over values loaded with -load, whatever their
 // order. Without -load, the "Default Settings" template is the base.
-// Host-only options: --dev-url URL, --devtools, --data-dir DIR (parsed by parseHostOptions).
+// Host-only options: --dev-url URL, --devtools, --data-dir DIR, --version / -V (parsed by parseHostOptions).
 #include "core/Types.h"
 
 #include <filesystem>
@@ -31,6 +31,7 @@ struct HostOptions {
     std::string devUrl;                // --dev-url URL (http/https)
     bool devtools = false;             // --devtools
     std::filesystem::path dataDir;     // --data-dir DIR
+    bool version = false;              // --version or -V (as in PuTTY): show the version and build id, then exit
     std::vector<std::string> rest;     // remaining (PuTTY) arguments, in order
     std::vector<std::string> errors;
 };

@@ -10,3 +10,8 @@
 
 /docs/notes/
 notes.md
+
+# Code signing: local configuration and keys (scripts/sign.ps1)
+/scripts/signing.json
+*.pfx
+*.p12

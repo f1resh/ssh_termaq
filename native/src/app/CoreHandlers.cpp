@@ -1,5 +1,6 @@
 #include "app/CoreHandlers.h"
 
+#include "app/BuildInfo.h"
 #include "app/Dialogs.h"
 #include "app/MainWindow.h"
 #include "bridge/Bridge.h"
@@ -16,10 +17,6 @@
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
-
-#ifndef ST_VERSION
-#define ST_VERSION "0.0.0"
-#endif
 
 namespace st {
 
@@ -251,8 +248,12 @@ void registerCoreHandlers(const CoreHandlerContext& c) {
 
     /* ---- app ---- */
     b.handleSync("app:info", [&win, paths](const Json&) {
+        const BuildInfo& build = buildInfo();
         return Json{{"name", "SSHTermaq"},
-                    {"version", ST_VERSION},
+                    {"version", build.version},
+                    {"build", build.number},
+                    {"commit", build.commit},
+                    {"buildTime", build.time},
                     {"electron", ""},
                     {"chrome", win.browserVersion()},
                     {"node", ""},

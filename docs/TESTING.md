@@ -10,8 +10,8 @@ them depends on another.
 
 | Part | What it tests | Framework | Where | Automated | Size | Run time |
 |---|---|---|---|---|---|---|
-| **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 163 test cases | about 1 minute |
-| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab titles and persistence, pane closing, SFTP panel, focus and sidebar actions, built-in themes and colour schemes | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 7 files, 90 tests | under 1 second |
+| **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 167 test cases | about 1 minute |
+| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab titles and persistence, pane closing, SFTP panel, focus and sidebar actions, built-in themes and colour schemes, version and build id in About | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 8 files, 93 tests | under 1 second |
 | **End-to-end and visual checks** | the whole UI, either inside the real app or in a browser against the mock backend | Playwright scripts | `ui/scripts/app.mjs`, `ui/scripts/shot.mjs` | no, run by hand | no saved scenarios | seconds |
 
 There are no automated tests of UI behaviour (clicking through screens, rendering, dialogs), and there is no CI:
@@ -153,14 +153,14 @@ TEST_CASE("ssh: password authentication, shell echo and exit code", "[ssh]") {
 
 ## 5. What is tested
 
-### Native tests (163 test cases)
+### Native tests (167 test cases)
 
-162 run by default; `putty: real registry smoke test` is hidden. The **Needs** column shows the tool without which a
+166 run by default; `putty: real registry smoke test` is hidden. The **Needs** column shows the tool without which a
 test case is skipped.
 
-#### app — `st_test_app.exe` (18)
+#### app — `st_test_app.exe` (22)
 
-Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`) data-folder resolution (portable / installed / override), and the embedded web UI (index parsing, request paths, content types, loading the test resources in `ui_test.rc`). *Kind: unit.* Source: [native/tests/app](../native/tests/app).
+Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`, `--version`), data-folder resolution (portable / installed / override), the version and build id (`BuildInfo`), and the embedded web UI (index parsing, request paths, content types, loading the test resources in `ui_test.rc`). *Kind: unit.* Source: [native/tests/app](../native/tests/app).
 
 | Test case | Tags | Needs (skipped without) | File |
 |---|---|---|---|
@@ -175,8 +175,12 @@ Command line (PuTTY-compatible options, `ssh://` / `sftp://` URLs, `-load`) data
 | cli: -m reads the remote command, -pwfile the password | `[app][cli]` |  | `cli_tests.cpp` |
 | cli: logging, misc options, unknown options | `[app][cli]` |  | `cli_tests.cpp` |
 | cli: host options are split off | `[app][cli]` |  | `cli_tests.cpp` |
+| cli: --version and -V ask for the version; -v stays PuTTY's verbose | `[app][cli]` |  | `cli_tests.cpp` |
 | cli: splitCommandLine follows Windows quoting rules | `[app][cli]` |  | `cli_tests.cpp` |
 | cli: parse with a real Store (-load + default template) | `[app][cli]` |  | `cli_tests.cpp` |
+| buildinfo: version, build number and commit come from the build | `[app][buildinfo]` |  | `buildinfo_tests.cpp` |
+| buildinfo: the build time is the link time of this executable | `[app][buildinfo]` |  | `buildinfo_tests.cpp` |
+| buildinfo: UTC times and the one-line description | `[app][buildinfo]` |  | `buildinfo_tests.cpp` |
 | paths: portable vs installed vs override | `[app][paths]` |  | `cli_tests.cpp` |
 | ui: index lines map paths to resource ids | `[app][ui]` |  | `ui_tests.cpp` |
 | ui: request URIs become paths relative to the UI root | `[app][ui]` |  | `ui_tests.cpp` |
@@ -405,7 +409,7 @@ Self-tests of the fake servers, validated with independent clients (`plink`, `ps
 | TestSshServer serves SFTP to psftp | `[support][plink]` | PuTTY `psftp.exe` | `support_tests.cpp` |
 | TestSshServer honours local forwarding from plink | `[support][plink]` | PuTTY `plink.exe` | `support_tests.cpp` |
 
-### UI unit tests (90 tests)
+### UI unit tests (93 tests)
 
 #### `actions.test.ts` (7)
 
@@ -545,6 +549,16 @@ Built-in app themes and terminal schemes: every colour present and valid, unique
 | SSHTermaq Neon | is the default theme, with its terminal scheme for "auto" |
 | SSHTermaq Neon | is dark, has the pink second accent, and button text stays readable |
 | theme resolution | "system" follows the OS, unknown ids fall back to Dark / Light by id |
+
+#### `buildInfo.test.ts` (3)
+
+About: the build number with the commit (marking uncommitted changes) and the build time in local time. Source: [ui/src/components/dialogs/about/buildInfo.test.ts](../ui/src/components/dialogs/about/buildInfo.test.ts).
+
+| Group | Test |
+|---|---|
+| About: version and build id | shows the build number with the commit, marking uncommitted changes |
+| About: version and build id | shows nothing when the host sent no build id |
+| About: version and build id | shows the build time in local time, and nothing for a missing or invalid time |
 
 ## 6. How to run the tests
 

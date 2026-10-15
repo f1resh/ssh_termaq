@@ -4,7 +4,7 @@ A modern, tabbed Windows SSH/Telnet/Rlogin/Raw/Serial client with PuTTY's featur
 
 ```
 SSHTermaq.exe (C++20, Win32)
-├─ app/        WinMain, main window (custom title bar), WebView2 host, CLI, single instance, dialogs
+├─ app/        WinMain, main window (custom title bar), WebView2 host, CLI, single instance, dialogs, build info
 ├─ bridge/     JSON message router  <── WebView2 postMessage ──>  UI (React + xterm.js, ui/)
 ├─ store/      sessions.json, settings.json, state.json, known_hosts.json, credentials.json (DPAPI)
 ├─ session/    SessionManager: connections, charset, local echo/edit (ldisc), session logging, prompts
@@ -35,6 +35,12 @@ addons) + lucide-react icons. The built UI (`ui/dist`) is embedded in `SSHTermaq
 (`cmake/EmbedUi.cmake` generates the resource script) and served from memory for `https://app.sshtermaq.local/` by
 WebView2's `WebResourceRequested` (`app/UiResources.h`, `MainWindow::serveUiResource`); there is no `ui` folder on
 disk (dev: `--dev-url http://localhost:5173`).
+
+Version: set only in `CMakeLists.txt` (`project(SSHTermaq VERSION x.y.z)`). On every build `cmake/BuildInfo.cmake`
+writes `build/<preset>/generated/st_build_info.h` (version, build number = commit count, short commit hash with
+`-dirty`), used by `native/res/app.rc` (file version `x.y.z.<build>`) and `app/BuildInfo.h`, which adds the link time
+from the PE header and feeds `app:info`, the startup log line and `--version`. The manifest is generated from
+`native/res/app.manifest.in` at configure time. Details: [BUILDING.md](BUILDING.md#9-versions-and-build-ids).
 
 ## Contracts (read before writing code)
 
@@ -164,7 +170,7 @@ client against the test SSH server (e.g. to validate PPK files we write).
 
 ## PuTTY feature parity checklist
 
-Status as of 0.1.0 (all items implemented and covered by native/UI tests or end-to-end checks).
+Status as of 1.0.0 (all items implemented and covered by native/UI tests or end-to-end checks).
 Known gaps: GSSAPI, SSH-1, SUPDUP, bare ssh-connection, SSH certificates, connection sharing, X11 cookie
 substitution, ML-KEM key exchange (disabled: libssh client issue).
 

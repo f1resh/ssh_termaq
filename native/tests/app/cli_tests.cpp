@@ -340,6 +340,16 @@ TEST_CASE("cli: host options are split off", "[app][cli]") {
     REQUIRE(h.errors.size() == 2);
 }
 
+TEST_CASE("cli: --version and -V ask for the version; -v stays PuTTY's verbose", "[app][cli]") {
+    REQUIRE_FALSE(parseHostOptions({"h.test"}).version);
+    auto h = parseHostOptions({"--version"});
+    REQUIRE(h.version);
+    REQUIRE(h.rest.empty());
+    h = parseHostOptions({"-V", "-v", "h.test"});
+    REQUIRE(h.version);
+    REQUIRE(h.rest == std::vector<std::string>{"-v", "h.test"});
+}
+
 TEST_CASE("cli: splitCommandLine follows Windows quoting rules", "[app][cli]") {
     auto a = splitCommandLine(L"SSHTermaq.exe -load \"my session\" -pw \"a\\\"b\" h\u00e9.test");
     REQUIRE(a == std::vector<std::string>{"-load", "my session", "-pw", "a\"b", "h\xC3\xA9.test"});

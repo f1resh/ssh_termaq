@@ -196,6 +196,8 @@ HostOptions parseHostOptions(const std::vector<std::string>& args) {
         std::string value;
         if (a == "--devtools") {
             out.devtools = true;
+        } else if (a == "--version" || a == "-V") {
+            out.version = true;
         } else if (a.rfind("--dev-url", 0) == 0 && (a == "--dev-url" || a[9] == '=')) {
             if (valueOf("--dev-url", value)) {
                 std::string lower = toLower(value);

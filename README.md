@@ -36,6 +36,7 @@ SSHTermaq.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] [
                [-m file] [-sercfg 115200,8,n,1,N] ...
 SSHTermaq.exe ssh://user@host:2222   telnet://host   @"Saved Session"
 SSHTermaq.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
+SSHTermaq.exe --version                                          (version and build id, also -V)
 ```
 A second invocation opens a new tab in the already running window.
 
@@ -71,9 +72,14 @@ WebView2 Runtime. Step-by-step setup, Visual Studio usage and troubleshooting: [
 # one-time: C++ dependencies (libssh, OpenSSL, zlib, nlohmann-json, WebView2, WIL, Catch2)
 & "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows-st --overlay-triplets=triplets --x-install-root=vcpkg_installed
 
-# everything: UI + native Release + dist\SSHTermaq-<version>-win-x64 (+ zip)
-.\scripts\build.ps1            # -Tests runs all test suites first, -Portable adds portable.flag
+# everything: UI + native Release + dist\SSHTermaq-<version>-win-x64 (+ zip); asks you to check the version first
+.\scripts\build.ps1            # -Tests runs all test suites first, -Portable adds portable.flag, -Installer adds setup.exe,
+                               # -Sign signs the exe, ssh.dll and the installer (setup: docs/BUILDING.md, section 10)
 ```
+
+The version is set in one place, `project(SSHTermaq VERSION x.y.z)` in `CMakeLists.txt`; each build also stamps a
+build id from git (commit count and hash), shown in About, in the log and in the exe's file properties. See
+[docs/BUILDING.md](docs/BUILDING.md#9-versions-and-build-ids).
 
 Development:
 
@@ -84,7 +90,7 @@ cmake --build build/vs --config Debug --parallel
 build\vs\Debug\SSHTermaq.exe --dev-url http://localhost:5173 --devtools
 ```
 
-An installer can be built with Inno Setup 6 from `scripts\installer.iss` after running `build.ps1`.
+`.\scripts\build.ps1 -Installer` also builds an installer, `dist\SSHTermaq-<version>-setup.exe` (needs Inno Setup 6).
 
 ## Tests
 

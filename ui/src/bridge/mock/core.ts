@@ -149,7 +149,10 @@ export function registerCoreMocks(ctx: MockContext): void {
   /* app */
   ctx.handle('app:info', () => ({
     name: 'SSHTermaq',
-    version: '0.1.0-mock',
+    version: '0.0.0',
+    build: 0,
+    commit: 'mock',
+    buildTime: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
     electron: '',
     chrome: navigator.userAgent,
     node: '',
