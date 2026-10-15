@@ -100,4 +100,5 @@ How everything is tested, the full list of tests and how to run each part: [docs
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What it would take to port SSHTerm to macOS and Linux (x64 and arm64):
+[docs/CrossPlatformChanges.md](docs/CrossPlatformChanges.md).
