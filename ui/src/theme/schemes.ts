@@ -80,6 +80,21 @@ const SOLARIZED: Palette16 = [
 ];
 
 export const BUILTIN_SCHEMES: ColorScheme[] = [
+  // Pairs with the SSHTermaq Neon app theme: neon magenta and pink on near-black, pink cursor.
+  scheme({
+    id: 'neon',
+    name: 'SSHTermaq Neon',
+    variant: 'dark',
+    foreground: '#ecdff7',
+    background: '#0b0710',
+    cursor: '#ff3db8',
+    cursorAccent: '#0b0710',
+    selectionBackground: '#e040fb55',
+    ansi: [
+      '#1a1124', '#ff4d6d', '#39e6a0', '#ffd166', '#7c6cff', '#e040fb', '#22e5ff', '#d9cbe6',
+      '#5e4b73', '#ff7a93', '#6ff5bf', '#ffe08f', '#a497ff', '#f07dff', '#6ff0ff', '#ffffff'
+    ]
+  }),
   scheme({
     id: 'putty',
     name: 'PuTTY Classic',

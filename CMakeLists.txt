@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(SSHTerm VERSION 0.1.0 LANGUAGES C CXX)
+project(SSHTermaq VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,7 +16,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(ST_BUILD_TESTS "Build unit/integration tests" ON)
 
 if(NOT MSVC)
-  message(FATAL_ERROR "SSHTerm is a Windows application and requires MSVC")
+  message(FATAL_ERROR "SSHTermaq is a Windows application and requires MSVC")
 endif()
 
 find_package(libssh CONFIG REQUIRED)
@@ -130,12 +130,12 @@ add_custom_target(st_ui_embed
   VERBATIM)
 set_target_properties(st_ui_embed PROPERTIES FOLDER "tools")
 
-add_executable(SSHTerm WIN32 ${ST_SRC}/app/main.cpp ${app_res} ${ST_UI_EMBED_DIR}/ui.rc)
-add_dependencies(SSHTerm st_ui_embed)
-target_link_libraries(SSHTerm PRIVATE st_app)
-set_target_properties(SSHTerm PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SSHTerm>")
+add_executable(SSHTermaq WIN32 ${ST_SRC}/app/main.cpp ${app_res} ${ST_UI_EMBED_DIR}/ui.rc)
+add_dependencies(SSHTermaq st_ui_embed)
+target_link_libraries(SSHTermaq PRIVATE st_app)
+set_target_properties(SSHTermaq PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SSHTermaq>")
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
-  target_sources(SSHTerm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
+  target_sources(SSHTermaq PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/native/res/app.manifest)
 endif()
 
 # ------------------------------------------------------------------ tests ---

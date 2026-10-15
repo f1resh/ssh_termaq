@@ -41,7 +41,7 @@ async function handleCloseRequest() {
     return;
   }
   const ok = await confirmDialog({
-    title: 'Exit SSHTerm?',
+    title: 'Exit SSHTermaq?',
     message: `${live.length} session${live.length === 1 ? ' is' : 's are'} still connected. Close ${live.length === 1 ? 'it' : 'them'} and exit?`,
     confirmLabel: 'Exit',
     danger: true
@@ -93,7 +93,7 @@ function useHostWiring(ready: boolean) {
       const ws = useWorkspace.getState();
       const tab = ws.tabs.find((t) => t.id === ws.activeTabId);
       const mode = useSettings.getState().settings.appearance.tabTitle;
-      const title = tab ? `${tabTitle(tab, ws.panes, mode)} - SSHTerm` : 'SSHTerm';
+      const title = tab ? `${tabTitle(tab, ws.panes, mode)} - SSHTermaq` : 'SSHTermaq';
       if (title !== last) {
         last = title;
         api.window.setTitle(title);

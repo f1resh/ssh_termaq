@@ -78,7 +78,7 @@ fs::path tempRoot() {
     wchar_t buf[MAX_PATH + 1];
     const DWORD n = GetTempPathW(MAX_PATH + 1, buf);
     fs::path root = n ? fs::path(std::wstring(buf, n)) : fs::temp_directory_path();
-    return root / L"SSHTerm";
+    return root / L"SSHTermaq";
 }
 
 fs::path newTempFolder() {

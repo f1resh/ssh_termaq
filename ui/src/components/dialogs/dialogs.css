@@ -1130,16 +1130,9 @@
   padding: 6px 0 2px;
 }
 .about__logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 45%, var(--bg)));
-  color: var(--accent-fg);
-  box-shadow: var(--shadow-md);
   flex: none;
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
 }
 .about__name {
   font-size: var(--fs-xl);
@@ -1153,6 +1146,11 @@
   color: var(--text-muted);
   font-size: var(--fs-sm);
   margin-top: 2px;
+}
+.about__slogan {
+  margin-top: 4px;
+  color: var(--accent2, var(--accent));
+  font-weight: 550;
 }
 .about__tagline {
   margin-top: 4px;

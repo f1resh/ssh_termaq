@@ -1,7 +1,9 @@
-"""Renders the SSHTerm application icon (stdlib only) into native/res/app.ico and native/res/icon-256.png.
+"""Renders the SSHTermaq application icon (stdlib only) into native/res/app.ico and native/res/icon-256.png.
 
-Design: rounded square with a diagonal blue gradient, a subtle inner highlight, and a white ">_" prompt.
-Rendering uses 4x4 supersampling of analytic shapes (rounded rect, thick line segments, rectangle).
+Design (same drawing as ui/src/components/welcome/Logo.tsx, in its 120x120 units): a near-black rounded square with
+a neon tube — a magenta terminal-window outline whose corner grows the tail of a "Q" — and a pink ">_" prompt inside.
+Each stroke is a soft Gaussian glow, a solid tube and a light core. Small sizes get thicker lines (at least about
+1.5 px tube / 0.7 px core) so the shape survives at 16 px. Rendering: 4x4 supersampling of analytic distance fields.
 """
 import math
 import os
@@ -11,12 +13,20 @@ import zlib
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.dirname(HERE)
 
-TOP = (0x5B, 0x9C, 0xFF)     # light blue
-BOTTOM = (0x2B, 0x4F, 0xD8)  # deep blue
-GLYPH = (0xFF, 0xFF, 0xFF)
+UNITS = 120.0                 # design space of the logo
+TILE = (0x08, 0x05, 0x0C)
+FRAME = (0xE0, 0x40, 0xFB)    # neon magenta
+FRAME_CORE = (0xFF, 0xE4, 0xFF)
+PROMPT = (0xFF, 0x3D, 0xB8)   # neon pink
+PROMPT_CORE = (0xFF, 0xE0, 0xF2)
+
+# Shapes in design units.
+WINDOW = (22.0, 24.0, 94.0, 92.0, 18.0)          # x0, y0, x1, y1, corner radius
+TAIL = ((88.0, 86.0), (104.0, 102.0))
+PROMPT_SEGMENTS = (((38.0, 46.0), (50.0, 57.0)), ((50.0, 57.0), (38.0, 68.0)), ((57.0, 69.0), (74.0, 69.0)))
 
 
-def rounded_rect_cover(x, y, size, radius):
+def rounded_square_cover(x, y, size, radius):
     """Coverage test for a rounded square [0,size]^2."""
     if x < 0 or y < 0 or x > size or y > size:
         return False
@@ -25,53 +35,77 @@ def rounded_rect_cover(x, y, size, radius):
     return (x - cx) ** 2 + (y - cy) ** 2 <= radius * radius
 
 
-def seg_dist(px, py, ax, ay, bx, by):
+def seg_dist(px, py, a, b):
+    (ax, ay), (bx, by) = a, b
     vx, vy = bx - ax, by - ay
     wx, wy = px - ax, py - ay
     t = max(0.0, min(1.0, (wx * vx + wy * vy) / (vx * vx + vy * vy)))
-    dx, dy = px - (ax + t * vx), py - (ay + t * vy)
-    return math.hypot(dx, dy)
+    return math.hypot(px - (ax + t * vx), py - (ay + t * vy))
+
+
+def outline_dist(px, py, rect):
+    """Distance to the outline of a rounded rectangle."""
+    x0, y0, x1, y1, r = rect
+    hx, hy = (x1 - x0) / 2.0, (y1 - y0) / 2.0
+    qx = abs(px - (x0 + hx)) - hx + r
+    qy = abs(py - (y0 + hy)) - hy + r
+    outside = math.hypot(max(qx, 0.0), max(qy, 0.0))
+    return abs(outside + min(max(qx, qy), 0.0) - r)
+
+
+def frame_dist(px, py):
+    return min(outline_dist(px, py, WINDOW), seg_dist(px, py, *TAIL))
+
+
+def prompt_dist(px, py):
+    return min(seg_dist(px, py, a, b) for a, b in PROMPT_SEGMENTS)
+
+
+def over(dst, src, alpha):
+    return [dst[i] * (1.0 - alpha) + src[i] * alpha for i in range(3)]
 
 
 def render(n):
     ss = 4
+    unit = UNITS / n                                   # design units per pixel
+    tube = max(3.25, 0.75 * unit)                      # half widths, in design units
+    core = max(1.4, 0.35 * unit)
+    sigma = max(7.0, 1.0 * unit)
+    groups = ((frame_dist, FRAME, FRAME_CORE), (prompt_dist, PROMPT, PROMPT_CORE))
+    radius = 26.0 / UNITS * n
     pix = []
-    s = float(n)
-    radius = s * 0.22
-    stroke = s * 0.085
-    # ">" chevron
-    a = (s * 0.24, s * 0.30)
-    b = (s * 0.46, s * 0.50)
-    c = (s * 0.24, s * 0.70)
-    # "_" underscore
-    ux0, ux1 = s * 0.52, s * 0.78
-    uy0, uy1 = s * 0.64, s * 0.64 + stroke
     for y in range(n):
         for x in range(n):
-            bg = 0
-            fg = 0
+            inside = 0
+            tube_hits = [0, 0]
+            core_hits = [0, 0]
             for sy in range(ss):
                 for sx in range(ss):
-                    px = x + (sx + 0.5) / ss
-                    py = y + (sy + 0.5) / ss
-                    if not rounded_rect_cover(px, py, s, radius):
+                    px, py = x + (sx + 0.5) / ss, y + (sy + 0.5) / ss
+                    if not rounded_square_cover(px, py, n, radius):
                         continue
-                    bg += 1
-                    d = min(seg_dist(px, py, *a, *b), seg_dist(px, py, *b, *c))
-                    if d <= stroke / 2 or (ux0 <= px <= ux1 and uy0 <= py <= uy1):
-                        fg += 1
-            total = ss * ss
-            if bg == 0:
+                    inside += 1
+                    ux, uy = px * unit, py * unit
+                    for g, (dist, _, _) in enumerate(groups):
+                        d = dist(ux, uy)
+                        if d <= tube:
+                            tube_hits[g] += 1
+                        if d <= core:
+                            core_hits[g] += 1
+            if inside == 0:
                 pix.append((0, 0, 0, 0))
                 continue
-            t = (x + y) / (2.0 * n)
-            col = [TOP[i] + (BOTTOM[i] - TOP[i]) * t for i in range(3)]
-            # soft highlight on the upper half
-            hl = max(0.0, 1.0 - y / (n * 0.55)) * 0.10
-            col = [min(255, v + (255 - v) * hl) for v in col]
-            fa = fg / bg
-            col = [col[i] * (1 - fa) + GLYPH[i] * fa for i in range(3)]
-            pix.append((int(col[0] + 0.5), int(col[1] + 0.5), int(col[2] + 0.5), int(255 * bg / total + 0.5)))
+            col = list(TILE)
+            cx, cy = (x + 0.5) * unit, (y + 0.5) * unit
+            for dist, color, _ in groups:                      # glow under everything
+                d = max(0.0, dist(cx, cy) - tube)
+                col = over(col, color, 0.55 * math.exp(-(d / sigma) ** 2))
+            for g, (_, color, _) in enumerate(groups):         # solid tube
+                col = over(col, color, 0.9 * tube_hits[g] / inside)
+            for g, (_, _, light) in enumerate(groups):         # light core
+                col = over(col, light, core_hits[g] / inside)
+            alpha = inside / (ss * ss)
+            pix.append((int(col[0] + 0.5), int(col[1] + 0.5), int(col[2] + 0.5), int(255 * alpha + 0.5)))
     return pix
 
 

@@ -1,6 +1,6 @@
 import type { AppSettings, CommandId, PortForward, Protocol, SessionConfig } from './types';
 
-export const APP_NAME = 'SSHTerm';
+export const APP_NAME = 'SSHTermaq';
 
 export const DEFAULT_PORTS: Record<Protocol, number> = {
   ssh: 22,
@@ -103,7 +103,7 @@ export function createDefaultSession(overrides: Partial<SessionConfig> = {}): Se
       localLineEditing: 'auto',
       implicitCrInLf: false,
       implicitLfInCr: false,
-      answerback: 'SSHTerm',
+      answerback: 'SSHTermaq',
       bell: 'visual',
       bellSoundPath: '',
       scrollbackLines: 0,
@@ -198,7 +198,7 @@ export function createDefaultSettings(): AppSettings {
   return {
     version: 1,
     appearance: {
-      theme: 'system',
+      theme: 'neon',
       accentColor: '',
       backgroundMaterial: 'none',
       showSidebar: true,

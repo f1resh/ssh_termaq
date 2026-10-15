@@ -161,7 +161,7 @@ function jsonPreview(): ImportPreview {
     candidates: markExisting(candidates, ''),
     hostKeys: [],
     errors: [],
-    origin: 'C:\\Users\\mock\\Documents\\sshterm-backup.json'
+    origin: 'C:\\Users\\mock\\Documents\\sshtermaq-backup.json'
   };
 }
 
@@ -234,10 +234,10 @@ export function registerImporterMocks(ctx: MockContext): void {
   });
   ctx.handle('importer:exportPuttyRegFile', async (ids: string[]) => {
     await delay(100);
-    return ids.length ? 'C:\\Users\\mock\\Documents\\sshterm-sessions.reg' : null;
+    return ids.length ? 'C:\\Users\\mock\\Documents\\sshtermaq-sessions.reg' : null;
   });
   ctx.handle('importer:exportJsonFile', async () => {
     await delay(100);
-    return 'C:\\Users\\mock\\Documents\\sshterm-sessions.json';
+    return 'C:\\Users\\mock\\Documents\\sshtermaq-sessions.json';
   });
 }

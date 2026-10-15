@@ -1,9 +1,9 @@
-# SSHTerm — Architecture & contributor contract
+# SSHTermaq — Architecture & contributor contract
 
 A modern, tabbed Windows SSH/Telnet/Rlogin/Raw/Serial client with PuTTY's feature set plus PuTTY session import.
 
 ```
-SSHTerm.exe (C++20, Win32)
+SSHTermaq.exe (C++20, Win32)
 ├─ app/        WinMain, main window (custom title bar), WebView2 host, CLI, single instance, dialogs
 ├─ bridge/     JSON message router  <── WebView2 postMessage ──>  UI (React + xterm.js, ui/)
 ├─ store/      sessions.json, settings.json, state.json, known_hosts.json, credentials.json (DPAPI)
@@ -31,8 +31,8 @@ OpenSSL 3.6, zlib, nlohmann-json 3.12, WebView2 SDK, WIL, Catch2 3. libssh sourc
 implementing) are in `vcpkg_installed/vcpkg/blds/libssh/src/libssh-0-e5f4972781.clean/`.
 
 UI: `ui/` — Vite + React 19 + TypeScript 5.9 + zustand + xterm.js 5.5 (+ fit/webgl/search/web-links/unicode11
-addons) + lucide-react icons. The built UI (`ui/dist`) is embedded in `SSHTerm.exe` as resources
-(`cmake/EmbedUi.cmake` generates the resource script) and served from memory for `https://app.sshterm.local/` by
+addons) + lucide-react icons. The built UI (`ui/dist`) is embedded in `SSHTermaq.exe` as resources
+(`cmake/EmbedUi.cmake` generates the resource script) and served from memory for `https://app.sshtermaq.local/` by
 WebView2's `WebResourceRequested` (`app/UiResources.h`, `MainWindow::serveUiResource`); there is no `ui` folder on
 disk (dev: `--dev-url http://localhost:5173`).
 
@@ -153,7 +153,7 @@ $cmake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Co
 build/<module>/Debug/st_test_<module>.exe                   # Catch2: add "[tag]" or a test name to filter
 ```
 Libraries: `st_core st_bridge st_store st_dialogs st_net st_transport st_keys st_ssh st_session st_putty st_dnd st_localfs st_sftp st_app`,
-executable `SSHTerm`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
+executable `SSHTermaq`. Sources are globbed — new `.cpp` files in your folders are picked up automatically.
 Tests: `native/tests/<module>/*.cpp` → `st_test_<module>`; `native/tests/support` (TestSshServer, TestEchoServer,
 TestScriptServer, TempDir) is linked into every test exe. `ST_FIXTURES_DIR` points at `native/tests/fixtures`.
 If the build fails in a file you don't own, another agent is mid-edit: wait a minute and retry; don't touch it.

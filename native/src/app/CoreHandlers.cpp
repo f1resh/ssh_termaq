@@ -251,7 +251,7 @@ void registerCoreHandlers(const CoreHandlerContext& c) {
 
     /* ---- app ---- */
     b.handleSync("app:info", [&win, paths](const Json&) {
-        return Json{{"name", "SSHTerm"},
+        return Json{{"name", "SSHTermaq"},
                     {"version", ST_VERSION},
                     {"electron", ""},
                     {"chrome", win.browserVersion()},

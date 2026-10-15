@@ -31,7 +31,8 @@ export function applyAppTheme(theme: AppTheme, accentOverride?: string, material
       colors[k] = `color-mix(in srgb, ${colors[k]} ${pct}%, transparent)`;
     }
   }
-  for (const [k, v] of Object.entries(colors)) root.style.setProperty(toVar(k), v);
+  root.style.removeProperty(toVar('accent2')); // optional: a theme without one must not inherit the previous theme's
+  for (const [k, v] of Object.entries(colors)) if (v) root.style.setProperty(toVar(k), v);
   root.dataset.variant = theme.variant;
   root.dataset.theme = theme.id;
   root.dataset.material = material;

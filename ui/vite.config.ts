@@ -6,7 +6,7 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
-  // Assets are served by the native host from https://app.sshterm.local/ (WebView2 virtual host mapping).
+  // Assets are served by the native host from https://app.sshtermaq.local/ (WebView2 virtual host mapping).
   base: './',
   resolve: {
     alias: {

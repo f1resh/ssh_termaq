@@ -312,7 +312,7 @@ int onShell(ssh_session, ssh_channel, void* ud) {
     if (ch->mode != ChannelState::Mode::None) return -1;
     ch->mode = ChannelState::Mode::Shell;
     ch->conn->server->event("shell");
-    queue(ch, "Welcome to the SSHTerm test server.\r\n$ ");
+    queue(ch, "Welcome to the SSHTermaq test server.\r\n$ ");
     return 0;
 }
 

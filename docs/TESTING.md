@@ -1,6 +1,6 @@
-# Testing SSHTerm
+# Testing SSHTermaq
 
-How SSHTerm is tested: the tools, how the tests are organised, the full list of tests, and how to run each part.
+How SSHTermaq is tested: the tools, how the tests are organised, the full list of tests, and how to run each part.
 Setting up the build environment is covered in [BUILDING.md](BUILDING.md).
 
 ## 1. Overview
@@ -11,7 +11,7 @@ them depends on another.
 | Part | What it tests | Framework | Where | Automated | Size | Run time |
 |---|---|---|---|---|---|---|
 | **Native tests** | the C++ backend: SSH, Telnet, Rlogin, Raw, proxies, keys, PuTTY import, storage, sessions, file transfer, drag & drop | Catch2 3, run by CTest | `native/tests/<module>/` | yes | 12 suites, 163 test cases | about 1 minute |
-| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab titles and persistence, pane closing, SFTP panel, focus and sidebar actions | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 6 files, 85 tests | under 1 second |
+| **UI unit tests** | pure TypeScript logic of the React UI: keyboard mapping, quick connect parser, file manager paths, tab titles and persistence, pane closing, SFTP panel, focus and sidebar actions, built-in themes and colour schemes | Vitest 4 | `ui/src/**/*.test.ts`, next to the code | yes | 7 files, 90 tests | under 1 second |
 | **End-to-end and visual checks** | the whole UI, either inside the real app or in a browser against the mock backend | Playwright scripts | `ui/scripts/app.mjs`, `ui/scripts/shot.mjs` | no, run by hand | no saved scenarios | seconds |
 
 There are no automated tests of UI behaviour (clicking through screens, rendering, dialogs), and there is no CI:
@@ -405,11 +405,11 @@ Self-tests of the fake servers, validated with independent clients (`plink`, `ps
 | TestSshServer serves SFTP to psftp | `[support][plink]` | PuTTY `psftp.exe` | `support_tests.cpp` |
 | TestSshServer honours local forwarding from plink | `[support][plink]` | PuTTY `plink.exe` | `support_tests.cpp` |
 
-### UI unit tests (85 tests)
+### UI unit tests (90 tests)
 
 #### `actions.test.ts` (7)
 
-UI actions: the SFTP side panel per tab (open, switch, close, forget closed panes), focus after a tab click, and the sidebar button. Source: [src/commands/actions.test.ts](../src/commands/actions.test.ts).
+UI actions: the SFTP side panel per tab (open, switch, close, forget closed panes), focus after a tab click, and the sidebar button. Source: [ui/src/commands/actions.test.ts](../ui/src/commands/actions.test.ts).
 
 | Group | Test |
 |---|---|
@@ -423,7 +423,7 @@ UI actions: the SFTP side panel per tab (open, switch, close, forget closed pane
 
 #### `paths.test.ts` (15)
 
-File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs, formatting, the list model (sorting, selection, filtering), dialog helpers, back/forward history. Source: [src/components/files/paths.test.ts](../src/components/files/paths.test.ts).
+File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs, formatting, the list model (sorting, selection, filtering), dialog helpers, back/forward history. Source: [ui/src/components/files/paths.test.ts](../ui/src/components/files/paths.test.ts).
 
 | Group | Test |
 |---|---|
@@ -445,7 +445,7 @@ File manager path helpers: remote (POSIX) and local (Windows) paths, breadcrumbs
 
 #### `parse.test.ts` (16)
 
-Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenSSH-style flags and `sftp://` / `scp://`; applying the result to a session; formatting it back. Source: [src/components/quickconnect/parse.test.ts](../src/components/quickconnect/parse.test.ts).
+Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenSSH-style flags and `sftp://` / `scp://`; applying the result to a session; formatting it back. Source: [ui/src/components/quickconnect/parse.test.ts](../ui/src/components/quickconnect/parse.test.ts).
 
 | Group | Test |
 |---|---|
@@ -468,7 +468,7 @@ Quick connect: parsing `user@host:port`, URLs, IPv6, serial targets, PuTTY/OpenS
 
 #### `workspace.test.ts` (9)
 
-Workspace store: automatic tab titles for each Tab titles setting (terminal title, session name, host address) and closing panes of a split tab. Source: [src/store/workspace.test.ts](../src/store/workspace.test.ts).
+Workspace store: automatic tab titles for each Tab titles setting (terminal title, session name, host address) and closing panes of a split tab. Source: [ui/src/store/workspace.test.ts](../ui/src/store/workspace.test.ts).
 
 | Group | Test |
 |---|---|
@@ -484,7 +484,7 @@ Workspace store: automatic tab titles for each Tab titles setting (terminal titl
 
 #### `workspacePersist.test.ts` (2)
 
-Saving and restoring open tabs, including file manager tabs and snapshots from older versions. Source: [src/store/workspacePersist.test.ts](../src/store/workspacePersist.test.ts).
+Saving and restoring open tabs, including file manager tabs and snapshots from older versions. Source: [ui/src/store/workspacePersist.test.ts](../ui/src/store/workspacePersist.test.ts).
 
 | Group | Test |
 |---|---|
@@ -493,7 +493,7 @@ Saving and restoring open tabs, including file manager tabs and snapshots from o
 
 #### `keymap.test.ts` (36)
 
-PuTTY keyboard modes: which escape sequence each key sends for every function-key, Home/End, cursor, keypad, Backspace and AltGr setting. Source: [src/terminal/keymap.test.ts](../src/terminal/keymap.test.ts).
+PuTTY keyboard modes: which escape sequence each key sends for every function-key, Home/End, cursor, keypad, Backspace and AltGr setting. Source: [ui/src/terminal/keymap.test.ts](../ui/src/terminal/keymap.test.ts).
 
 | Group | Test |
 |---|---|
@@ -534,6 +534,18 @@ PuTTY keyboard modes: which escape sequence each key sends for every function-ke
 | PuTTY local actions | Ctrl+Break sends the break special, Pause sends ^Z |
 | PuTTY local actions | ordinary keys are left to xterm.js |
 
+#### `themes.test.ts` (5)
+
+Built-in app themes and terminal schemes: every colour present and valid, unique ids, SSHTermaq Neon as the default (with its terminal scheme and readable contrast), "system" and unknown-theme fallback. Source: [ui/src/theme/themes.test.ts](../ui/src/theme/themes.test.ts).
+
+| Group | Test |
+|---|---|
+| built-in themes and schemes | every app theme has all colours and pairs with an existing terminal scheme |
+| built-in themes and schemes | every terminal scheme has a unique id and hex colours |
+| SSHTermaq Neon | is the default theme, with its terminal scheme for "auto" |
+| SSHTermaq Neon | is dark, has the pink second accent, and button text stays readable |
+| theme resolution | "system" follows the OS, unknown ids fall back to Dark / Light by id |
+
 ## 6. How to run the tests
 
 ### Native tests
@@ -560,7 +572,7 @@ Catch2 options, for any `st_test_*.exe`:
 | `st_test_core.exe -d yes` | prints each test case's duration |
 | `st_test_core.exe --reporter junit --out results.xml` | writes a JUnit XML report (for CI tools) |
 
-**In Visual Studio:** open `build\vs\SSHTerm.sln`. The test projects are in the solution's `tests` folder. Right-click
+**In Visual Studio:** open `build\vs\SSHTermaq.sln`. The test projects are in the solution's `tests` folder. Right-click
 one, choose *Set as Startup Project*, and press F5 to debug it. To debug a single test case, put its name or tag into
 *Properties* → *Debugging* → *Command Arguments*.
 
@@ -604,7 +616,7 @@ Both scripts need the UI's `node_modules` (`npm ci`) and are run from the `ui` f
 
 ### `app.mjs`: the real app
 
-Starts `SSHTerm.exe` with a new temporary data folder (your sessions in `%APPDATA%\SSHTerm` are never touched),
+Starts `SSHTermaq.exe` with a new temporary data folder (your sessions in `%APPDATA%\SSHTermaq` are never touched),
 attaches Playwright to the app's WebView2 over the DevTools protocol, runs an optional steps file, takes a screenshot
 and closes the app.
 
@@ -615,7 +627,7 @@ node scripts/app.mjs --steps my-steps.mjs --out ..\artifacts\check.png
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--exe PATH` | `build\vs\Debug\SSHTerm.exe` | app to start |
+| `--exe PATH` | `build\vs\Debug\SSHTermaq.exe` | app to start |
 | `--data-dir DIR` | a new temporary folder, deleted afterwards | data folder for the app |
 | `--keep-data` | off | keep the temporary data folder |
 | `--steps FILE` | none | ES module to run before the screenshot |
@@ -630,7 +642,7 @@ anything with plain code:
 // my-steps.mjs
 export default async function (page, { bridge, dataDir, out, exe }) {
   const info = await bridge('app:info');               // raw bridge call, same wire format as the UI
-  if (info.name !== 'SSHTerm') throw new Error('unexpected app name ' + info.name);
+  if (info.name !== 'SSHTermaq') throw new Error('unexpected app name ' + info.name);
   await page.getByRole('main').getByRole('button', { name: 'New session' }).click();   // opens the session editor
   await page.screenshot({ path: out.replace('.png', '-editor.png') });
 }

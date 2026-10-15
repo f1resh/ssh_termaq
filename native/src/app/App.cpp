@@ -57,7 +57,7 @@ public:
     explicit SingleInstance(const std::filesystem::path& dataDir) {
         std::string key = toLower(narrow(dataDir.wstring()));
         std::string hash = hexEncode(crypto::sha256(key)).substr(0, 16);
-        mutex_ = CreateMutexW(nullptr, TRUE, widen("Local\\SSHTerm-" + hash).c_str());
+        mutex_ = CreateMutexW(nullptr, TRUE, widen("Local\\SSHTermaq-" + hash).c_str());
         primary_ = mutex_ && GetLastError() != ERROR_ALREADY_EXISTS;
     }
     ~SingleInstance() {
@@ -72,7 +72,7 @@ public:
     static bool forward() {
         HWND target = nullptr;
         for (int i = 0; i < 40 && !target; ++i) {
-            target = FindWindowW(L"SSHTermMainWindow", nullptr);
+            target = FindWindowW(L"SSHTermaqMainWindow", nullptr);
             if (!target) Sleep(50);
         }
         if (!target) return false;
@@ -132,8 +132,8 @@ int runApp(int argc, wchar_t** argv) {
     HostOptions host = parseHostOptions(args);
 
     AppPaths paths = initAppPaths(host.dataDir);
-    applog::init(paths.logsDir / "sshterm.log");
-    applog::info(std::string("SSHTerm starting, data dir: ") + narrow(paths.dataDir.wstring()) +
+    applog::init(paths.logsDir / "sshtermaq.log");
+    applog::info(std::string("SSHTermaq starting, data dir: ") + narrow(paths.dataDir.wstring()) +
                  (paths.portable ? " (portable)" : ""));
     for (const auto& e : host.errors) applog::warn("Command line: " + e);
 
@@ -184,7 +184,7 @@ int runApp(int argc, wchar_t** argv) {
 
         applyInitialAppearance(window, store.settings());
         if (!window.create(SW_SHOWDEFAULT)) {
-            MessageBoxW(nullptr, L"SSHTerm could not create its main window.", L"SSHTerm", MB_ICONERROR);
+            MessageBoxW(nullptr, L"SSHTermaq could not create its main window.", L"SSHTermaq", MB_ICONERROR);
             exitCode = 1;
         } else {
             dialogs::init(window.hwnd(), &window);

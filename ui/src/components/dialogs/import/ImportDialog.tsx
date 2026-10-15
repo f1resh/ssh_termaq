@@ -1,6 +1,6 @@
 /**
  * Import wizard: 1) choose a source  2) preview + select + options  3) result.
- * Sources: PuTTY sessions on this PC (registry), PuTTY .reg file, OpenSSH config, SSHTerm JSON backup.
+ * Sources: PuTTY sessions on this PC (registry), PuTTY .reg file, OpenSSH config, SSHTermaq JSON backup.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileCode2, FileJson, FolderOpen, KeyRound, Monitor } from 'lucide-react';
@@ -37,7 +37,7 @@ const SOURCES: SourceCard[] = [
   { source: 'putty-registry', title: 'PuTTY on this PC', description: 'Saved sessions, default settings and trusted host keys from the registry.', icon: <Monitor size={22} /> },
   { source: 'putty-regfile', title: 'PuTTY .reg file', description: 'A registry export of PuTTY sessions (e.g. from another computer).', icon: <FileCode2 size={22} /> },
   { source: 'ssh-config', title: 'OpenSSH config', description: 'Hosts from ~/.ssh/config, including ProxyJump and port forwards.', icon: <KeyRound size={22} /> },
-  { source: 'json', title: 'SSHTerm backup', description: 'A JSON file exported from SSHTerm.', icon: <FileJson size={22} /> }
+  { source: 'json', title: 'SSHTermaq backup', description: 'A JSON file exported from SSHTermaq.', icon: <FileJson size={22} /> }
 ];
 
 async function loadPreview(source: ImportSource): Promise<ImportPreview | null> {

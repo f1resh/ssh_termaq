@@ -1,11 +1,15 @@
-# SSHTerm
+# SSHTermaq
+
+*Your ultimate destination.* The name comes from *terminus ad quem*, Latin for "the end point toward which" —
+where every connection is headed.
 
 A modern, tabbed SSH / Telnet / Rlogin / Raw / Serial client for Windows with PuTTY's feature set and one-click
 import of your PuTTY sessions and trusted host keys.
 
 - **Native C++20 host** (Win32 + WebView2) with a C++ backend built on libssh 0.12, OpenSSL 3 and zlib
 - **Modern UI** in React + xterm.js: tabs, split panes, sidebar with folders and search, command palette, quick connect,
-  14 app themes, 29 terminal color schemes, custom scheme editor, configurable keybindings, Mica/Acrylic backdrop
+  15 app themes (the default is the neon-on-black SSHTermaq Neon), 30 terminal color schemes, custom scheme editor,
+  configurable keybindings, Mica/Acrylic backdrop
 - **PuTTY compatible**: PuTTY-style settings for every session, PuTTY command-line options, `.ppk` keys (v2/v3),
   Pageant, and import from the PuTTY registry or `.reg` files (sessions, "Default Settings", SSH host keys)
 
@@ -27,25 +31,25 @@ import of your PuTTY sessions and trusted host keys.
 ### Command line (PuTTY compatible)
 
 ```
-SSHTerm.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] [-l user] [-pw password]
+SSHTermaq.exe [-ssh|-telnet|-rlogin|-raw|-serial] [user@]host[:port] [-P port] [-l user] [-pw password]
                [-i key.ppk] [-load "Saved Session"] [-L|-R|-D spec] [-A|-a] [-X|-x] [-C] [-4|-6] [-N]
                [-m file] [-sercfg 115200,8,n,1,N] ...
-SSHTerm.exe ssh://user@host:2222   telnet://host   @"Saved Session"
-SSHTerm.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
+SSHTermaq.exe ssh://user@host:2222   telnet://host   @"Saved Session"
+SSHTermaq.exe sftp://user@host/var/www   scp://user@router        (open the file manager)
 ```
 A second invocation opens a new tab in the already running window.
 
 ### Requirements
 
 Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11). The release consists of
-two files: `SSHTerm.exe`, which also contains the user interface, and `ssh.dll` (libssh, kept separate so it can be
+two files: `SSHTermaq.exe`, which also contains the user interface, and `ssh.dll` (libssh, kept separate so it can be
 replaced under the LGPL). Everything else, including the C/C++ runtime and OpenSSL, is linked in statically: no
 Visual C++ Redistributable is needed.
 
 ### Data and portable mode
 
-Settings, sessions and trusted host keys live in `%APPDATA%\SSHTerm`. Put a file named `portable.flag`
-next to `SSHTerm.exe` to keep everything in a `data` folder beside the program instead.
+Settings, sessions and trusted host keys live in `%APPDATA%\SSHTermaq`. Put a file named `portable.flag`
+next to `SSHTermaq.exe` to keep everything in a `data` folder beside the program instead.
 
 ## Not supported (yet)
 
@@ -67,7 +71,7 @@ WebView2 Runtime. Step-by-step setup, Visual Studio usage and troubleshooting: [
 # one-time: C++ dependencies (libssh, OpenSSL, zlib, nlohmann-json, WebView2, WIL, Catch2)
 & "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows-st --overlay-triplets=triplets --x-install-root=vcpkg_installed
 
-# everything: UI + native Release + dist\SSHTerm-<version>-win-x64 (+ zip)
+# everything: UI + native Release + dist\SSHTermaq-<version>-win-x64 (+ zip)
 .\scripts\build.ps1            # -Tests runs all test suites first, -Portable adds portable.flag
 ```
 
@@ -77,7 +81,7 @@ Development:
 cd ui; npm install; npm run dev              # UI with a mock backend at http://localhost:5173
 cmake --preset vs                            # native Debug build in build\vs
 cmake --build build/vs --config Debug --parallel
-build\vs\Debug\SSHTerm.exe --dev-url http://localhost:5173 --devtools
+build\vs\Debug\SSHTermaq.exe --dev-url http://localhost:5173 --devtools
 ```
 
 An installer can be built with Inno Setup 6 from `scripts\installer.iss` after running `build.ps1`.
@@ -100,5 +104,5 @@ How everything is tested, the full list of tests and how to run each part: [docs
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What it would take to port SSHTerm to macOS and Linux (x64 and arm64):
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What it would take to port SSHTermaq to macOS and Linux (x64 and arm64):
 [docs/CrossPlatformChanges.md](docs/CrossPlatformChanges.md).

@@ -7,7 +7,7 @@
 using namespace st;
 
 namespace {
-constexpr std::string_view kOrigin = "https://app.sshterm.local";
+constexpr std::string_view kOrigin = "https://app.sshtermaq.local";
 }
 
 TEST_CASE("ui: index lines map paths to resource ids", "[app][ui]") {
@@ -30,23 +30,23 @@ TEST_CASE("ui: index lines map paths to resource ids", "[app][ui]") {
 }
 
 TEST_CASE("ui: request URIs become paths relative to the UI root", "[app][ui]") {
-    CHECK(uiPathFromUri("https://app.sshterm.local/index.html", kOrigin) == "index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local/", kOrigin) == "index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local", kOrigin) == "index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local/assets/index-1a2b.js", kOrigin) == "assets/index-1a2b.js");
-    CHECK(uiPathFromUri("https://app.sshterm.local/index.html?x=1#top", kOrigin) == "index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local?x=1", kOrigin) == "index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local/assets/", kOrigin) == "assets/index.html");
-    CHECK(uiPathFromUri("https://app.sshterm.local//assets/a.js", kOrigin) == "assets/a.js");
-    CHECK(uiPathFromUri("https://app.sshterm.local/a%20b%2Ec.js", kOrigin) == "a b.c.js");
-    CHECK(uiPathFromUri("HTTPS://App.SSHTerm.Local/index.html", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/index.html", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/assets/index-1a2b.js", kOrigin) == "assets/index-1a2b.js");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/index.html?x=1#top", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local?x=1", kOrigin) == "index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/assets/", kOrigin) == "assets/index.html");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local//assets/a.js", kOrigin) == "assets/a.js");
+    CHECK(uiPathFromUri("https://app.sshtermaq.local/a%20b%2Ec.js", kOrigin) == "a b.c.js");
+    CHECK(uiPathFromUri("HTTPS://App.SSHTermaq.Local/index.html", kOrigin) == "index.html");
 
-    CHECK_FALSE(uiPathFromUri("https://app.sshterm.local.example/index.html", kOrigin));
+    CHECK_FALSE(uiPathFromUri("https://app.sshtermaq.local.example/index.html", kOrigin));
     CHECK_FALSE(uiPathFromUri("https://example.com/index.html", kOrigin));
-    CHECK_FALSE(uiPathFromUri("http://app.sshterm.local/index.html", kOrigin));
-    CHECK_FALSE(uiPathFromUri("https://app.sshterm.local/bad%2", kOrigin));
-    CHECK_FALSE(uiPathFromUri("https://app.sshterm.local/bad%zz", kOrigin));
-    CHECK_FALSE(uiPathFromUri("https://app.sshterm.local/index.html", ""));
+    CHECK_FALSE(uiPathFromUri("http://app.sshtermaq.local/index.html", kOrigin));
+    CHECK_FALSE(uiPathFromUri("https://app.sshtermaq.local/bad%2", kOrigin));
+    CHECK_FALSE(uiPathFromUri("https://app.sshtermaq.local/bad%zz", kOrigin));
+    CHECK_FALSE(uiPathFromUri("https://app.sshtermaq.local/index.html", ""));
 }
 
 TEST_CASE("ui: content types by extension", "[app][ui]") {

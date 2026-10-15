@@ -391,8 +391,8 @@ ImportPreview previewJsonBackup(const std::string& path, const Store& store) {
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Not a valid JSON backup: ") + e.what());
     }
-    if (!j.is_object() || j.value("format", "") != "sshterm-sessions" || !j.contains("sessions") || !j["sessions"].is_array())
-        throw std::runtime_error("Not an SSHTerm session backup file");
+    if (!j.is_object() || j.value("format", "") != "sshtermaq-sessions" || !j.contains("sessions") || !j["sessions"].is_array())
+        throw std::runtime_error("Not an SSHTermaq session backup file");
     for (const auto& raw : j["sessions"]) {
         if (!raw.is_object()) continue;
         try {
@@ -550,7 +550,7 @@ std::string exportPuttyReg(const std::vector<SessionConfig>& sessions) {
 }
 
 std::string exportJsonBackup(const Json& sessions, const std::vector<std::string>& folders) {
-    Json j = {{"format", "sshterm-sessions"}, {"version", 1}, {"exportedAt", nowMs()}, {"sessions", sessions}, {"folders", folders}};
+    Json j = {{"format", "sshtermaq-sessions"}, {"version", 1}, {"exportedAt", nowMs()}, {"sessions", sessions}, {"folders", folders}};
     // Never export secrets.
     for (auto& s : j["sessions"])
         if (s.contains("proxy") && s["proxy"].is_object()) s["proxy"]["password"] = "";

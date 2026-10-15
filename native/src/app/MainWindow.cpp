@@ -25,8 +25,8 @@ namespace st {
 
 namespace {
 
-constexpr wchar_t kWindowClass[] = L"SSHTermMainWindow";
-constexpr wchar_t kAppHost[] = L"app.sshterm.local";
+constexpr wchar_t kWindowClass[] = L"SSHTermaqMainWindow";
+constexpr wchar_t kAppHost[] = L"app.sshtermaq.local";
 constexpr UINT WM_APP_DISPATCH = WM_APP + 1;
 /** WM_COPYDATA identifier for command lines forwarded by a second instance. */
 constexpr ULONG_PTR kCopyDataCommandLine = 0x53545243;  // 'STRC'
@@ -157,7 +157,7 @@ bool MainWindow::create(int showCommand) {
         return false;
     }
 
-    hwnd_ = CreateWindowExW(WS_EX_APPWINDOW, kWindowClass, L"SSHTerm", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    hwnd_ = CreateWindowExW(WS_EX_APPWINDOW, kWindowClass, L"SSHTermaq", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                             CW_USEDEFAULT, CW_USEDEFAULT, 1280, 800, nullptr, nullptr, inst, this);
     if (!hwnd_) {
         applog::error("CreateWindowEx failed: " + lastErrorMessage());
@@ -397,14 +397,14 @@ void MainWindow::onWebViewEnvironment(HRESULT hr, void* environment) {
         applog::error("WebView2 environment creation failed: " + narrow(hrMessage(hr)));
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
             int r = MessageBoxW(hwnd_,
-                                L"SSHTerm needs the Microsoft Edge WebView2 Runtime, which is not installed.\n\n"
+                                L"SSHTermaq needs the Microsoft Edge WebView2 Runtime, which is not installed.\n\n"
                                 L"Open the download page now?",
-                                L"SSHTerm", MB_ICONERROR | MB_YESNO);
+                                L"SSHTermaq", MB_ICONERROR | MB_YESNO);
             if (r == IDYES)
                 ShellExecuteW(nullptr, L"open", L"https://developer.microsoft.com/microsoft-edge/webview2/", nullptr,
                               nullptr, SW_SHOWNORMAL);
         } else {
-            MessageBoxW(hwnd_, (L"Could not start the WebView2 runtime:\n" + hrMessage(hr)).c_str(), L"SSHTerm",
+            MessageBoxW(hwnd_, (L"Could not start the WebView2 runtime:\n" + hrMessage(hr)).c_str(), L"SSHTermaq",
                         MB_ICONERROR);
         }
         PostMessageW(hwnd_, WM_CLOSE, 0, 0);
@@ -427,7 +427,7 @@ void MainWindow::onWebViewController(HRESULT hr, void* controller) {
     if (FAILED(hr) || !controller) {
         webViewFailed_ = true;
         applog::error("WebView2 controller creation failed: " + narrow(hrMessage(hr)));
-        MessageBoxW(hwnd_, (L"Could not create the WebView2 control:\n" + hrMessage(hr)).c_str(), L"SSHTerm",
+        MessageBoxW(hwnd_, (L"Could not create the WebView2 control:\n" + hrMessage(hr)).c_str(), L"SSHTermaq",
                     MB_ICONERROR);
         closeConfirmed_ = true;
         PostMessageW(hwnd_, WM_CLOSE, 0, 0);
@@ -484,7 +484,7 @@ void MainWindow::configureWebView() {
 
     EventRegistrationToken token{};
 
-    // Bundled UI: every request for https://app.sshterm.local/* is answered from the resources embedded in the
+    // Bundled UI: every request for https://app.sshtermaq.local/* is answered from the resources embedded in the
     // executable (no files on disk, no file:// URLs).
     if (options_.devUrl.empty()) {
         view->AddWebResourceRequestedFilter((std::wstring(L"https://") + kAppHost + L"/*").c_str(),
@@ -598,9 +598,9 @@ void MainWindow::navigateToUi() {
     if (!ui_.find("index.html")) {
         const std::wstring html =
             L"<!doctype html><meta charset=utf-8><body style=\"font:14px 'Segoe UI';background:#1b1d22;color:#e6e8ec;"
-            L"padding:40px\"><h2>SSHTerm</h2><p>This copy of SSHTerm was built without its user interface: "
-            L"<code>ui/dist</code> did not exist when <code>SSHTerm.exe</code> was built.</p>"
-            L"<p>Run <code>npm run build</code> in the <code>ui</code> folder, then build SSHTerm again (the build embeds "
+            L"padding:40px\"><h2>SSHTermaq</h2><p>This copy of SSHTermaq was built without its user interface: "
+            L"<code>ui/dist</code> did not exist when <code>SSHTermaq.exe</code> was built.</p>"
+            L"<p>Run <code>npm run build</code> in the <code>ui</code> folder, then build SSHTermaq again (the build embeds "
             L"the interface into the executable), or start with <code>--dev-url http://localhost:5173</code>.</p></body>";
         web_->view->NavigateToString(html.c_str());
         return;
@@ -726,7 +726,8 @@ bool MainWindow::effectiveDark() const {
     return systemPrefersDark();
 }
 
-COLORREF MainWindow::backgroundColor() const { return effectiveDark() ? RGB(0x1b, 0x1d, 0x22) : RGB(0xff, 0xff, 0xff); }
+// Shown until the page paints: the background of the default theme (SSHTermaq Neon) when dark.
+COLORREF MainWindow::backgroundColor() const { return effectiveDark() ? RGB(0x0b, 0x07, 0x10) : RGB(0xff, 0xff, 0xff); }
 
 void MainWindow::applyFrameTheme() {
     if (!hwnd_) return;
@@ -779,7 +780,7 @@ void MainWindow::requestClose() { PostMessageW(hwnd_, WM_CLOSE, 0, 0); }
 
 bool MainWindow::isMaximized() const { return hwnd_ && IsZoomed(hwnd_); }
 
-void MainWindow::setTitle(const std::string& title) { SetWindowTextW(hwnd_, widen(title.empty() ? "SSHTerm" : title).c_str()); }
+void MainWindow::setTitle(const std::string& title) { SetWindowTextW(hwnd_, widen(title.empty() ? "SSHTermaq" : title).c_str()); }
 
 void MainWindow::flash() {
     if (GetForegroundWindow() == hwnd_) return;

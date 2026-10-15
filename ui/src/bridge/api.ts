@@ -1,7 +1,7 @@
 /**
  * `api` — the UI's single entry point to the native host.
  *
- * Inside the SSHTerm host (WebView2) messages go over window.chrome.webview using the wire format
+ * Inside the SSHTermaq host (WebView2) messages go over window.chrome.webview using the wire format
  * documented in src/shared/ipc.ts. In a plain browser (vite dev server / tests) a mock backend is used so
  * the UI can be developed and previewed without the native host.
  */

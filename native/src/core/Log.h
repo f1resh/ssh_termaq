@@ -1,6 +1,6 @@
 #pragma once
 // Application diagnostics log (not the per-connection event log / session log).
-// Writes to OutputDebugString and <dataDir>/logs/sshterm.log once initialized.
+// Writes to OutputDebugString and <dataDir>/logs/sshtermaq.log once initialized.
 #include <filesystem>
 #include <string>
 

@@ -20,12 +20,12 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "SSHTerm"
-            VALUE "FileDescription", "SSHTerm - SSH, Telnet, Rlogin, Raw and Serial client"
+            VALUE "CompanyName", "SSHTermaq"
+            VALUE "FileDescription", "SSHTermaq - SSH, Telnet, Rlogin, Raw and Serial client"
             VALUE "FileVersion", ST_VERSION_STR
-            VALUE "InternalName", "SSHTerm"
-            VALUE "OriginalFilename", "SSHTerm.exe"
-            VALUE "ProductName", "SSHTerm"
+            VALUE "InternalName", "SSHTermaq"
+            VALUE "OriginalFilename", "SSHTermaq.exe"
+            VALUE "ProductName", "SSHTermaq"
             VALUE "ProductVersion", ST_VERSION_STR
         END
     END

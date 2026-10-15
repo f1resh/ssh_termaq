@@ -181,7 +181,7 @@ struct SftpCore : std::enable_shared_from_this<SftpCore> {
     };
 
     void checkRunning() const {
-        if (stopping) throw SftpError("SSHTerm is shutting down");
+        if (stopping) throw SftpError("SSHTermaq is shutting down");
     }
 
     SessionPtr session(const std::string& id) {
@@ -523,7 +523,7 @@ struct SftpCore : std::enable_shared_from_this<SftpCore> {
                         shellEdit(local, editor);
                     {
                         std::lock_guard lk(self->em);
-                        if (self->watcherStop) throw SftpError("SSHTerm is shutting down");
+                        if (self->watcherStop) throw SftpError("SSHTermaq is shutting down");
                         self->edits[e->editId] = e;
                         if (!self->watcher.joinable()) self->watcher = std::thread([self] { self->watchLoop(); });
                     }

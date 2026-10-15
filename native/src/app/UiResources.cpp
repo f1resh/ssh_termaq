@@ -72,7 +72,7 @@ std::optional<std::string> uiPathFromUri(std::string_view uri, std::string_view 
         return std::nullopt;
     std::string_view rest = uri.substr(origin.size());
     if (!rest.empty() && rest.front() != '/' && rest.front() != '?' && rest.front() != '#')
-        return std::nullopt;  // "https://app.sshterm.local.evil" is not our origin
+        return std::nullopt;  // "https://app.sshtermaq.local.evil" is not our origin
     rest = rest.substr(0, rest.find_first_of("?#"));
     while (!rest.empty() && rest.front() == '/') rest.remove_prefix(1);
 

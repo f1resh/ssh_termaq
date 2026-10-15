@@ -55,7 +55,7 @@ import { SESSION_MIME } from '@/components/titlebar/TabStrip';
 import { buildTree, flattenTree, folderKey, isWithin, parentFolder, searchTokens, sessionKey, type Row } from './tree';
 import './sidebar.css';
 
-const FOLDER_MIME = 'application/x-sshterm-folder';
+const FOLDER_MIME = 'application/x-sshtermaq-folder';
 const COLLAPSED_KEY = 'sidebar.collapsed';
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 560;

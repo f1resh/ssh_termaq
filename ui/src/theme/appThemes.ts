@@ -4,8 +4,8 @@
  * (`defaultScheme`, used when the global terminal scheme is 'auto').
  *
  * Palettes follow the upstream theme definitions (Nord, Dracula, Solarized, Gruvbox, Catppuccin, GitHub
- * Primer, Tokyo Night, One Dark Pro); UI-only shades (hover/active/borders) are derived to keep contrast
- * readable at small sizes.
+ * Primer, Tokyo Night, One Dark Pro) plus SSHTermaq Neon, the default; UI-only shades (hover/active/borders) are
+ * derived to keep contrast readable at small sizes.
  */
 import type { AppTheme, AppThemeColors } from '@shared/types';
 
@@ -14,6 +14,37 @@ function theme(id: string, name: string, variant: AppTheme['variant'], defaultSc
 }
 
 export const APP_THEMES: AppTheme[] = [
+  // SSHTermaq's own theme and the default: near-black with a violet tint, neon magenta accent and a neon pink second
+  // accent, matching the logo (components/welcome/Logo.tsx).
+  theme('neon', 'SSHTermaq Neon', 'dark', 'neon', {
+    bg: '#0b0710',
+    bgElevated: '#140d1c',
+    bgSunken: '#07040a',
+    surface: '#1a1124',
+    surfaceHover: '#241731',
+    surfaceActive: '#2e1d3f',
+    border: '#2a1c3a',
+    borderStrong: '#432b5c',
+    text: '#f4eafb',
+    textMuted: '#b9a7cc',
+    textFaint: '#7f6c94',
+    accent: '#e040fb',
+    accentHover: '#ea6bff',
+    accentFg: '#14051c',
+    accent2: '#ff3db8',
+    danger: '#ff4d6d',
+    warning: '#ffb547',
+    success: '#39e6a0',
+    info: '#b98cff',
+    titlebar: '#08050c',
+    titlebarFg: '#d9c8ea',
+    sidebar: '#0e0914',
+    tabActive: '#160e20',
+    tabHover: '#120b1a',
+    overlay: 'rgba(4,0,8,0.7)',
+    scrollbar: 'rgba(224,64,251,0.18)',
+    scrollbarHover: 'rgba(224,64,251,0.34)'
+  }),
   theme('dark', 'Dark', 'dark', 'one-dark', {
     bg: '#1b1d22',
     bgElevated: '#24272e',

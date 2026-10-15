@@ -216,7 +216,7 @@ struct TerminalOptions {
     TriState localLineEditing = TriState::Auto;
     bool implicitCrInLf = false;
     bool implicitLfInCr = false;
-    std::string answerback = "SSHTerm";
+    std::string answerback = "SSHTermaq";
     BellMode bell = BellMode::Visual;
     std::string bellSoundPath;
     int scrollbackLines = 0;

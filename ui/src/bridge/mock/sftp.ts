@@ -89,14 +89,14 @@ function buildTree(): FsNode {
     file('.profile', 807, 120),
     file('.bash_history', 18_420, 0.01, 0o600),
     dir('.ssh', 0o700, 60, [file('authorized_keys', 1_162, 60, 0o600), file('known_hosts', 2_840, 5, 0o644)]),
-    dir('projects', 0o755, 0.1, [dir('sshterm', 0o755, 0.1, projectFiles), dir('dotfiles', 0o755, 90)]),
+    dir('projects', 0o755, 0.1, [dir('sshtermaq', 0o755, 0.1, projectFiles), dir('dotfiles', 0o755, 90)]),
     dir('logs', 0o755, 0.5, logs),
     dir('Downloads', 0o755, 10, [file('ubuntu-24.04-server.iso', 2_754_981_888, 10), file('photo.jpg', 3_481_002, 12)]),
     file('backup-2026-10-01.tar.gz', 1_288_490_188, 12),
     file('notes.txt', 2_048, 0.3),
     file('deploy.sh', 1_337, 6, 0o755),
     file('report.pdf', 845_112, 2),
-    link('current', `${HOME}/projects/sshterm`),
+    link('current', `${HOME}/projects/sshtermaq`),
     link('latest.log', `${HOME}/logs/app-2026-09-01.log`)
   ]);
   return dir('', 0o755, 200, [
@@ -511,7 +511,7 @@ export function registerSftpMocks(ctx: MockContext): void {
           sftpId: id,
           direction: 'download',
           name: baseName(remotePath),
-          localPath: `C:\\Users\\demo\\AppData\\Local\\Temp\\SSHTerm\\mock\\${baseName(remotePath)}`,
+          localPath: `C:\\Users\\demo\\AppData\\Local\\Temp\\SSHTermaq\\mock\\${baseName(remotePath)}`,
           remotePath,
           total: node.size,
           origin: 'open'
@@ -618,7 +618,7 @@ export function registerSftpMocks(ctx: MockContext): void {
     session(id);
     const editId = `mock-edit-${nextId++}`;
     const ev = (state: EditEvent['state']) =>
-      ctx.emit('sftp:onEdit', { editId, sftpId: id, remotePath, localPath: `C:\\Users\\demo\\AppData\\Local\\Temp\\SSHTerm\\mock\\${baseName(remotePath)}`, state });
+      ctx.emit('sftp:onEdit', { editId, sftpId: id, remotePath, localPath: `C:\\Users\\demo\\AppData\\Local\\Temp\\SSHTermaq\\mock\\${baseName(remotePath)}`, state });
     setTimeout(() => ev('opened'), 50);
     setTimeout(() => ev('uploading'), 3000);
     setTimeout(() => ev('uploaded'), 3600);

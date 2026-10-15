@@ -6,7 +6,7 @@
 
 namespace st::sftpimpl {
 
-/** %TEMP%\SSHTerm */
+/** %TEMP%\SSHTermaq */
 std::filesystem::path tempRoot();
 /** A new empty folder below tempRoot() (old ones are pruned once per process). */
 std::filesystem::path newTempFolder();

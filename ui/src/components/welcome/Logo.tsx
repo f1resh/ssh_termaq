@@ -1,31 +1,57 @@
 /**
- * SSHTerm logo: a rounded tile with a terminal prompt and a trail of connected nodes.
- * Pure SVG so it scales crisply; colours come from the accent token with a fixed violet partner.
+ * SSHTermaq logo: a neon tube on black — a terminal window whose corner grows the tail of a "Q", with a pink ">_"
+ * prompt inside (terminus ad quem: the end point toward which). Pure SVG: the glow is a blurred copy of the strokes,
+ * under a solid tube and a light core, so it reads at 18 px in the title bar and at 56 px on the welcome screen.
+ * The .exe icon is the same drawing, rendered by native/res/tools/make_icon.py.
  */
 import { useId } from 'react';
 
+const TILE = '#08050c';
+const FRAME = '#e040fb'; // neon magenta
+const FRAME_CORE = '#ffe4ff';
+const PROMPT = '#ff3db8'; // neon pink
+const PROMPT_CORE = '#ffe0f2';
+
+/** Window outline and the Q's tail. */
+const frame = (
+  <>
+    <rect x="22" y="24" width="72" height="68" rx="18" />
+    <line x1="88" y1="86" x2="104" y2="102" />
+  </>
+);
+
+/** The ">_" prompt. */
+const prompt = (
+  <>
+    <path d="M38 46 L50 57 L38 68" />
+    <line x1="57" y1="69" x2="74" y2="69" />
+  </>
+);
+
 export function Logo({ size = 64, className }: { size?: number; className?: string }) {
-  const gid = useId().replace(/:/g, '');
+  const glow = `glow-${useId().replace(/:/g, '')}`;
   return (
-    <svg className={className} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="SSHTerm">
+    <svg className={className} width={size} height={size} viewBox="0 0 120 120" role="img" aria-label="SSHTermaq">
       <defs>
-        <linearGradient id={`lg-${gid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--accent)" />
-          <stop offset="1" stopColor="color-mix(in srgb, var(--accent) 35%, #8b5cf6)" />
-        </linearGradient>
-        <linearGradient id={`sh-${gid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.28" />
-          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
+        <filter id={glow} x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="5" />
+        </filter>
       </defs>
-      <rect x="2" y="2" width="60" height="60" rx="15" fill={`url(#lg-${gid})`} />
-      <rect x="2" y="2" width="60" height="60" rx="15" fill={`url(#sh-${gid})`} />
-      <path d="M15 22 L26 31 L15 40" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="30" y="37" width="17" height="5" rx="2.5" fill="#fff" />
-      <circle cx="44" cy="19" r="3" fill="#fff" opacity="0.95" />
-      <circle cx="51" cy="26" r="2.2" fill="#fff" opacity="0.7" />
-      <circle cx="37" cy="23" r="1.8" fill="#fff" opacity="0.55" />
-      <path d="M37 23 L44 19 L51 26" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.4" />
+      <rect width="120" height="120" rx="26" fill={TILE} />
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g filter={`url(#${glow})`} strokeWidth="10" opacity="0.85">
+          <g stroke={FRAME}>{frame}</g>
+          <g stroke={PROMPT}>{prompt}</g>
+        </g>
+        <g strokeWidth="6.5" opacity="0.85">
+          <g stroke={FRAME}>{frame}</g>
+          <g stroke={PROMPT}>{prompt}</g>
+        </g>
+        <g strokeWidth="2.8">
+          <g stroke={FRAME_CORE}>{frame}</g>
+          <g stroke={PROMPT_CORE}>{prompt}</g>
+        </g>
+      </g>
     </svg>
   );
 }

@@ -1,9 +1,10 @@
 /**
  * App information + third-party notices, shared by the About dialog and the Settings › About page.
  */
-import { ExternalLink, FolderOpen, Terminal } from 'lucide-react';
+import { ExternalLink, FolderOpen } from 'lucide-react';
 import { api } from '@/bridge/api';
 import { Button } from '@/components/ui';
+import { Logo } from '@/components/welcome/Logo';
 import { APP_NAME } from '@shared/defaults';
 import type { AppInfo } from '@shared/types';
 import { Badge, Spinner } from '../common/controls';
@@ -34,9 +35,7 @@ export function AboutContent({ compact }: { compact?: boolean }) {
   return (
     <div className={compact ? 'about about--compact' : 'about'}>
       <div className="about__hero">
-        <div className="about__logo" aria-hidden>
-          <Terminal size={28} />
-        </div>
+        <Logo size={56} className="about__logo" />
         <div>
           <div className="about__name">{info?.name || APP_NAME}</div>
           <div className="about__version">
@@ -47,7 +46,11 @@ export function AboutContent({ compact }: { compact?: boolean }) {
               </Badge>
             )}
           </div>
-          <div className="about__tagline">A modern SSH, Telnet, Rlogin, Raw and Serial client for Windows.</div>
+          <div className="about__slogan">Your ultimate destination</div>
+          <div className="about__tagline">
+            A modern SSH, Telnet, Rlogin, Raw and Serial client for Windows. The name comes from <i>terminus ad quem</i>, Latin
+            for “the end point toward which”.
+          </div>
         </div>
       </div>
 
@@ -93,7 +96,7 @@ export function AboutContent({ compact }: { compact?: boolean }) {
         ))}
       </ul>
       <p className="about__note">
-        Session import and feature set are modelled on PuTTY by Simon Tatham (MIT licence). SSHTerm is not affiliated with the PuTTY project.
+        Session import and feature set are modelled on PuTTY by Simon Tatham (MIT licence). SSHTermaq is not affiliated with the PuTTY project.
       </p>
     </div>
   );

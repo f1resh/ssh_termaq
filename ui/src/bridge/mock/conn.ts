@@ -44,7 +44,7 @@ export function registerConnMocks(ctx: MockContext): void {
       log(c, 'Connected (mock)');
       out(
         c,
-        `Welcome to the \x1b[1mSSHTerm\x1b[0m mock shell (${s.protocol} ${sessionLabel(s)}).\r\n` +
+        `Welcome to the \x1b[1mSSHTermaq\x1b[0m mock shell (${s.protocol} ${sessionLabel(s)}).\r\n` +
           `Type \x1b[33mhelp\x1b[0m, \x1b[33mcolors\x1b[0m, \x1b[33mexit\x1b[0m.\r\n\r\n` +
           prompt()
       );

@@ -184,7 +184,7 @@ TEST_CASE("dnd: virtual data object", "[dnd]") {
     CHECK(src->enumerations == 1);
 
     // Generic store (drag image helper data and the like)
-    FORMATETC custom = fmt(L"SSHTerm.Test", TYMED_HGLOBAL);
+    FORMATETC custom = fmt(L"SSHTermaq.Test", TYMED_HGLOBAL);
     CHECK(obj->QueryGetData(&custom) == DV_E_FORMATETC);
     STGMEDIUM in{};
     in.tymed = TYMED_HGLOBAL;

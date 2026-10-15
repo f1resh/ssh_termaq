@@ -127,7 +127,7 @@ private:
     DWORD uiThreadId_ = 0;
     std::unique_ptr<WebView> web_;
     std::string browserVersion_;
-    std::wstring appOrigin_;  // "https://app.sshterm.local" or the dev server origin
+    std::wstring appOrigin_;  // "https://app.sshtermaq.local" or the dev server origin
     UiResources ui_;          // the web UI embedded in the executable (see app/UiResources.h)
 
     std::mutex dispatchMutex_;

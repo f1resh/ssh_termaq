@@ -29,6 +29,12 @@
   margin: 4px 0 0;
   color: var(--text-muted);
 }
+.welcome__hero .welcome__slogan {
+  margin-top: 2px;
+  color: var(--accent2, var(--accent));
+  font-weight: 550;
+  letter-spacing: 0.01em;
+}
 .welcome__connect {
   display: flex;
   gap: 8px;

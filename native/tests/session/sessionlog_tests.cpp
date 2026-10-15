@@ -159,7 +159,7 @@ TEST_CASE("sessionlog: off mode, header, directories", "[sessionlog]") {
     log.output("hello", "hello");
     log.close();
     const std::string content = slurp(expected);
-    CHECK(startsWith(content, "=~=~=~=~=~=~=~=~=~=~=~= SSHTerm log "));
+    CHECK(startsWith(content, "=~=~=~=~=~=~=~=~=~=~=~= SSHTermaq log "));
     CHECK(endsWith(content, " =~=~=~=~=~=~=~=~=~=~=~=\r\nhello"));
 
     // Absolute template paths are used as is.

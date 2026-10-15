@@ -272,7 +272,7 @@ bool SessionLog::open(Prompter* prompter, std::string& error) {
         char stamp[64];
         std::snprintf(stamp, sizeof stamp, "%04d.%02d.%02d %02d:%02d:%02d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday,
                       now.tm_hour, now.tm_min, now.tm_sec);
-        impl_->writeLocked(std::string("=~=~=~=~=~=~=~=~=~=~=~= SSHTerm log ") + stamp +
+        impl_->writeLocked(std::string("=~=~=~=~=~=~=~=~=~=~=~= SSHTermaq log ") + stamp +
                            " =~=~=~=~=~=~=~=~=~=~=~=\r\n");
     }
     return true;

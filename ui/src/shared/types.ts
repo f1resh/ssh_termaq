@@ -326,6 +326,8 @@ export interface AppThemeColors {
   accent: string;
   accentHover: string;
   accentFg: string;
+  /** Second accent (the neon pink of SSHTermaq Neon); `var(--accent2, var(--accent))` where a theme has none. */
+  accent2?: string;
   danger: string;
   warning: string;
   success: string;

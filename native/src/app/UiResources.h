@@ -1,11 +1,11 @@
 #pragma once
-// The web UI (ui/dist) embedded in SSHTerm.exe and served to WebView2 from memory, so the program needs no `ui`
+// The web UI (ui/dist) embedded in SSHTermaq.exe and served to WebView2 from memory, so the program needs no `ui`
 // folder next to it.
 //
 // Build: cmake/EmbedUi.cmake turns ui/dist into a generated resource script. Every file becomes a resource of type
 // "UIFILE" with a numeric id (2, 3, ...); resource UIFILE #1 is the index, one "<id>\t<path>" line per file, paths
 // relative to ui/dist with '/' separators ("index.html", "assets/index-1a2b3c.js").
-// Run time: MainWindow answers WebView2's requests for https://app.sshterm.local/<path> with find(path). Lookups are
+// Run time: MainWindow answers WebView2's requests for https://app.sshtermaq.local/<path> with find(path). Lookups are
 // exact matches in an in-memory table, never file system access.
 #include "core/Win.h"
 
@@ -35,7 +35,7 @@ private:
 };
 
 /**
- * Path relative to the UI root for a request URI under `origin` ("https://app.sshterm.local"): query and fragment
+ * Path relative to the UI root for a request URI under `origin` ("https://app.sshtermaq.local"): query and fragment
  * dropped, percent-decoded, "" or a trailing '/' -> "index.html". nullopt when the URI is not under `origin` or has a
  * malformed escape. The origin comparison ignores case.
  */

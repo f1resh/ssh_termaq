@@ -25,7 +25,7 @@ export function resolveAppThemeId(themeSetting: string, systemDark: boolean): st
 /** Resolve the app theme id ('system' follows the OS preference). */
 export function resolveAppTheme(settings: AppSettings, systemDark: boolean): AppTheme {
   const id = resolveAppThemeId(settings.appearance.theme, systemDark);
-  return APP_THEMES.find((t) => t.id === id) ?? (systemDark ? APP_THEMES[0] : APP_THEMES[1]) ?? APP_THEMES[0];
+  return APP_THEMES.find((t) => t.id === id) ?? APP_THEMES.find((t) => t.id === (systemDark ? 'dark' : 'light')) ?? APP_THEMES[0];
 }
 
 /** Terminal colours for a session: session customScheme > session colorScheme > global scheme > app theme default. */
