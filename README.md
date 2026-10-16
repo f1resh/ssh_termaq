@@ -110,5 +110,23 @@ How everything is tested, the full list of tests and how to run each part: [docs
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What it would take to port SSHTermaq to macOS and Linux (x64 and arm64):
-[docs/CrossPlatformChanges.md](docs/CrossPlatformChanges.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## License
+
+SSHTermaq is released under the [MIT License](LICENSE).
+
+The release includes third-party components under their own licenses, listed in `THIRD-PARTY-NOTICES.txt` next to
+the program:
+
+| Component | License |
+|---|---|
+| [libssh](https://www.libssh.org/) | LGPL-2.1; shipped as the separate `ssh.dll`, which you may replace with your own build of libssh |
+| [OpenSSL](https://www.openssl.org/) | Apache-2.0 |
+| [zlib](https://zlib.net/) | zlib |
+| [nlohmann/json](https://github.com/nlohmann/json), [WIL](https://github.com/microsoft/wil), [React](https://react.dev/), [zustand](https://github.com/pmndrs/zustand), [xterm.js](https://xtermjs.org/) | MIT |
+| [Lucide](https://lucide.dev/) icons | ISC |
+| [WebView2 SDK](https://developer.microsoft.com/microsoft-edge/webview2/) | BSD-3-Clause |
+
+Session import and the feature set are modelled on [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/) by
+Simon Tatham (MIT). SSHTermaq is not affiliated with the PuTTY project.
