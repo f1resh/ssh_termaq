@@ -1,0 +1,17 @@
+# Line endings: LF in the repository and in every checkout, on Windows and macOS alike (both edit the same files;
+# MSVC, PowerShell, Inno Setup and rc.exe all read LF). Git decides what is text; the binary types are named below.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.pfx binary
+*.p12 binary

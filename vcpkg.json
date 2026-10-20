@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "sshtermaq",
+  "dependencies": [
+    {
+      "name": "libssh",
+      "features": [
+        "zlib"
+      ]
+    },
+    "openssl",
+    "zlib",
+    "nlohmann-json",
+    {
+      "name": "webview2",
+      "platform": "windows"
+    },
+    "catch2"
+  ],
+  "builtin-baseline": "e456309491fd875487bf02b8a0dca76c1b1b00cc"
+}

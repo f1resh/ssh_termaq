@@ -1,0 +1,23 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+}
+:root[data-material='mica'] .app,
+:root[data-material='acrylic'] .app {
+  background: transparent;
+}
+.app__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.app__main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+}

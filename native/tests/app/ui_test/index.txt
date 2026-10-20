@@ -1,0 +1,4 @@
+# test index: <resource id>	<path>
+2	index.html
+3	assets/app.js
+9	missing.js

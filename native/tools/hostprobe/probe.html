@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HostProbe</title>
+<link rel="stylesheet" href="/node_modules/@xterm/xterm/css/xterm.css">
+<style>
+  body { margin: 0; font: 13px -apple-system, sans-serif; background: #1e1e1e; color: #ddd; }
+  #bar { height: 38px; padding-left: 80px; display: flex; align-items: center; color: #999; }
+  #log { white-space: pre; padding: 8px; height: 180px; overflow: auto; font: 12px ui-monospace, Menlo, monospace; }
+  #term { height: 420px; padding: 0 8px; }
+</style>
+<script src="/node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="/node_modules/@xterm/addon-webgl/lib/addon-webgl.js"></script>
+</head>
+<body>
+<div id="bar">HostProbe: measuring, the window closes by itself</div>
+<div id="log"></div>
+<div id="term"></div>
+<script>
+// Drives HostProbe.mm: each test asks the host for something and measures what arrives. ?plan=quick|full
+const params = new URLSearchParams(location.search);
+const MB = 1e6;
+const post = (o) => window.webkit.messageHandlers.st.postMessage(JSON.stringify(o));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const log = (s) => {
+  const el = document.getElementById('log');
+  el.textContent += s + '\n';
+  el.scrollTop = el.scrollHeight;
+};
+
+/* ---- the four ways in: evaluateJavaScript / callAsyncJavaScript call these, the pull and stream loops feed them ---- */
+let onMessage = () => {};
+window.__stDeliver = (arr) => { for (const m of arr) onMessage(m); };
+window.__stDeliverText = (s) => window.__stDeliver(JSON.parse(s));
+
+async function pullLoop(state) {
+  while (!state.stop) window.__stDeliverText(await window.webkit.messageHandlers.stpull.postMessage(0));
+}
+
+async function streamLoop(state) {
+  const res = await fetch('/__events');
+  state.reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  while (!state.stop) {
+    const { value, done } = await state.reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, i);
+      buf = buf.slice(i + 1);
+      if (line) onMessage(JSON.parse(line));
+    }
+  }
+}
+
+function makeTerm(webgl) {
+  const el = document.getElementById('term');
+  el.innerHTML = '';
+  const t = new Terminal({ cols: 120, rows: 28, scrollback: 10000 });
+  t.open(el);
+  let renderer = 'dom';
+  if (webgl) {
+    try {
+      t.loadAddon(new WebglAddon.WebglAddon());
+      renderer = 'webgl';
+    } catch (e) {
+      log('webgl addon failed: ' + e);
+    }
+  }
+  t.renderer = renderer;
+  return t;
+}
+
+/** Floods `mb` MB of conn:onData messages through `mode` and measures delivery, responsiveness and reply latency. */
+async function flood(o) {
+  const { mode, mb, chunk = 65536, consumer = 'count', dispatch = 'source', batchMax = 1 << 20, inFlight = 4, rateMBs = 0, panel = null } = o;
+  const total = Math.round(mb * MB);
+  const count = Math.ceil(total / chunk);
+  let got = 0;
+  let resolveDone;
+  const done = new Promise((r) => (resolveDone = r));
+  let last = performance.now(), maxGap = 0, gapsOver50 = 0;
+  const tick = setInterval(() => {
+    const n = performance.now();
+    maxGap = Math.max(maxGap, n - last);
+    if (n - last > 50) gapsOver50++;
+    last = n;
+  }, 10);
+  let frames = 0, rafOn = true;
+  const raf = () => { frames++; if (rafOn) requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
+  const rtts = [], pingSent = new Map();
+  let pingId = 1;
+  const pinger = setInterval(() => {
+    const id = pingId++;
+    pingSent.set(id, performance.now());
+    post({ cmd: 'ping', id });
+  }, 100);
+  const deliveries = [];
+  const term = consumer.startsWith('xterm') ? makeTerm(consumer === 'xterm-webgl') : null;
+  let pendingWrites = 0;
+  onMessage = (m) => {
+    if (m.t === 'res') {
+      const s = pingSent.get(m.id);
+      if (s !== undefined) { rtts.push(performance.now() - s); pingSent.delete(m.id); }
+      return;
+    }
+    if (m.t !== 'evt' || m.ch !== 'conn:onData') return;
+    got++;
+    if (panel) deliveries.push(Date.now());
+    if (term) {
+      pendingWrites++;
+      term.write(m.args[1], () => { if (--pendingWrites === 0 && got >= count) resolveDone(); });
+    } else if (got >= count) {
+      resolveDone();
+    }
+  };
+  const state = { stop: false };
+  if (mode === 'pull') pullLoop(state);
+  if (mode === 'stream') streamLoop(state).catch((e) => log('stream: ' + e));
+  const t0 = performance.now();
+  post({ cmd: 'flood', mode, bytes: total, chunk, dispatch, batchMax, inFlight, rateMBs });
+  if (panel) setTimeout(() => post({ cmd: 'panel', kind: panel, seconds: 2 }), 600);
+  const result = await Promise.race([done.then(() => 'ok'), sleep(o.timeoutMs || 60000).then(() => 'timeout')]);
+  const ms = performance.now() - t0;
+  state.stop = true;
+  if (state.reader) state.reader.cancel();
+  clearInterval(tick);
+  clearInterval(pinger);
+  rafOn = false;
+  const renderer = term ? term.renderer : undefined;
+  if (term) term.dispose();
+  rtts.sort((a, b) => a - b);
+  const pct = (p) => (rtts.length ? Math.round(rtts[Math.min(rtts.length - 1, Math.floor(p * rtts.length))]) : null);
+  const r = {
+    mode, consumer, renderer, dispatch, inFlight, mb, chunk, rateMBs, panel, result, messages: got, ms: Math.round(ms),
+    MBps: +(total / MB / (ms / 1000)).toFixed(1), maxGapMs: Math.round(maxGap), gapsOver50, fps: Math.round(frames / (ms / 1000)),
+    rttP50: pct(0.5), rttP95: pct(0.95), rttMax: rtts.length ? Math.round(rtts[rtts.length - 1]) : null, pings: rtts.length,
+  };
+  if (panel) r.deliveries = deliveries;
+  const summary = JSON.stringify({ ...r, deliveries: undefined });
+  log(summary);
+  post({ cmd: 'run', result: r, summary });
+  await sleep(300);
+  return r;
+}
+
+function env() {
+  let webgl2 = false, renderer = null;
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    webgl2 = !!gl;
+    const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    renderer = gl && gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER);
+  } catch (e) { renderer = String(e); }
+  const tryIt = (f) => { try { return f(); } catch (e) { return 'throws: ' + e; } };
+  return {
+    userAgent: navigator.userAgent, origin: location.origin, isSecureContext,
+    randomUUID: tryIt(() => typeof crypto.randomUUID === 'function' && crypto.randomUUID().length === 36),
+    subtleCrypto: !!crypto.subtle, clipboard: !!navigator.clipboard, queryLocalFonts: typeof window.queryLocalFonts,
+    webgl2, webglRenderer: renderer, devicePixelRatio,
+    cssColorMix: CSS.supports('color', 'color-mix(in srgb, red, blue)'), cssNesting: CSS.supports('selector(&)'),
+    cssHas: CSS.supports('selector(:has(a))'), structuredClone: typeof structuredClone,
+    localStorage: tryIt(() => { localStorage.setItem('x', '1'); return localStorage.getItem('x') === '1'; }),
+    indexedDB: typeof indexedDB, webkitMessageHandlers: !!(window.webkit && window.webkit.messageHandlers),
+  };
+}
+
+async function zoom() {
+  const out = [];
+  for (const z of [{ pageZoom: 1 }, { pageZoom: 1.5 }, { pageZoom: 1, magnification: 1.5 }, { pageZoom: 1, magnification: 1 }]) {
+    const applied = new Promise((r) => (window.__zoomApplied = r));
+    post({ cmd: 'zoom', ...z });
+    await applied;
+    await sleep(100);
+    out.push({ ...z, devicePixelRatio, innerWidth, innerHeight, visualViewportScale: visualViewport && visualViewport.scale });
+  }
+  log('zoom ' + JSON.stringify(out));
+  return out;
+}
+
+async function chrome() {
+  const p = new Promise((r) => (window.__chrome = r));
+  post({ cmd: 'chrome' });
+  const c = await p;
+  log('chrome ' + JSON.stringify(c));
+  return c;
+}
+
+async function main() {
+  const plan = params.get('plan') || 'full';
+  const report = { plan, env: env(), runs: [] };
+  log('env ' + JSON.stringify(report.env));
+  report.chrome = await chrome();
+  report.zoom = await zoom();
+  const runs = params.get('runs') ? JSON.parse(params.get('runs'))
+    : plan === 'quick'
+    ? [{ mode: 'call', mb: 20 }]
+    : [
+        { mode: 'eval', mb: 100 }, { mode: 'call', mb: 100 }, { mode: 'pull', mb: 100 }, { mode: 'stream', mb: 100 },
+        { mode: 'call', mb: 100, inFlight: 1 }, { mode: 'eval', mb: 100, inFlight: 1 },
+        { mode: 'call', mb: 32, consumer: 'xterm' }, { mode: 'call', mb: 32, consumer: 'xterm-webgl' },
+        { mode: 'pull', mb: 32, consumer: 'xterm-webgl' },
+        { mode: 'call', mb: 40, rateMBs: 10, panel: 'sheet' }, { mode: 'call', mb: 40, rateMBs: 10, panel: 'modal' },
+        { mode: 'call', mb: 40, rateMBs: 10, panel: 'modal', dispatch: 'gcd' },
+        { mode: 'pull', mb: 40, rateMBs: 10, panel: 'sheet' }, { mode: 'pull', mb: 40, rateMBs: 10, panel: 'modal' },
+      ];
+  for (const r of runs) await flood(r);  // each result goes to the host as it comes (runs in the output)
+  post({ cmd: 'done', report });
+}
+
+main().catch((e) => post({ cmd: 'done', report: { error: String(e && e.stack || e) } }));
+</script>
+</body>
+</html>

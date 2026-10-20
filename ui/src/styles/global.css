@@ -1,0 +1,172 @@
+/*
+ * Global design tokens + reset. Colour tokens are (re)assigned at runtime from the active AppTheme by
+ * src/theme/applyTheme.ts — every key of AppThemeColors maps to a CSS variable (bgElevated -> --bg-elevated).
+ * Components must use these variables, never hard-coded colours.
+ */
+:root {
+  /* colour defaults (dark) — overwritten by applyTheme */
+  --bg: #1b1d22;
+  --bg-elevated: #23262d;
+  --bg-sunken: #15171b;
+  --surface: #2a2e36;
+  --surface-hover: #323742;
+  --surface-active: #3a404c;
+  --border: #31353e;
+  --border-strong: #454b57;
+  --text: #e6e8ec;
+  --text-muted: #a3a9b5;
+  --text-faint: #6f7684;
+  --accent: #4c8dff;
+  --accent-hover: #6aa1ff;
+  --accent-fg: #ffffff;
+  --danger: #f2555a;
+  --warning: #e3a23b;
+  --success: #3fb968;
+  --info: #4c8dff;
+  --titlebar: #15171b;
+  --titlebar-fg: #c9ced8;
+  --sidebar: #191b20;
+  --tab-active: #1b1d22;
+  --tab-hover: #22252b;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --scrollbar: rgba(255, 255, 255, 0.14);
+  --scrollbar-hover: rgba(255, 255, 255, 0.26);
+
+  /* non-colour tokens */
+  --font-ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-lg: 15px;
+  --fs-xl: 18px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --titlebar-height: 40px;
+  --statusbar-height: 24px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  --transition: 120ms ease;
+
+  color-scheme: dark;
+}
+
+:root[data-variant='light'] {
+  color-scheme: light;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Mica / acrylic: the host makes the window background translucent; chrome surfaces become transparent. */
+:root[data-material='mica'] body,
+:root[data-material='acrylic'] body {
+  background: transparent;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+a {
+  color: var(--accent);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Title bar drag regions (WebView2 non-client region support). */
+.drag-region {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+.no-drag {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

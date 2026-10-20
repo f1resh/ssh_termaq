@@ -1,0 +1,24 @@
+/build/
+/out/
+/vcpkg_installed/
+/.tools/
+/dist/
+*.user
+.vs/
+/ui/node_modules/
+/ui/dist/
+/artifacts/
+
+.claude
+
+/docs/notes/
+notes.md
+
+# Code signing: local configuration and keys (scripts/windows/sign.ps1)
+/scripts/windows/signing.json
+/scripts/macos/signing.json
+*.pfx
+*.p12
+
+# macOS Finder metadata
+.DS_Store

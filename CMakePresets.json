@@ -1,0 +1,82 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "vs",
+      "displayName": "Visual Studio 2022 x64 (vcpkg)",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/vs",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-st",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed",
+        "VCPKG_MANIFEST_INSTALL": "OFF"
+      },
+      "environment": {
+        "VCPKG_ROOT": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/vcpkg"
+      }
+    },
+    {
+      "name": "mac-base",
+      "hidden": true,
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/.tools/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_MAKE_PROGRAM": "${sourceDir}/.tools/bin/ninja",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "VCPKG_MANIFEST_INSTALL": "OFF",
+        "VCPKG_APPLOCAL_DEPS": "OFF"
+      }
+    },
+    {
+      "name": "mac-arm64",
+      "inherits": "mac-base",
+      "displayName": "macOS arm64 (Apple silicon)",
+      "binaryDir": "${sourceDir}/build/mac-arm64",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-st",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed/mac-arm64"
+      }
+    },
+    {
+      "name": "mac-x64",
+      "inherits": "mac-base",
+      "displayName": "macOS x86_64 (Intel; runs under Rosetta on Apple silicon)",
+      "binaryDir": "${sourceDir}/build/mac-x64",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        "VCPKG_TARGET_TRIPLET": "x64-osx-st",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed/mac-x64"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "vs", "configuration": "Debug" },
+    { "name": "release", "configurePreset": "vs", "configuration": "Release" },
+    { "name": "mac-arm64-debug", "configurePreset": "mac-arm64", "configuration": "Debug" },
+    { "name": "mac-arm64-release", "configurePreset": "mac-arm64", "configuration": "Release" },
+    { "name": "mac-x64-debug", "configurePreset": "mac-x64", "configuration": "Debug" },
+    { "name": "mac-x64-release", "configurePreset": "mac-x64", "configuration": "Release" }
+  ],
+  "testPresets": [
+    {
+      "name": "mac-arm64",
+      "configurePreset": "mac-arm64",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "mac-x64",
+      "configurePreset": "mac-x64",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

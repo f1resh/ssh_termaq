@@ -1,0 +1,198 @@
+.imp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 0 !important;
+}
+.imp-sources {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+.imp-source {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), transform var(--transition);
+}
+.imp-source:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+  transform: translateY(-1px);
+}
+.imp-source__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  flex: none;
+}
+.imp-source__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.imp-source__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.imp-source__desc {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.imp-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0 64px;
+}
+.imp-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* On a short window only the session list gives up height (down to about three rows, then it scrolls); the rest
+   keeps its size, and whatever still does not fit makes the dialog body scroll. Children with overflow: hidden
+   would otherwise be squeezed to nothing (their automatic minimum height is 0). */
+.imp-preview > * {
+  flex: none;
+}
+.imp-preview > .imp-table {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 140px;
+}
+.imp-preview__origin {
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: -4px;
+}
+.imp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.imp-filter {
+  max-width: 280px;
+}
+.imp-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.imp-row {
+  display: grid;
+  grid-template-columns: 36px minmax(140px, 1.2fr) minmax(160px, 1.5fr) 80px 110px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  min-height: 32px;
+}
+.imp-table__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+.imp-item + .imp-item {
+  border-top: 1px solid var(--border);
+}
+.imp-item--off .imp-name,
+.imp-item--off .imp-addr {
+  color: var(--text-faint);
+}
+.imp-name,
+.imp-addr {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.imp-proto {
+  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.imp-badges {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.imp-warnings {
+  margin: 0 0 8px;
+  padding: 6px 12px 6px 60px;
+  color: var(--warning);
+  font-size: var(--fs-sm);
+}
+.imp-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  align-items: start;
+}
+.imp-checks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.imp-errors {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.imp-footer {
+  margin: 4px -20px 0;
+}
+.imp-footer__spacer {
+  flex: 1;
+}
+.imp-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0 20px;
+  text-align: center;
+}
+.imp-result__icon {
+  color: var(--success);
+}
+.imp-result__stats {
+  display: flex;
+  gap: 10px;
+}
+.imp-stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+.imp-stat__n {
+  font-size: 22px;
+  font-weight: 650;
+}
+.imp-stat__label {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}

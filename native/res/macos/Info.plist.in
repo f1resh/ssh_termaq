@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SSHTermaq.app's Info.plist; CMakeLists.txt fills in @PROJECT_VERSION@ (configure_file). -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>SSHTermaq</string>
+  <key>CFBundleDisplayName</key>
+  <string>SSHTermaq</string>
+  <key>CFBundleExecutable</key>
+  <string>SSHTermaq</string>
+  <key>CFBundleIdentifier</key>
+  <string>io.github.f1resh.sshtermaq</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@PROJECT_VERSION@</string>
+  <key>CFBundleVersion</key>
+  <string>@PROJECT_VERSION@</string>
+  <key>CFBundleIconFile</key>
+  <string>app</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2026 Pavel Akulov. MIT License.</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>12.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.developer-tools</string>
+  <key>NSPrincipalClass</key>
+  <string>NSApplication</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>NSSupportsAutomaticTermination</key>
+  <false/>
+  <key>NSSupportsSuddenTermination</key>
+  <false/>
+
+  <!-- Links that open a session (the command line takes the same URLs). -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>SSH, SFTP, SCP and Telnet session</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>ssh</string>
+        <string>sftp</string>
+        <string>scp</string>
+        <string>telnet</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- --dev-url http://localhost:5173 (the UI's dev server). -->
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+  </dict>
+
+  <!-- What macOS shows when it asks for access. -->
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>SSHTermaq connects to the hosts on your local network that you open sessions to.</string>
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>SSHTermaq transfers files to and from your Desktop when you ask it to.</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>SSHTermaq transfers files to and from your Documents folder when you ask it to.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>SSHTermaq transfers files to and from your Downloads folder when you ask it to.</string>
+  <key>NSRemovableVolumesUsageDescription</key>
+  <string>SSHTermaq transfers files to and from removable drives when you ask it to.</string>
+  <key>NSNetworkVolumesUsageDescription</key>
+  <string>SSHTermaq transfers files to and from network volumes when you ask it to.</string>
+</dict>
+</plist>

@@ -1,0 +1,817 @@
+﻿// The host window on Windows: Win32 custom frame + WebView2 (see HostWindowWin.h).
+#include "platform/win/ui/HostWindowWin.h"
+
+#include "core/Log.h"
+#include "core/Strings.h"
+#include "platform/sys/Errors.h"
+#include "platform/win/sys/WinText.h"
+
+#include <objbase.h>
+#include <unknwn.h>
+#include <WebView2.h>
+#include <dwmapi.h>
+#include <shellapi.h>
+#include <shlwapi.h>
+#include <windowsx.h>
+#include <wrl.h>
+
+#include <algorithm>
+#include <cmath>
+
+using Microsoft::WRL::Callback;
+using Microsoft::WRL::ComPtr;
+
+namespace st::ui {
+
+namespace {
+
+constexpr wchar_t kAppHost[] = L"app.sshtermaq.local";
+constexpr UINT WM_APP_DISPATCH = WM_APP + 1;
+constexpr int kMinWidth = 640;
+constexpr int kMinHeight = 400;
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+#ifndef DWMWA_SYSTEMBACKDROP_TYPE
+#define DWMWA_SYSTEMBACKDROP_TYPE 38
+#endif
+
+int scale(int v, UINT dpi) { return MulDiv(v, static_cast<int>(dpi), 96); }
+
+std::wstring hrMessage(HRESULT hr) {
+    return widen(sys::errorMessage(static_cast<unsigned long>(hr))) + L" (0x" + [&] {
+        wchar_t buf[16];
+        swprintf_s(buf, L"%08X", static_cast<unsigned>(hr));
+        return std::wstring(buf);
+    }() + L")";
+}
+
+}  // namespace
+
+struct HostWindowWin::WebView {
+    ComPtr<ICoreWebView2Environment> env;
+    ComPtr<ICoreWebView2Controller> controller;
+    ComPtr<ICoreWebView2> view;
+};
+
+HostWindowWin::HostWindowWin(HostWindowOptions options) : options_(std::move(options)), web_(std::make_unique<WebView>()) {
+    uiThreadId_ = GetCurrentThreadId();
+}
+
+std::unique_ptr<HostWindow> createHostWindow(HostWindowOptions options) {
+    return std::make_unique<HostWindowWin>(std::move(options));
+}
+
+std::string bundledUiOrigin() { return narrow(std::wstring(L"https://") + kAppHost); }
+
+HostWindowWin::~HostWindowWin() {
+    if (web_ && web_->controller) web_->controller->Close();
+    web_.reset();
+    if (hwnd_) {
+        SetWindowLongPtrW(hwnd_, GWLP_USERDATA, 0);
+        DestroyWindow(hwnd_);
+    }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Dispatcher                                                                */
+/* ------------------------------------------------------------------------ */
+
+void HostWindowWin::post(std::function<void()> fn) {
+    bool needPost = false;
+    {
+        std::lock_guard lock(dispatchMutex_);
+        dispatchQueue_.push_back(std::move(fn));
+        if (!dispatchPosted_) {
+            dispatchPosted_ = true;
+            needPost = true;
+        }
+    }
+    if (needPost && hwnd_) PostMessageW(hwnd_, WM_APP_DISPATCH, 0, 0);
+}
+
+void HostWindowWin::postWebMessage(const std::string& json) {
+    if (web_ && web_->view && !webViewFailed_) web_->view->PostWebMessageAsJson(widen(json).c_str());
+}
+
+bool HostWindowWin::isUiThread() const { return GetCurrentThreadId() == uiThreadId_; }
+
+void HostWindowWin::drainDispatchQueue() {
+    std::deque<std::function<void()>> batch;
+    {
+        std::lock_guard lock(dispatchMutex_);
+        batch.swap(dispatchQueue_);
+        dispatchPosted_ = false;
+    }
+    for (auto& fn : batch) {
+        try {
+            fn();
+        } catch (const std::exception& e) {
+            applog::error(std::string("Dispatched task threw: ") + e.what());
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Window creation                                                           */
+/* ------------------------------------------------------------------------ */
+
+bool HostWindowWin::create() {
+    const int showCommand = SW_SHOWDEFAULT;
+    HINSTANCE inst = GetModuleHandleW(nullptr);
+    WNDCLASSEXW wc{sizeof(wc)};
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = &HostWindowWin::wndProc;
+    wc.hInstance = inst;
+    wc.hIcon = LoadIconW(inst, MAKEINTRESOURCEW(1));
+    wc.hIconSm = static_cast<HICON>(LoadImageW(inst, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                               GetSystemMetrics(SM_CYSMICON), 0));
+    if (!wc.hIcon) wc.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hbrBackground = nullptr;
+    wc.lpszClassName = kWindowClass;
+    if (!RegisterClassExW(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+        applog::error("RegisterClassEx failed: " + sys::lastErrorMessage());
+        return false;
+    }
+
+    hwnd_ = CreateWindowExW(WS_EX_APPWINDOW, kWindowClass, L"SSHTermaq", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+                            CW_USEDEFAULT, CW_USEDEFAULT, 1280, 800, nullptr, nullptr, inst, this);
+    if (!hwnd_) {
+        applog::error("CreateWindowEx failed: " + sys::lastErrorMessage());
+        return false;
+    }
+    // Make DWM extend the frame (shadow + Win11 rounded corners) and recompute the client area.
+    MARGINS m{0, 0, 1, 0};
+    DwmExtendFrameIntoClientArea(hwnd_, &m);
+    applyFrameTheme();
+    SetWindowPos(hwnd_, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    restorePlacement(showCommand);
+    UpdateWindow(hwnd_);
+    initWebView();
+    return true;
+}
+
+LRESULT CALLBACK HostWindowWin::wndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    HostWindowWin* self = nullptr;
+    if (msg == WM_NCCREATE) {
+        auto* cs = reinterpret_cast<CREATESTRUCTW*>(lp);
+        self = static_cast<HostWindowWin*>(cs->lpCreateParams);
+        self->hwnd_ = hwnd;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
+    } else {
+        self = reinterpret_cast<HostWindowWin*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    }
+    if (!self) return DefWindowProcW(hwnd, msg, wp, lp);
+    try {
+        return self->handleMessage(msg, wp, lp);
+    } catch (const std::exception& e) {
+        applog::error(std::string("Window message handler threw: ") + e.what());
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
+}
+
+UINT HostWindowWin::dpi() const { return hwnd_ ? GetDpiForWindow(hwnd_) : 96; }
+
+LRESULT HostWindowWin::handleMessage(UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_APP_DISPATCH:
+            drainDispatchQueue();
+            return 0;
+
+        case WM_NCCALCSIZE:
+            return onNcCalcSize(wp, lp);
+
+        case WM_NCHITTEST:
+            return onNcHitTest(lp);
+
+        case WM_SIZE:
+            onSize(wp);
+            return 0;
+
+        case WM_MOVE:
+        case WM_MOVING:
+            if (web_->controller) web_->controller->NotifyParentWindowPositionChanged();
+            break;
+
+        case WM_GETMINMAXINFO: {
+            auto* mmi = reinterpret_cast<MINMAXINFO*>(lp);
+            mmi->ptMinTrackSize.x = scale(kMinWidth, dpi());
+            mmi->ptMinTrackSize.y = scale(kMinHeight, dpi());
+            return 0;
+        }
+
+        case WM_DPICHANGED: {
+            auto* r = reinterpret_cast<RECT*>(lp);
+            SetWindowPos(hwnd_, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+            return 0;
+        }
+
+        case WM_ERASEBKGND: {
+            RECT rc;
+            GetClientRect(hwnd_, &rc);
+            HBRUSH b = CreateSolidBrush(backgroundColor());
+            FillRect(reinterpret_cast<HDC>(wp), &rc, b);
+            DeleteObject(b);
+            return 1;
+        }
+
+        case WM_ACTIVATE: {
+            const bool focused = LOWORD(wp) != WA_INACTIVE;
+            if (onFocusChanged) onFocusChanged(focused);
+            if (focused && web_->controller) web_->controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+            break;
+        }
+
+        case WM_SETFOCUS:
+            if (web_->controller) web_->controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+            return 0;
+
+        case WM_SETTINGCHANGE:
+            if (lp && wcscmp(reinterpret_cast<const wchar_t*>(lp), L"ImmersiveColorSet") == 0) {
+                applyFrameTheme();
+                if (onSystemThemeChanged) onSystemThemeChanged(systemPrefersDark());
+                InvalidateRect(hwnd_, nullptr, TRUE);
+            }
+            break;
+
+        case WM_COPYDATA: {
+            auto* cds = reinterpret_cast<COPYDATASTRUCT*>(lp);
+            if (cds && cds->dwData == kCopyDataCommandLine && cds->lpData && cds->cbData >= sizeof(wchar_t)) {
+                std::wstring payload(static_cast<const wchar_t*>(cds->lpData), cds->cbData / sizeof(wchar_t));
+                while (!payload.empty() && payload.back() == L'\0') payload.pop_back();
+                // payload = cwd \0 command line
+                std::wstring cwd, cmd;
+                auto nul = payload.find(L'\0');
+                if (nul == std::wstring::npos) {
+                    cmd = payload;
+                } else {
+                    cwd = payload.substr(0, nul);
+                    cmd = payload.substr(nul + 1);
+                }
+                std::vector<std::string> args = splitCommandLine(cmd);
+                activate();
+                if (onSecondInstance) {
+                    // Defer: don't run app logic inside SendMessage from another process.
+                    post([this, args, cwd] { onSecondInstance(args, std::filesystem::path(cwd)); });
+                }
+                return TRUE;
+            }
+            break;
+        }
+
+        case WM_CLOSE:
+            // The close policy (asking the page while sessions are active) is the onCloseRequested hook's.
+            if (forceClose_ || !onCloseRequested || onCloseRequested()) {
+                savePlacement(true);
+                DestroyWindow(hwnd_);
+            }
+            return 0;
+
+        case WM_DESTROY:
+            savePlacement(true);
+            if (web_->controller) {
+                web_->controller->Close();
+                web_->controller.Reset();
+                web_->view.Reset();
+            }
+            PostQuitMessage(0);
+            return 0;
+
+        default:
+            break;
+    }
+    return DefWindowProcW(hwnd_, msg, wp, lp);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Custom frame                                                              */
+/* ------------------------------------------------------------------------ */
+
+LRESULT HostWindowWin::onNcCalcSize(WPARAM wp, LPARAM lp) {
+    if (!wp) return DefWindowProcW(hwnd_, WM_NCCALCSIZE, wp, lp);
+    auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lp);
+    if (fullscreen_) return 0;  // whole window is client
+    const LONG originalTop = params->rgrc[0].top;
+    LRESULT r = DefWindowProcW(hwnd_, WM_NCCALCSIZE, wp, lp);
+    if (r != 0) return r;
+    // Remove the caption: the client area extends to the top edge of the window.
+    params->rgrc[0].top = originalTop;
+    if (IsZoomed(hwnd_)) {
+        // Maximized windows hang over the monitor by the frame thickness on every side.
+        const UINT d = dpi();
+        params->rgrc[0].top += GetSystemMetricsForDpi(SM_CYFRAME, d) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, d);
+    }
+    return 0;
+}
+
+LRESULT HostWindowWin::onNcHitTest(LPARAM lp) {
+    // Left/right/bottom borders are real non-client area.
+    LRESULT hit = DefWindowProcW(hwnd_, WM_NCHITTEST, 0, lp);
+    if (hit != HTCLIENT || fullscreen_) return hit;
+
+    POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+    ScreenToClient(hwnd_, &pt);
+    if (!IsZoomed(hwnd_)) {
+        const UINT d = dpi();
+        const int border = GetSystemMetricsForDpi(SM_CYFRAME, d) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, d);
+        if (pt.y < border) {
+            RECT rc;
+            GetClientRect(hwnd_, &rc);
+            if (pt.x < border * 2) return HTTOPLEFT;
+            if (pt.x >= rc.right - border * 2) return HTTOPRIGHT;
+            return HTTOP;
+        }
+    }
+    // Points reach the host window only where the web content hands hit-testing back (CSS app-region: drag).
+    return HTCAPTION;
+}
+
+void HostWindowWin::onSize(WPARAM wp) {
+    resizeWebView();
+    const bool maximized = wp == SIZE_MAXIMIZED;
+    if (wp != SIZE_MINIMIZED && maximized != lastMaximized_) {
+        lastMaximized_ = maximized;
+        if (onMaximizedChanged) onMaximizedChanged(maximized);
+    }
+    if (wp != SIZE_MINIMIZED) savePlacement(false);
+}
+
+void HostWindowWin::resizeWebView() {
+    if (!web_->controller) return;
+    RECT rc;
+    GetClientRect(hwnd_, &rc);
+    web_->controller->put_Bounds(rc);
+}
+
+/* ------------------------------------------------------------------------ */
+/* WebView2                                                                  */
+/* ------------------------------------------------------------------------ */
+
+void HostWindowWin::initWebView() {
+    std::error_code ec;
+    std::filesystem::create_directories(options_.webDataDir, ec);
+    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
+        nullptr, options_.webDataDir.wstring().c_str(), nullptr,
+        Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
+            [this](HRESULT result, ICoreWebView2Environment* env) -> HRESULT {
+                onWebViewEnvironment(result, env);
+                return S_OK;
+            })
+            .Get());
+    if (FAILED(hr)) onWebViewEnvironment(hr, nullptr);
+}
+
+void HostWindowWin::onWebViewEnvironment(HRESULT hr, void* environment) {
+    if (FAILED(hr) || !environment) {
+        webViewFailed_ = true;
+        applog::error("WebView2 environment creation failed: " + narrow(hrMessage(hr)));
+        if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+            int r = MessageBoxW(hwnd_,
+                                L"SSHTermaq needs the Microsoft Edge WebView2 Runtime, which is not installed.\n\n"
+                                L"Open the download page now?",
+                                L"SSHTermaq", MB_ICONERROR | MB_YESNO);
+            if (r == IDYES)
+                ShellExecuteW(nullptr, L"open", L"https://developer.microsoft.com/microsoft-edge/webview2/", nullptr,
+                              nullptr, SW_SHOWNORMAL);
+        } else {
+            MessageBoxW(hwnd_, (L"Could not start the WebView2 runtime:\n" + hrMessage(hr)).c_str(), L"SSHTermaq",
+                        MB_ICONERROR);
+        }
+        PostMessageW(hwnd_, WM_CLOSE, 0, 0);
+        forceClose_ = true;
+        return;
+    }
+    web_->env = static_cast<ICoreWebView2Environment*>(environment);
+    ComPtr<ICoreWebView2Environment> env = web_->env;
+    hr = env->CreateCoreWebView2Controller(
+        hwnd_, Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+                   [this](HRESULT result, ICoreWebView2Controller* controller) -> HRESULT {
+                       onWebViewController(result, controller);
+                       return S_OK;
+                   })
+                   .Get());
+    if (FAILED(hr)) onWebViewController(hr, nullptr);
+}
+
+void HostWindowWin::onWebViewController(HRESULT hr, void* controller) {
+    if (FAILED(hr) || !controller) {
+        webViewFailed_ = true;
+        applog::error("WebView2 controller creation failed: " + narrow(hrMessage(hr)));
+        MessageBoxW(hwnd_, (L"Could not create the WebView2 control:\n" + hrMessage(hr)).c_str(), L"SSHTermaq",
+                    MB_ICONERROR);
+        forceClose_ = true;
+        PostMessageW(hwnd_, WM_CLOSE, 0, 0);
+        return;
+    }
+    web_->controller = static_cast<ICoreWebView2Controller*>(controller);
+    web_->controller->get_CoreWebView2(&web_->view);
+
+    ComPtr<ICoreWebView2Environment> env = web_->env;
+    LPWSTR version = nullptr;
+    if (SUCCEEDED(env->get_BrowserVersionString(&version)) && version) {
+        browserVersion_ = narrow(version);
+        CoTaskMemFree(version);
+    }
+    configureWebView();
+    applyControllerBackground();
+    resizeWebView();
+    web_->controller->put_IsVisible(TRUE);
+    web_->controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+    navigateToUi();
+}
+
+void HostWindowWin::configureWebView() {
+    ICoreWebView2* view = web_->view.Get();
+    if (!view) return;
+
+#ifdef NDEBUG
+    const bool devtools = options_.devtools;
+#else
+    const bool devtools = true;
+#endif
+
+    ComPtr<ICoreWebView2Settings> settings;
+    if (SUCCEEDED(view->get_Settings(&settings))) {
+        settings->put_AreDevToolsEnabled(devtools ? TRUE : FALSE);
+        settings->put_IsStatusBarEnabled(FALSE);
+        settings->put_IsZoomControlEnabled(FALSE);
+        settings->put_AreDefaultScriptDialogsEnabled(TRUE);
+        settings->put_IsBuiltInErrorPageEnabled(TRUE);
+        ComPtr<ICoreWebView2Settings3> s3;
+        if (SUCCEEDED(settings.As(&s3))) s3->put_AreBrowserAcceleratorKeysEnabled(devtools ? TRUE : FALSE);
+        ComPtr<ICoreWebView2Settings4> s4;
+        if (SUCCEEDED(settings.As(&s4))) {
+            s4->put_IsPasswordAutosaveEnabled(FALSE);
+            s4->put_IsGeneralAutofillEnabled(FALSE);
+        }
+        ComPtr<ICoreWebView2Settings5> s5;
+        if (SUCCEEDED(settings.As(&s5))) s5->put_IsPinchZoomEnabled(FALSE);
+        ComPtr<ICoreWebView2Settings6> s6;
+        if (SUCCEEDED(settings.As(&s6))) s6->put_IsSwipeNavigationEnabled(FALSE);
+        ComPtr<ICoreWebView2Settings9> s9;
+        if (SUCCEEDED(settings.As(&s9))) s9->put_IsNonClientRegionSupportEnabled(TRUE);
+    }
+
+    EventRegistrationToken token{};
+
+    // Bundled UI: every request for https://app.sshtermaq.local/* is answered from the resources embedded in the
+    // executable (no files on disk, no file:// URLs).
+    if (options_.devUrl.empty()) {
+        view->AddWebResourceRequestedFilter((std::wstring(L"https://") + kAppHost + L"/*").c_str(),
+                                            COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        view->add_WebResourceRequested(
+            Callback<ICoreWebView2WebResourceRequestedEventHandler>(
+                [this](ICoreWebView2*, ICoreWebView2WebResourceRequestedEventArgs* args) -> HRESULT {
+                    serveUiResource(args);
+                    return S_OK;
+                })
+                .Get(),
+            &token);
+    }
+
+    view->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
+                                     [this](ICoreWebView2*, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
+                                         handleWebMessage(args);
+                                         return S_OK;
+                                     })
+                                     .Get(),
+                                 &token);
+
+    view->add_NavigationStarting(
+        Callback<ICoreWebView2NavigationStartingEventHandler>(
+            [this](ICoreWebView2*, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT {
+                LPWSTR uri = nullptr;
+                args->get_Uri(&uri);
+                std::wstring u = uri ? uri : L"";
+                if (uri) CoTaskMemFree(uri);
+                if (onNavigationStarting && !onNavigationStarting(narrow(u))) args->put_Cancel(TRUE);
+                return S_OK;
+            })
+            .Get(),
+        &token);
+
+    view->add_NewWindowRequested(Callback<ICoreWebView2NewWindowRequestedEventHandler>(
+                                     [this](ICoreWebView2*, ICoreWebView2NewWindowRequestedEventArgs* args) -> HRESULT {
+                                         args->put_Handled(TRUE);
+                                         LPWSTR uri = nullptr;
+                                         if (SUCCEEDED(args->get_Uri(&uri)) && uri) {
+                                             if (onNewWindowRequested) onNewWindowRequested(narrow(uri));
+                                             CoTaskMemFree(uri);
+                                         }
+                                         return S_OK;
+                                     })
+                                     .Get(),
+                                 &token);
+
+    view->add_PermissionRequested(
+        Callback<ICoreWebView2PermissionRequestedEventHandler>(
+            [](ICoreWebView2*, ICoreWebView2PermissionRequestedEventArgs* args) -> HRESULT {
+                COREWEBVIEW2_PERMISSION_KIND kind{};
+                args->get_PermissionKind(&kind);
+                const bool allow =
+                    kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ || kind == COREWEBVIEW2_PERMISSION_KIND_LOCAL_FONTS;
+                args->put_State(allow ? COREWEBVIEW2_PERMISSION_STATE_ALLOW : COREWEBVIEW2_PERMISSION_STATE_DENY);
+                return S_OK;
+            })
+            .Get(),
+        &token);
+
+    // Native context menu only for editable fields (cut/copy/paste); the app draws its own menus elsewhere.
+    ComPtr<ICoreWebView2_11> v11;
+    if (SUCCEEDED(web_->view.As(&v11))) {
+        v11->add_ContextMenuRequested(
+            Callback<ICoreWebView2ContextMenuRequestedEventHandler>(
+                [devtools](ICoreWebView2*, ICoreWebView2ContextMenuRequestedEventArgs* args) -> HRESULT {
+                    ComPtr<ICoreWebView2ContextMenuTarget> target;
+                    BOOL editable = FALSE;
+                    if (SUCCEEDED(args->get_ContextMenuTarget(&target)) && target) target->get_IsEditable(&editable);
+                    if (!editable && !(devtools && (GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)))
+                        args->put_Handled(TRUE);
+                    return S_OK;
+                })
+                .Get(),
+            &token);
+    }
+
+    view->add_ProcessFailed(Callback<ICoreWebView2ProcessFailedEventHandler>(
+                                [this](ICoreWebView2*, ICoreWebView2ProcessFailedEventArgs* args) -> HRESULT {
+                                    COREWEBVIEW2_PROCESS_FAILED_KIND kind{};
+                                    args->get_ProcessFailedKind(&kind);
+                                    applog::error("WebView2 process failed, kind " + std::to_string(kind));
+                                    if (kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED ||
+                                        kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE) {
+                                        if (web_->view) web_->view->Reload();
+                                    } else if (kind == COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED) {
+                                        web_->controller.Reset();
+                                        web_->view.Reset();
+                                        initWebView();
+                                    }
+                                    return S_OK;
+                                })
+                                .Get(),
+                            &token);
+}
+
+void HostWindowWin::navigateToUi() {
+    if (!web_->view) return;
+    if (!options_.devUrl.empty()) {
+        web_->view->Navigate(widen(options_.devUrl).c_str());
+        return;
+    }
+    if (!serveUi || !serveUi(bundledUiOrigin() + "/index.html")) {
+        const std::wstring html =
+            L"<!doctype html><meta charset=utf-8><body style=\"font:14px 'Segoe UI';background:#1b1d22;color:#e6e8ec;"
+            L"padding:40px\"><h2>SSHTermaq</h2><p>This copy of SSHTermaq was built without its user interface: "
+            L"<code>ui/dist</code> did not exist when <code>SSHTermaq.exe</code> was built.</p>"
+            L"<p>Run <code>npm run build</code> in the <code>ui</code> folder, then build SSHTermaq again (the build embeds "
+            L"the interface into the executable), or start with <code>--dev-url http://localhost:5173</code>.</p></body>";
+        web_->view->NavigateToString(html.c_str());
+        return;
+    }
+    web_->view->Navigate((std::wstring(L"https://") + kAppHost + L"/index.html").c_str());
+}
+
+void HostWindowWin::serveUiResource(void* argsPtr) {
+    auto* args = static_cast<ICoreWebView2WebResourceRequestedEventArgs*>(argsPtr);
+    ComPtr<ICoreWebView2WebResourceRequest> request;
+    LPWSTR uriPtr = nullptr;
+    if (!args || !web_->env || FAILED(args->get_Request(&request)) || !request || FAILED(request->get_Uri(&uriPtr)) ||
+        !uriPtr)
+        return;
+    const std::string uri = narrow(uriPtr);
+    CoTaskMemFree(uriPtr);
+
+    int status = 404;
+    const wchar_t* reason = L"Not Found";
+    std::string_view body = "Not found";
+    std::string contentType = "text/plain; charset=utf-8";
+    if (const std::optional<UiFile> file = serveUi ? serveUi(uri) : std::nullopt) {
+        status = 200;
+        reason = L"OK";
+        body = file->body;
+        contentType = file->contentType;
+    }
+    if (status != 200) applog::warn("Embedded UI has no file for " + uri);
+
+    // SHCreateMemStream copies the bytes, so the stream does not depend on the resource's lifetime.
+    ComPtr<IStream> stream;
+    stream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(body.data()), static_cast<UINT>(body.size())));
+    const std::wstring headers = L"Content-Type: " + widen(contentType) + L"\r\nCache-Control: no-cache";
+    ComPtr<ICoreWebView2WebResourceResponse> response;
+    if (stream && SUCCEEDED(web_->env->CreateWebResourceResponse(stream.Get(), status, reason, headers.c_str(), &response)))
+        args->put_Response(response.Get());
+}
+
+void HostWindowWin::handleWebMessage(void* argsPtr) {
+    auto* args = static_cast<ICoreWebView2WebMessageReceivedEventArgs*>(argsPtr);
+    if (!onWebMessage || !args) return;
+    std::string source;  // '' when unknown
+    LPWSTR sourcePtr = nullptr;
+    if (SUCCEEDED(args->get_Source(&sourcePtr)) && sourcePtr) {
+        source = narrow(sourcePtr);
+        CoTaskMemFree(sourcePtr);
+    }
+    LPWSTR json = nullptr;
+    if (FAILED(args->get_WebMessageAsJson(&json)) || !json) return;
+    std::string text = narrow(json);
+    CoTaskMemFree(json);
+
+    std::vector<std::string> files;
+    ComPtr<ICoreWebView2WebMessageReceivedEventArgs2> args2;
+    if (SUCCEEDED(args->QueryInterface(IID_PPV_ARGS(&args2)))) {
+        ComPtr<ICoreWebView2ObjectCollectionView> objects;
+        if (SUCCEEDED(args2->get_AdditionalObjects(&objects)) && objects) {
+            UINT32 count = 0;
+            objects->get_Count(&count);
+            for (UINT32 i = 0; i < count; ++i) {
+                ComPtr<IUnknown> obj;
+                if (FAILED(objects->GetValueAtIndex(i, &obj)) || !obj) continue;
+                ComPtr<ICoreWebView2File> file;
+                if (FAILED(obj.As(&file))) continue;
+                LPWSTR path = nullptr;
+                if (SUCCEEDED(file->get_Path(&path)) && path) {
+                    files.push_back(narrow(path));
+                    CoTaskMemFree(path);
+                }
+            }
+        }
+    }
+    onWebMessage(source, text, files);
+}
+
+void HostWindowWin::applyControllerBackground() {
+    ComPtr<ICoreWebView2Controller2> c2;
+    if (!web_->controller || FAILED(web_->controller.As(&c2))) return;
+    COREWEBVIEW2_COLOR color{};
+    if (backdrop_ != "none" && !fullscreen_) {
+        color = {0, 0, 0, 0};  // transparent: let the DWM backdrop show through
+    } else {
+        COLORREF bg = backgroundColor();
+        color = {255, GetRValue(bg), GetGValue(bg), GetBValue(bg)};
+    }
+    c2->put_DefaultBackgroundColor(color);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Theme / backdrop                                                          */
+/* ------------------------------------------------------------------------ */
+
+bool systemPrefersDark() {
+    DWORD value = 1, size = sizeof(value);
+    if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                     L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &value, &size) != ERROR_SUCCESS)
+        return false;
+    return value == 0;
+}
+
+bool HostWindowWin::effectiveDark() const {
+    if (themeSource_ == "dark") return true;
+    if (themeSource_ == "light") return false;
+    return systemPrefersDark();
+}
+
+// Shown until the page paints: the background of the default theme (SSHTermaq Neon) when dark.
+COLORREF HostWindowWin::backgroundColor() const { return effectiveDark() ? RGB(0x0b, 0x07, 0x10) : RGB(0xff, 0xff, 0xff); }
+
+void HostWindowWin::applyFrameTheme() {
+    if (!hwnd_) return;
+    BOOL dark = effectiveDark() ? TRUE : FALSE;
+    DwmSetWindowAttribute(hwnd_, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
+}
+
+void HostWindowWin::applyBackdrop() {
+    if (!hwnd_) return;
+    int type = 1;  // DWMSBT_NONE
+    if (backdrop_ == "mica") type = 2;          // DWMSBT_MAINWINDOW
+    else if (backdrop_ == "acrylic") type = 3;  // DWMSBT_TRANSIENTWINDOW
+    if (fullscreen_) type = 1;
+    MARGINS m = type == 1 ? MARGINS{0, 0, 1, 0} : MARGINS{-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(hwnd_, &m);
+    DwmSetWindowAttribute(hwnd_, DWMWA_SYSTEMBACKDROP_TYPE, &type, sizeof(type));
+    applyControllerBackground();
+}
+
+void HostWindowWin::setThemeSource(const std::string& source) {
+    themeSource_ = (source == "light" || source == "dark") ? source : "system";
+    applyFrameTheme();
+    applyControllerBackground();
+    InvalidateRect(hwnd_, nullptr, TRUE);
+}
+
+void HostWindowWin::setBackgroundMaterial(const std::string& material) {
+    backdrop_ = (material == "mica" || material == "acrylic") ? material : "none";
+    applyBackdrop();
+}
+
+void HostWindowWin::setUiScale(double factor) {
+    if (!std::isfinite(factor)) return;
+    uiScale_ = std::clamp(factor, 0.25, 5.0);
+    if (web_->controller) web_->controller->put_ZoomFactor(uiScale_);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Window control                                                            */
+/* ------------------------------------------------------------------------ */
+
+void HostWindowWin::minimize() { ShowWindow(hwnd_, SW_MINIMIZE); }
+
+void HostWindowWin::toggleMaximize() {
+    if (fullscreen_) toggleFullscreen();
+    ShowWindow(hwnd_, IsZoomed(hwnd_) ? SW_RESTORE : SW_MAXIMIZE);
+}
+
+void HostWindowWin::requestClose() { PostMessageW(hwnd_, WM_CLOSE, 0, 0); }
+
+bool HostWindowWin::isMaximized() const { return hwnd_ && IsZoomed(hwnd_); }
+
+void HostWindowWin::setTitle(const std::string& title) { SetWindowTextW(hwnd_, widen(title.empty() ? "SSHTermaq" : title).c_str()); }
+
+void HostWindowWin::flash() {
+    if (GetForegroundWindow() == hwnd_) return;
+    FLASHWINFO fi{sizeof(fi), hwnd_, FLASHW_TRAY | FLASHW_TIMERNOFG, 0, 0};
+    FlashWindowEx(&fi);
+}
+
+void HostWindowWin::toggleFullscreen() {
+    if (!fullscreen_) {
+        preFullscreen_.length = sizeof(preFullscreen_);
+        GetWindowPlacement(hwnd_, &preFullscreen_);
+        MONITORINFO mi{sizeof(mi)};
+        GetMonitorInfoW(MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST), &mi);
+        fullscreen_ = true;
+        SetWindowLongPtrW(hwnd_, GWL_STYLE, (GetWindowLongPtrW(hwnd_, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW) | WS_POPUP);
+        SetWindowPos(hwnd_, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left,
+                     mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    } else {
+        fullscreen_ = false;
+        SetWindowLongPtrW(hwnd_, GWL_STYLE, (GetWindowLongPtrW(hwnd_, GWL_STYLE) & ~WS_POPUP) | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(hwnd_, &preFullscreen_);
+        SetWindowPos(hwnd_, nullptr, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+    applyBackdrop();
+    if (onFullscreenChanged) onFullscreenChanged(fullscreen_);
+}
+
+void HostWindowWin::activate() {
+    if (IsIconic(hwnd_)) ShowWindow(hwnd_, SW_RESTORE);
+    // Allowed because the request came from the foreground process (the second instance).
+    SetForegroundWindow(hwnd_);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Placement                                                                 */
+/* ------------------------------------------------------------------------ */
+
+void HostWindowWin::restorePlacement(int showCommand) {
+    const std::optional<WindowPlacement> saved = loadPlacement ? loadPlacement() : std::nullopt;
+    bool restored = false;
+    if (saved) {
+        RECT r{saved->x, saved->y, 0, 0};
+        r.right = r.left + std::max(saved->width, kMinWidth);
+        r.bottom = r.top + std::max(saved->height, kMinHeight);
+        // Only restore if a reasonable part of the window is on a monitor.
+        RECT probe = r;
+        probe.bottom = probe.top + 40;
+        if (MonitorFromRect(&probe, MONITOR_DEFAULTTONULL)) {
+            WINDOWPLACEMENT wp{sizeof(wp)};
+            wp.rcNormalPosition = r;
+            wp.showCmd = (saved->maximized && showCommand != SW_SHOWMINIMIZED && showCommand != SW_MINIMIZE)
+                             ? SW_SHOWMAXIMIZED
+                             : (showCommand == SW_SHOWDEFAULT ? SW_SHOWNORMAL : static_cast<UINT>(showCommand));
+            SetWindowPlacement(hwnd_, &wp);
+            restored = true;
+        }
+    }
+    if (!restored) {
+        // Center a comfortable default size on the primary work area.
+        MONITORINFO mi{sizeof(mi)};
+        GetMonitorInfoW(MonitorFromWindow(hwnd_, MONITOR_DEFAULTTOPRIMARY), &mi);
+        const UINT d = dpi();
+        const int w = std::min(scale(1280, d), static_cast<int>(mi.rcWork.right - mi.rcWork.left) - 40);
+        const int h = std::min(scale(800, d), static_cast<int>(mi.rcWork.bottom - mi.rcWork.top) - 40);
+        SetWindowPos(hwnd_, nullptr, mi.rcWork.left + (mi.rcWork.right - mi.rcWork.left - w) / 2,
+                     mi.rcWork.top + (mi.rcWork.bottom - mi.rcWork.top - h) / 2, w, h, SWP_NOZORDER);
+        ShowWindow(hwnd_, showCommand == SW_SHOWDEFAULT ? SW_SHOWNORMAL : showCommand);
+    }
+    lastMaximized_ = IsZoomed(hwnd_) != FALSE;
+}
+
+void HostWindowWin::savePlacement(bool synchronous) {
+    if (!hwnd_ || fullscreen_ || !onPlacementChanged) return;
+    WINDOWPLACEMENT wp{sizeof(wp)};
+    if (!GetWindowPlacement(hwnd_, &wp)) return;
+    const RECT& r = wp.rcNormalPosition;
+    WindowPlacement p;
+    p.x = static_cast<int>(r.left);
+    p.y = static_cast<int>(r.top);
+    p.width = static_cast<int>(r.right - r.left);
+    p.height = static_cast<int>(r.bottom - r.top);
+    p.maximized = wp.showCmd == SW_SHOWMAXIMIZED || IsZoomed(hwnd_);
+    onPlacementChanged(p, synchronous);  // the hook debounces while resizing
+}
+
+}  // namespace st::ui

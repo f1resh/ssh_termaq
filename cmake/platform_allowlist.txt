@@ -1,0 +1,2 @@
+# Files that still contain OS-specific code outside native/src/platform (cmake/CheckPlatformBoundaries.cmake).
+# The list only shrinks: drop a file once its OS-specific code has moved (cmake -DUPDATE=ON does that).

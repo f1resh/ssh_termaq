@@ -1,0 +1,188 @@
+/* App frame: title bar / (sidebar | workspace) / status bar */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--bg);
+}
+.app__body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.workspace {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+}
+.workspace__main {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Every tab is mounted; only the visible one paints and takes input. */
+.tabview {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: var(--terminal-bg, var(--bg));
+}
+.tabview--visible {
+  visibility: visible;
+  pointer-events: auto;
+}
+.tabview--split {
+  background: var(--border);
+}
+
+.pane-slot {
+  position: absolute;
+  overflow: hidden;
+  background: var(--terminal-bg, var(--bg));
+}
+.pane-slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid transparent;
+  transition: border-color var(--transition);
+}
+.pane-slot--active::after {
+  border-color: color-mix(in srgb, var(--accent) 80%, transparent);
+}
+.pane-slot--broadcast::after {
+  border-color: color-mix(in srgb, var(--warning) 55%, transparent);
+  border-style: dashed;
+}
+.pane-slot--broadcast.pane-slot--active::after {
+  border-color: var(--warning);
+  border-style: solid;
+}
+
+.pane-slot__body {
+  position: absolute;
+  inset: 0;
+}
+.pane-slot__body--headed {
+  top: var(--pane-head-height, 24px);
+}
+
+/* Header bar of each pane in a split tab. */
+.pane-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--pane-head-height, 24px);
+  padding: 0 3px 0 8px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  user-select: none;
+}
+.pane-head--active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elevated));
+}
+.pane-head__icon {
+  flex: none;
+}
+.pane-head__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pane-head__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: default;
+}
+.pane-head__close:hover {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger);
+}
+
+.splitter {
+  position: absolute;
+  z-index: 4;
+  touch-action: none;
+}
+.splitter--row {
+  cursor: col-resize;
+}
+.splitter--column {
+  cursor: row-resize;
+}
+.splitter::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: transparent;
+  transition: background-color var(--transition);
+}
+.splitter:hover::after,
+.splitter--dragging::after {
+  background: var(--accent);
+  transition-delay: 150ms;
+}
+.splitter--dragging::after {
+  transition-delay: 0ms;
+}
+
+/* SFTP side panel */
+.sftp-side {
+  position: relative;
+  display: flex;
+  flex: none;
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+.sftp-side--hidden {
+  display: none;
+}
+.sftp-side__resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  z-index: 5;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.sftp-side__resizer:hover {
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.sftp-side__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
