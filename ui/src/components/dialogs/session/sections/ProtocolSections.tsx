@@ -2,6 +2,7 @@
  * Session editor: Telnet, Rlogin and Serial sections.
  */
 import { Select, TextInput } from '@/components/ui';
+import { osTerms } from '@shared/platform';
 import type { FlowControl, Parity, SerialOptions } from '@shared/types';
 import { FieldGrid, FormField, Section, SegmentedControl, SettingRow, ToggleRow, type SegmentOption } from '../../common/controls';
 import { useEditor } from '../editorContext';
@@ -104,7 +105,7 @@ export function SerialSection() {
     <>
       <Section title="Serial line">
         <FieldGrid cols={2}>
-          <FormField label="Serial line" error={fieldError('serial.line')} hint="Pick a detected port or type its name, e.g. COM3">
+          <FormField label="Serial line" error={fieldError('serial.line')} hint={`Pick a detected port or type its name, e.g. ${osTerms.serialLine}`}>
             <SerialLineInput />
           </FormField>
           <FormField label="Speed (baud)" error={fieldError('serial.baudRate')}>

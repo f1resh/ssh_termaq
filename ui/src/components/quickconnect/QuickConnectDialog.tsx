@@ -9,6 +9,7 @@ import { Button, Kbd, Modal, cx } from '@/components/ui';
 import { connectSession, createAdHocSession } from '@/commands/actions';
 import { useUi } from '@/store/ui';
 import type { Protocol } from '@shared/types';
+import { osTerms } from '@shared/platform';
 import { PROTOCOL_LABELS, ProtocolIcon, sessionSubtitle } from '@/components/layout/sessionVisuals';
 import { PROTOCOLS, applyQuickConnect, formatQuickConnect, parseQuickConnect, type QuickConnectTarget } from './parse';
 import './quickconnect.css';
@@ -98,7 +99,7 @@ export function QuickConnectDialog({ initial, onClose }: QuickConnectDialogProps
     telnet: 'host:port',
     rlogin: 'user@host',
     raw: 'host:port',
-    serial: 'COM3 or serial://COM3?baud=115200'
+    serial: `${osTerms.serialLine} or ${osTerms.serialExample}`
   };
 
   return (
@@ -167,7 +168,7 @@ export function QuickConnectDialog({ initial, onClose }: QuickConnectDialogProps
       <div className="qc__status" aria-live="polite">
         {!text.trim() ? (
           <span className="qc__hint">
-            Examples: <code>deploy@web-01:2222</code> <code>telnet://router</code> <code>[::1]:2222</code> <code>serial://COM3?baud=115200</code>
+            Examples: <code>deploy@web-01:2222</code> <code>telnet://router</code> <code>[::1]:2222</code> <code>{osTerms.serialExample}</code>
           </span>
         ) : parsed.ok && preview ? (
           <span className="qc__preview">

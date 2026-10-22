@@ -11,6 +11,7 @@
  *   CLI flags                    -ssh/-telnet/-rlogin/-raw/-serial, -P/-p <port>, -l <user>
  */
 import { DEFAULT_PORTS } from '@shared/defaults';
+import { osTerms } from '@shared/platform';
 import type { FileProtocol, FlowControl, Parity, Protocol, SerialOptions, SessionConfig } from '@shared/types';
 
 export const PROTOCOLS: Protocol[] = ['ssh', 'telnet', 'rlogin', 'raw', 'serial'];
@@ -110,7 +111,7 @@ function parseSerial(spec: string): QuickConnectTarget | string {
     line = m[1];
     serial.baudRate = Number(m[2]);
   }
-  if (!line) return 'Enter a serial line, e.g. COM3';
+  if (!line) return `Enter a serial line, e.g. ${osTerms.serialLine}`;
   if (/^com\d+$/i.test(line)) line = line.toUpperCase();
   for (const part of query.split('&').filter(Boolean)) {
     const [k, v = ''] = part.split('=', 2).map((x) => decodeURIComponent(x).trim());

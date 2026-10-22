@@ -4,6 +4,7 @@
  * No React / bridge imports so it can be unit tested in node.
  */
 import { DEFAULT_PORTS, newId, normalizeFolder } from '@shared/defaults';
+import { osTerms } from '@shared/platform';
 import type { AppearanceOverrides, PortForward, Protocol, SessionConfig } from '@shared/types';
 
 /* -------------------------------------------------------------------------- */
@@ -222,7 +223,7 @@ export function validateSession(s: SessionConfig, ctx: ValidationContext): Valid
   const isDefault = !!ctx.isDefault;
 
   if (s.protocol === 'serial') {
-    if (!s.serial.line.trim()) errors['serial.line'] = 'Serial line is required (e.g. COM1)';
+    if (!s.serial.line.trim()) errors['serial.line'] = `Serial line is required (e.g. ${osTerms.serialLine})`;
     if (!Number.isInteger(s.serial.baudRate) || s.serial.baudRate <= 0) errors['serial.baudRate'] = 'Speed must be a positive number';
   } else {
     if (!isDefault) {

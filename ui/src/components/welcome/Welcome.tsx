@@ -12,6 +12,7 @@ import { Button, Kbd } from '@/components/ui';
 import { useSessions } from '@/store/data';
 import { useUi } from '@/store/ui';
 import { sessionLabel } from '@shared/defaults';
+import { isMac, osTerms } from '@shared/platform';
 import type { CommandId } from '@shared/types';
 import { Logo } from './Logo';
 import './welcome.css';
@@ -84,9 +85,10 @@ export function Welcome() {
             connect();
           }}
         >
+          {/* macOS: the device path alone; with a baud rate it no longer fits the field in a 1280-wide window */}
           <input
             className="input welcome__input"
-            placeholder="user@host[:port]  ·  telnet://host  ·  serial://COM3?baud=115200"
+            placeholder={`user@host[:port]  ·  telnet://host  ·  ${isMac ? osTerms.serialLine : osTerms.serialExample}`}
             value={value}
             spellCheck={false}
             autoFocus

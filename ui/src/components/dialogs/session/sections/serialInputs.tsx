@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react';
 import { api } from '@/bridge/api';
 import { IconButton, NumberInput, Select } from '@/components/ui';
 import { BAUD_RATES } from '@shared/algorithms';
+import { osTerms } from '@shared/platform';
 import type { SerialPortInfo } from '@shared/types';
 import { ComboInput, type ComboOption } from '../../common/controls';
 import { useEditor } from '../editorContext';
@@ -47,7 +48,7 @@ export function SerialLineInput({ id }: { id?: string }) {
         mono
         value={draft.serial.line}
         options={options}
-        placeholder="COM1"
+        placeholder={osTerms.serialLine}
         invalid={!!fieldError('serial.line')}
         onChange={(v) => update((d) => void (d.serial.line = v))}
         emptyText={loading ? 'Looking for serial ports…' : 'No serial ports found'}
