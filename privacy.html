@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy – SSHTermaq</title>
+  <meta name="description" content="SSHTermaq collects no data. What the app stores on your computer, and what this website does.">
+  <link rel="canonical" href="https://f1resh.github.io/sshtermaq/privacy.html">
+  <meta name="theme-color" content="#0b0912">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="./">
+        <img src="favicon.png" alt="" width="28" height="28">
+        <span>SSHTermaq</span>
+      </a>
+      <nav class="nav__links" aria-label="Sections">
+        <a href="./#features">Features</a>
+        <a href="./#download">Download</a>
+        <a href="./#faq">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="wrap narrow">
+      <h1>Privacy policy</h1>
+      <p class="muted">Last updated: 23 October 2026</p>
+
+      <p><strong>Short version: SSHTermaq collects nothing.</strong> It has no accounts, no analytics, no telemetry and no
+        update checks, and it sends nothing to its author or to anyone else.</p>
+
+      <h2>The app</h2>
+      <p>SSHTermaq connects only to the servers, proxies and serial ports you tell it to use. What it keeps, it keeps on
+        your computer:</p>
+      <ul>
+        <li><strong>Your sessions and settings</strong>, in <code>%APPDATA%\SSHTermaq</code> on Windows (or next to the
+          program in a portable copy) and <code>~/Library/Application Support/SSHTermaq</code> on macOS.</li>
+        <li><strong>The host keys of servers you trust</strong>, in the same folder.</li>
+        <li><strong>Passwords you choose to save</strong>, encrypted for your user account with Windows' data protection
+          (DPAPI) or with a key kept in the macOS Keychain.</li>
+        <li><strong>Session logs</strong>, only when you turn logging on, in the file you choose.</li>
+      </ul>
+      <p>Importing from PuTTY or OpenSSH reads their settings on your computer and copies them into SSHTermaq; nothing
+        leaves your computer. You can delete everything SSHTermaq keeps by deleting the folders above.</p>
+
+      <h2>The Microsoft Store and app stores</h2>
+      <p>If you install SSHTermaq from a store, the store's own privacy policy covers what the store collects (for
+        example your download and crash statistics). SSHTermaq itself adds nothing to that.</p>
+
+      <h2>This website</h2>
+      <p>This site is hosted by GitHub Pages. It sets no cookies and has no analytics. To show the newest download links,
+        your browser asks GitHub's public API (<code>api.github.com</code>) for the latest release. GitHub may keep
+        technical logs such as your IP address for those requests and for serving the site; see the
+        <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>.</p>
+
+      <h2>Questions</h2>
+      <p>Open an issue on <a href="https://github.com/f1resh/sshtermaq/issues">GitHub</a>.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <div class="brand">
+        <img src="favicon.png" alt="" width="24" height="24">
+        <span>SSHTermaq</span>
+      </div>
+      <nav aria-label="Links">
+        <a href="./">Home</a>
+        <a href="https://github.com/f1resh/sshtermaq">GitHub</a>
+        <a href="https://github.com/f1resh/sshtermaq/blob/main/LICENSE">MIT license</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

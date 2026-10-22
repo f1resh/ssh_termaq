@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SSHTermaq – PuTTY-compatible SSH client for Windows and macOS</title>
+  <meta name="description" content="Free, open-source SSH client for Windows and macOS with tabs, split panes, an SFTP file manager and one-click import of your PuTTY sessions. SSH, Telnet, Rlogin, Raw and serial.">
+  <link rel="canonical" href="https://f1resh.github.io/sshtermaq/">
+  <meta name="theme-color" content="#0b0912">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SSHTermaq – PuTTY-compatible SSH client for Windows and macOS">
+  <meta property="og:description" content="Tabs, split panes, an SFTP file manager and your PuTTY sessions. Free and open source.">
+  <meta property="og:url" content="https://f1resh.github.io/sshtermaq/">
+  <meta property="og:image" content="https://f1resh.github.io/sshtermaq/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="./">
+        <img src="favicon.png" alt="" width="28" height="28">
+        <span>SSHTermaq</span>
+      </a>
+      <nav class="nav__links" aria-label="Sections">
+        <a href="#features">Features</a>
+        <a href="#putty">PuTTY users</a>
+        <a href="#download">Download</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="nav__github" href="https://github.com/f1resh/sshtermaq" aria-label="SSHTermaq on GitHub">
+        <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero__inner">
+        <div class="hero__text">
+          <p class="eyebrow">Free and open source · Windows and macOS</p>
+          <h1>The SSH client for people who grew up on PuTTY</h1>
+          <p class="lead">SSHTermaq keeps everything PuTTY does – your sessions, keys and settings – and adds tabs, split panes and a real file manager. SSH, Telnet, Rlogin, Raw and serial.</p>
+          <div class="hero__actions">
+            <a class="button button--primary" id="primary-download" href="https://github.com/f1resh/sshtermaq/releases/latest">
+              <span id="primary-label">Download</span>
+              <small id="primary-detail">Windows · macOS</small>
+            </a>
+            <a class="button button--ghost" href="#download">All downloads</a>
+          </div>
+          <p class="hero__version"><span id="version">Latest release</span> · <a href="https://github.com/f1resh/sshtermaq/releases/latest">Release notes</a></p>
+        </div>
+        <picture class="hero__shot">
+          <source srcset="img/split-panes.avif" type="image/avif">
+          <img src="img/split-panes.png" width="1600" height="1048" alt="SSHTermaq with two terminal panes side by side: a live server overview and a scrolling web server log">
+        </picture>
+      </div>
+    </section>
+
+    <section class="demo">
+      <div class="wrap">
+        <figure class="video">
+          <video src="video/demo.mp4" poster="video/demo-poster.jpg" width="1280" height="800" muted loop playsinline autoplay preload="auto" data-play-in-view aria-label="Connecting to a server, running a deploy and splitting the pane"></video>
+        </figure>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="wrap">
+        <h2 class="section-title">Everything in one window</h2>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Tabs, split panes and broadcast input</h3>
+            <p>Open each server in a tab, split any tab into panes, and type into all of them at once when the same command has to run everywhere.</p>
+          </div>
+          <figure class="video">
+            <video src="video/broadcast.mp4" poster="video/broadcast-poster.jpg" width="1280" height="800" muted loop playsinline preload="none" data-play-in-view aria-label="One deploy command typed once and running in three panes"></video>
+          </figure>
+        </article>
+
+        <article class="feature feature--flip">
+          <div class="feature__text">
+            <h3>A file manager, not just a terminal</h3>
+            <p>Every SSH session has an SFTP panel beside the terminal, and a two-pane file manager shows your computer and the server side by side. Drag files between them or to and from Explorer and Finder, watch the transfer queue, resume interrupted transfers, edit remote files in your own editor and keep folders in sync. No SFTP on the server? It falls back to SCP.</p>
+          </div>
+          <figure class="video">
+            <video src="video/file-manager.mp4" poster="video/file-manager-poster.jpg" width="1280" height="800" muted loop playsinline preload="none" data-play-in-view aria-label="Copying two large files from a server to the local computer with progress bars"></video>
+          </figure>
+        </article>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Find anything in a keystroke</h3>
+            <p>The command palette finds sessions and commands as you type. Sessions live in folders with colours and notes, and every shortcut can be changed.</p>
+          </div>
+          <picture class="shot">
+            <source srcset="img/command-palette.avif" type="image/avif">
+            <img src="img/command-palette.png" width="1600" height="1048" loading="lazy" alt="The command palette listing sessions and commands">
+          </picture>
+        </article>
+
+        <div class="cards">
+          <article class="card">
+            <picture>
+              <source srcset="img/sftp-panel.avif" type="image/avif">
+              <img src="img/sftp-panel.png" width="1600" height="1048" loading="lazy" alt="A terminal with the SFTP panel open beside it">
+            </picture>
+            <h3>SFTP next to the shell</h3>
+            <p>Browse, upload and download without leaving the terminal.</p>
+          </article>
+          <article class="card">
+            <picture>
+              <source srcset="img/key-generator.avif" type="image/avif">
+              <img src="img/key-generator.png" width="1600" height="1048" loading="lazy" alt="The key generator showing a new Ed25519 key">
+            </picture>
+            <h3>Key generator</h3>
+            <p>Ed25519, RSA and ECDSA keys, saved as OpenSSH or PuTTY .ppk.</p>
+          </article>
+          <article class="card">
+            <picture>
+              <source srcset="img/themes.avif" type="image/avif">
+              <img src="img/themes.png" width="1600" height="1048" loading="lazy" alt="The theme picker with a grid of themes">
+            </picture>
+            <h3>Themes</h3>
+            <p>Built-in themes from Dracula to Solarized, plus your own colour schemes.</p>
+          </article>
+          <article class="card">
+            <picture>
+              <source srcset="img/host-key.avif" type="image/avif">
+              <img src="img/host-key.png" width="1600" height="1048" loading="lazy" alt="A prompt asking whether to trust a new server's host key">
+            </picture>
+            <h3>Safe by default</h3>
+            <p>Host keys are checked on every connection, and saved passwords are encrypted by the operating system.</p>
+          </article>
+        </div>
+
+        <div class="more">
+          <h3>And everything else you expect</h3>
+          <ul>
+            <li><strong>Protocols:</strong> SSH-2, Telnet, Rlogin, Raw TCP and serial ports</li>
+            <li><strong>Sign-in:</strong> password, keys, two-factor (keyboard-interactive), Pageant and ssh-agent</li>
+            <li><strong>Forwarding:</strong> local, remote and dynamic (SOCKS) ports, agent and X11 forwarding</li>
+            <li><strong>Getting there:</strong> jump hosts, SOCKS, HTTP and Telnet proxies, proxy commands</li>
+            <li><strong>Terminal:</strong> PuTTY's keyboard modes and character sets, find, zoom, copy on select</li>
+            <li><strong>Links:</strong> <code>ssh://</code>, <code>sftp://</code>, <code>scp://</code> and <code>telnet://</code> open in SSHTermaq</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="putty" id="putty">
+      <div class="wrap putty__inner">
+        <div>
+          <h2 class="section-title">Coming from PuTTY?</h2>
+          <p class="lead">You don't start over. SSHTermaq reads what PuTTY already knows.</p>
+          <ul class="checks">
+            <li>Imports your saved sessions, Default Settings and trusted host keys – from the registry, a <code>.reg</code> file or <code>~/.putty</code></li>
+            <li>Uses your <code>.ppk</code> keys (v2 and v3) and OpenSSH keys</li>
+            <li>Understands PuTTY's command line: <code>-ssh</code>, <code>-P</code>, <code>-l</code>, <code>-i</code>, <code>-load</code>, <code>-L</code>/<code>-R</code>/<code>-D</code> and more</li>
+            <li>Has PuTTY's settings, from keyboard modes to proxy options</li>
+            <li>Also imports hosts from your OpenSSH <code>~/.ssh/config</code></li>
+          </ul>
+        </div>
+        <picture class="shot">
+          <source srcset="img/putty-import.avif" type="image/avif">
+          <img src="img/putty-import.png" width="1600" height="1048" loading="lazy" alt="The Import from PuTTY dialog listing five sessions">
+        </picture>
+      </div>
+    </section>
+
+    <section class="download" id="download">
+      <div class="wrap">
+        <h2 class="section-title">Download</h2>
+        <p class="lead center">Free, no account, no ads. <span id="version-line"></span></p>
+        <div class="platforms">
+          <article class="platform" id="platform-windows">
+            <h3>Windows</h3>
+            <p class="platform__req">Windows 10 or 11, 64-bit</p>
+            <a class="button button--primary" data-asset="win-setup" href="https://github.com/f1resh/sshtermaq/releases/latest">Installer <small>.exe</small></a>
+            <a class="button button--ghost" data-asset="win-zip" href="https://github.com/f1resh/sshtermaq/releases/latest">Portable <small>.zip</small></a>
+            <p class="platform__note">Needs the Microsoft Edge WebView2 Runtime, which Windows 11 and up-to-date Windows 10 already have.</p>
+          </article>
+          <article class="platform" id="platform-mac">
+            <h3>macOS</h3>
+            <p class="platform__req">macOS 12 Monterey or later</p>
+            <a class="button button--primary" data-asset="mac-arm64-dmg" href="https://github.com/f1resh/sshtermaq/releases/latest">Apple silicon <small>.dmg</small></a>
+            <a class="button button--ghost" data-asset="mac-x64-dmg" href="https://github.com/f1resh/sshtermaq/releases/latest">Intel <small>.dmg</small></a>
+            <p class="platform__note">Signed and notarized by Apple. Also as .zip: <a data-asset="mac-arm64-zip" href="https://github.com/f1resh/sshtermaq/releases/latest">Apple silicon</a>, <a data-asset="mac-x64-zip" href="https://github.com/f1resh/sshtermaq/releases/latest">Intel</a>.</p>
+          </article>
+        </div>
+        <p class="center muted">Older versions and the source code are on <a href="https://github.com/f1resh/sshtermaq/releases">GitHub Releases</a>.</p>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <div class="wrap narrow">
+        <h2 class="section-title">Questions</h2>
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. SSHTermaq is open source under the MIT license: no price, no subscription, no account and no ads.</p>
+        </details>
+        <details>
+          <summary>Where are my sessions stored?</summary>
+          <p>On your computer only: in <code>%APPDATA%\SSHTermaq</code> on Windows and <code>~/Library/Application Support/SSHTermaq</code> on macOS. On Windows a portable copy can keep everything next to the program instead.</p>
+        </details>
+        <details>
+          <summary>Are my passwords safe?</summary>
+          <p>Saving a password is optional. When you do, it is encrypted with the operating system's protection for your user account (Windows DPAPI, or a key kept in the macOS Keychain). Keys and agents are always the better choice, and both are supported.</p>
+        </details>
+        <details>
+          <summary>Does it send anything anywhere?</summary>
+          <p>No. SSHTermaq connects only to the servers you open, and has no telemetry or update pings. See the <a href="privacy.html">privacy policy</a>.</p>
+        </details>
+        <details>
+          <summary>Windows says "Windows protected your PC". Is that normal?</summary>
+          <p>SmartScreen warns about programs it hasn't seen often yet. Choose <em>More info › Run anyway</em>. You can check the download against the release on GitHub, and the source code is public.</p>
+        </details>
+        <details>
+          <summary>Which Mac download do I need?</summary>
+          <p>Apple menu › About This Mac: a chip called "Apple M…" means Apple silicon; a processor called "Intel" means Intel.</p>
+        </details>
+        <details>
+          <summary>Is there a Linux version?</summary>
+          <p>Not yet. SSHTermaq runs on Windows and macOS today.</p>
+        </details>
+        <details>
+          <summary>Where do I report a bug or ask for a feature?</summary>
+          <p>On <a href="https://github.com/f1resh/sshtermaq/issues">GitHub Issues</a>.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <div class="brand">
+        <img src="favicon.png" alt="" width="24" height="24">
+        <span>SSHTermaq</span>
+      </div>
+      <nav aria-label="Links">
+        <a href="https://github.com/f1resh/sshtermaq">GitHub</a>
+        <a href="https://github.com/f1resh/sshtermaq/releases">Releases</a>
+        <a href="https://github.com/f1resh/sshtermaq/blob/main/LICENSE">MIT license</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+      <p class="muted">SSHTermaq is an independent project, not affiliated with PuTTY.</p>
+    </div>
+  </footer>
+</body>
+</html>

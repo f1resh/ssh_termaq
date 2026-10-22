@@ -1,0 +1,262 @@
+/* SSHTermaq site: one dark theme, the app's neon magenta as the accent. */
+:root {
+  --bg: #0b0912;
+  --bg-raised: #14111d;
+  --bg-card: #17131f;
+  --border: #2a2436;
+  --text: #ece9f2;
+  --text-dim: #a59fb3;
+  --accent: #e15af5;
+  --accent-strong: #c03be0;
+  --accent-soft: rgba(225, 90, 245, 0.14);
+  --radius: 14px;
+  --wrap: 1180px;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, video { display: block; max-width: 100%; height: auto; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.05em 0.35em;
+}
+
+h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; letter-spacing: -0.015em; }
+
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
+.narrow { max-width: 780px; }
+.center { text-align: center; }
+.muted { color: var(--text-dim); font-size: 0.92rem; }
+
+.section-title { font-size: clamp(1.9rem, 3.6vw, 2.6rem); text-align: center; margin-bottom: 0.4em; }
+.lead { font-size: 1.15rem; color: var(--text-dim); }
+
+/* ---- navigation ------------------------------------------------------------------------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(11, 9, 18, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav__inner { display: flex; align-items: center; gap: 28px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 650; font-size: 1.05rem; }
+.brand:hover { text-decoration: none; }
+.brand img { border-radius: 6px; }
+.nav__links { display: flex; gap: 22px; margin-left: auto; }
+.nav__links a, .nav__github { color: var(--text-dim); font-size: 0.95rem; }
+.nav__links a:hover, .nav__github:hover { color: var(--text); text-decoration: none; }
+.nav__github { display: flex; align-items: center; gap: 8px; }
+
+/* ---- buttons ---------------------------------------------------------------------------------------------------- */
+.button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.button:hover { text-decoration: none; transform: translateY(-1px); }
+.button small { font-weight: 450; font-size: 0.78rem; opacity: 0.85; }
+.button--primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(225, 90, 245, 0.28);
+}
+.button--primary:hover { background: linear-gradient(135deg, #e877f8, var(--accent)); }
+.button--ghost { color: var(--text); border-color: var(--border); background: var(--bg-raised); }
+.button--ghost:hover { border-color: var(--accent); }
+
+/* ---- hero ------------------------------------------------------------------------------------------------------- */
+.hero {
+  padding: 72px 0 40px;
+  background:
+    radial-gradient(900px 480px at 85% 10%, rgba(192, 59, 224, 0.20), transparent 70%),
+    radial-gradient(700px 420px at 0% 0%, rgba(90, 60, 200, 0.14), transparent 70%);
+}
+.hero__inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
+.eyebrow { color: var(--accent); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.02em; margin: 0 0 14px; }
+.hero h1 { font-size: clamp(2.3rem, 4.6vw, 3.5rem); }
+.hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 14px; }
+.hero__version { color: var(--text-dim); font-size: 0.9rem; margin: 0; }
+.hero__shot img { width: 100%; filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5)); }
+
+/* ---- videos and screenshots ------------------------------------------------------------------------------------- */
+.demo { padding: 24px 0 72px; }
+.video {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.video video { width: 100%; }
+.demo .video { max-width: 1000px; margin: 0 auto; }
+.shot img { width: 100%; }
+
+/* ---- features --------------------------------------------------------------------------------------------------- */
+.features { padding: 40px 0 72px; }
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+  gap: 48px;
+  align-items: center;
+  margin: 56px 0;
+}
+.feature--flip .feature__text { order: 2; }
+.feature h3 { font-size: 1.6rem; }
+.feature p { color: var(--text-dim); margin: 0; }
+
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 72px; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 12px 20px;
+}
+.card picture img { border-radius: 8px; margin-bottom: 14px; }
+.card h3 { font-size: 1.1rem; margin: 0 6px 6px; }
+.card p { color: var(--text-dim); font-size: 0.93rem; margin: 0 6px; }
+
+.more {
+  margin-top: 56px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.more h3 { font-size: 1.25rem; }
+.more ul { margin: 0; padding-left: 1.2em; columns: 2; column-gap: 40px; }
+.more li { break-inside: avoid; margin-bottom: 8px; color: var(--text-dim); }
+.more strong { color: var(--text); font-weight: 600; }
+
+/* ---- PuTTY ------------------------------------------------------------------------------------------------------ */
+.putty { padding: 72px 0; background: linear-gradient(180deg, transparent, rgba(192, 59, 224, 0.07), transparent); }
+.putty__inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: center; }
+.putty .section-title { text-align: left; }
+.checks { list-style: none; padding: 0; margin: 20px 0 0; }
+.checks li { position: relative; padding-left: 32px; margin-bottom: 12px; }
+.checks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%23e15af5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+
+/* ---- download --------------------------------------------------------------------------------------------------- */
+.download { padding: 72px 0; }
+.platforms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 900px; margin: 32px auto 24px; }
+.platform {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.platform.is-yours { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 12px 40px rgba(225, 90, 245, 0.15); }
+.platform h3 { font-size: 1.5rem; margin: 0; }
+.platform__req { color: var(--text-dim); margin: 0 0 6px; }
+.platform__note { color: var(--text-dim); font-size: 0.88rem; margin: 6px 0 0; }
+.platform .button { flex-direction: row; gap: 8px; }
+
+/* ---- FAQ -------------------------------------------------------------------------------------------------------- */
+.faq { padding: 48px 0 80px; }
+.faq details { border-bottom: 1px solid var(--border); padding: 4px 0; }
+.faq summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  padding: 16px 36px 16px 0;
+  position: relative;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 4px;
+  top: 12px;
+  font-size: 1.4rem;
+  color: var(--accent);
+  transition: transform 0.2s;
+}
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { color: var(--text-dim); margin: 0 0 18px; }
+
+/* ---- footer ----------------------------------------------------------------------------------------------------- */
+.footer { border-top: 1px solid var(--border); padding: 32px 0 40px; }
+.footer__inner { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; }
+.footer nav { display: flex; flex-wrap: wrap; gap: 20px; }
+.footer nav a { color: var(--text-dim); font-size: 0.95rem; }
+.footer .muted { flex-basis: 100%; margin: 0; font-size: 0.85rem; }
+
+/* ---- privacy page ----------------------------------------------------------------------------------------------- */
+.page { padding: 56px 0 80px; }
+.page h1 { font-size: clamp(2rem, 4vw, 2.6rem); }
+.page h2 { font-size: 1.3rem; margin-top: 2em; }
+.page p, .page li { color: var(--text-dim); }
+.page strong { color: var(--text); }
+
+/* ---- narrower screens ------------------------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .hero__inner, .feature, .putty__inner { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .feature--flip .feature__text { order: 0; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .putty .section-title { text-align: center; }
+}
+
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .wrap { padding: 0 16px; }
+  .nav__links { display: none; }
+  .nav__github { margin-left: auto; }
+  .hero { padding: 40px 0 24px; }
+  .hero__actions .button { flex: 1 1 100%; }
+  .demo { padding-bottom: 48px; }
+  .feature { margin: 40px 0; }
+  .cards { grid-template-columns: minmax(0, 1fr); margin-top: 48px; }
+  .more { padding: 22px 20px; }
+  .more ul { columns: 1; }
+  .platforms { grid-template-columns: minmax(0, 1fr); }
+  .putty, .download { padding: 48px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .button { transition: none; }
+}
