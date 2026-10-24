@@ -39,6 +39,7 @@ code {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.05em 0.35em;
+  white-space: nowrap;  /* -ssh, ~/.putty: never broken at the dash */
 }
 
 h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; letter-spacing: -0.015em; }
@@ -195,6 +196,60 @@ h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; letter-spacing: -0.015em; }
 .platform__note { color: var(--text-dim); font-size: 0.88rem; margin: 6px 0 0; }
 .platform .button { flex-direction: row; gap: 8px; }
 
+/* ---- package managers ------------------------------------------------------------------------------------------- */
+.packages__title { text-align: center; font-size: 1.25rem; margin: 48px 0 20px; }
+.packages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto 28px; }
+.package {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.package__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.package__head h4 { margin: 0; font-size: 1.1rem; }
+.package__os { color: var(--text-dim); font-size: 0.85rem; }
+.package__note { color: var(--text-dim); font-size: 0.88rem; margin: 0; }
+.badge {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f0b44c;
+  background: rgba(240, 180, 76, 0.12);
+  border: 1px solid rgba(240, 180, 76, 0.35);
+}
+.command {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 6px 6px 12px;
+  background: #07060b;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.command code { background: none; border: 0; padding: 0; font-size: 0.85rem; flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.command__text { color: var(--text-dim); font-size: 0.9rem; }
+.copy {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--accent); }
+.copy.is-done { border-color: #3fb950; color: #3fb950; }
+.package.is-soon .command { opacity: 0.45; }
+.package.is-soon h4 { color: var(--text-dim); }
+
 /* ---- FAQ -------------------------------------------------------------------------------------------------------- */
 .faq { padding: 48px 0 80px; }
 .faq details { border-bottom: 1px solid var(--border); padding: 4px 0; }
@@ -237,6 +292,7 @@ h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; letter-spacing: -0.015em; }
   .hero__inner, .feature, .putty__inner { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .feature--flip .feature__text { order: 0; }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .packages { grid-template-columns: minmax(0, 1fr); max-width: 560px; }
   .putty .section-title { text-align: center; }
 }
 
@@ -252,7 +308,7 @@ h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; letter-spacing: -0.015em; }
   .cards { grid-template-columns: minmax(0, 1fr); margin-top: 48px; }
   .more { padding: 22px 20px; }
   .more ul { columns: 1; }
-  .platforms { grid-template-columns: minmax(0, 1fr); }
+  .platforms, .packages { grid-template-columns: minmax(0, 1fr); }
   .putty, .download { padding: 48px 0; }
 }
 

@@ -117,6 +117,32 @@
     for (const video of list) observer.observe(video);
   }
 
+  // ---- copy buttons ---------------------------------------------------------------------------------------------
+  function copyButtons() {
+    for (const button of document.querySelectorAll('button[data-copy]')) {
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(button.dataset.copy);
+          button.textContent = 'Copied';
+          button.classList.add('is-done');
+        } catch {
+          // no clipboard access: select the command so the usual shortcut copies it
+          const code = button.parentElement.querySelector('code');
+          const range = document.createRange();
+          range.selectNodeContents(code);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+          button.textContent = /Mac/.test(navigator.platform) ? 'Press ⌘C' : 'Press Ctrl+C';
+        }
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('is-done');
+        }, 2000);
+      });
+    }
+  }
+
+  copyButtons();
   videos();
   main();
 })();
